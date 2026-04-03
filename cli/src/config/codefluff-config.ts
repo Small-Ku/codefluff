@@ -11,8 +11,17 @@ const modeMappingSchema = z.object({
   'check-new-files': z.string().min(1),
 })
 
+const providerKeySchema = z.union([
+  z.string().min(1),
+  z.object({
+    key: z.string().min(1),
+    baseURL: z.string().min(1).optional(),
+    style: z.enum(['openai', 'anthropic', 'google']).optional(),
+  }),
+])
+
 const codefluffConfigSchema = z.object({
-  keys: z.record(z.string(), z.string().min(1)).optional(),
+  keys: z.record(z.string(), providerKeySchema).optional(),
   mapping: z
     .record(
       z.string(),
@@ -29,6 +38,10 @@ const codefluffConfigSchema = z.object({
 export type CodefluffConfig = z.infer<typeof codefluffConfigSchema>
 export type CostMode = 'free' | 'normal' | 'max' | 'experimental' | 'ask'
 export type Operation = 'agent' | 'file-requests' | 'check-new-files'
+
+export type ProviderKeyConfig =
+  | string
+  | { key: string; baseURL?: string; style?: 'openai' | 'anthropic' | 'google' }
 
 function interpolateEnvVars(value: string): string {
   return value.replace(/\$\{([^}]+)\}/g, (_, envVar) => {
@@ -49,6 +62,17 @@ function interpolateConfigKeys(
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
       result[key] = interpolateEnvVars(value)
+    } else if (typeof value === 'object' && value !== null && 'key' in value) {
+      const providerConfig = value as Record<string, unknown>
+      const interpolated: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(providerConfig)) {
+        if (typeof v === 'string') {
+          interpolated[k] = interpolateEnvVars(v)
+        } else {
+          interpolated[k] = v
+        }
+      }
+      result[key] = interpolated
     } else {
       result[key] = value
     }
@@ -98,9 +122,9 @@ export function loadCodefluffConfig(): CodefluffConfig {
   }
 }
 
-export function getConfiguredKeys(): Record<string, string> {
+export function getConfiguredKeys(): Record<string, ProviderKeyConfig> {
   const config = loadCodefluffConfig()
-  return (config.keys ?? {}) as Record<string, string>
+  return (config.keys ?? {}) as Record<string, ProviderKeyConfig>
 }
 
 export function getDefaultMode(): CostMode {

@@ -10,10 +10,9 @@
 import path from 'path'
 
 import { createAnthropic } from '@ai-sdk/anthropic'
-import {
-  BYOK_OPENROUTER_HEADER,
-  CODEFLUFF_BYOK_KEYS_ENV_VAR,
-} from '@codebuff/common/constants/byok'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenAI } from '@ai-sdk/openai'
+import { BYOK_OPENROUTER_HEADER } from '@codebuff/common/constants/byok'
 import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import {
   CHATGPT_BACKEND_BASE_URL,
@@ -530,65 +529,119 @@ function createCodebuffBackendModel(
 // Codefluff BYOK Direct Provider Routing
 // ============================================================================
 
-function getCodefluffProviderKey(model: string): string | undefined {
+type ProviderConfig = {
+  key: string
+  baseURL?: string
+  style?: 'openai' | 'anthropic' | 'google'
+}
+
+function getProviderName(model: string): string {
+  const slashIdx = model.indexOf('/')
+  if (slashIdx === -1) return model
+  return model.substring(0, slashIdx)
+}
+
+function getModelId(model: string): string {
+  const slashIdx = model.indexOf('/')
+  if (slashIdx === -1) return model
+  return model.substring(slashIdx + 1)
+}
+
+function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
   const envKeys = getCodefluffByokKeysFromEnv()
   if (envKeys) {
-    if (model.startsWith('anthropic/')) return envKeys.anthropic
-    if (model.startsWith('openai/')) return envKeys.openai
-    if (model.startsWith('google/')) return envKeys.google
-    return envKeys.openrouter
-  }
-
-  // Fall back to config file
-  const { existsSync, readFileSync } = require('fs')
-  const { join } = require('path')
-  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? ''
-  const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
-  if (!existsSync(configPath)) return undefined
-
-  try {
-    const raw = readFileSync(configPath, 'utf8')
-    const config = JSON.parse(raw)
-    const keys = config.keys ?? {}
-    if (model.startsWith('anthropic/')) return keys.anthropic
-    if (model.startsWith('openai/')) return keys.openai
-    if (model.startsWith('google/')) return keys.google
-    return keys.openrouter
-  } catch {
+    const providerName = getProviderName(model)
+    if (providerName === 'anthropic' && envKeys.anthropic)
+      return { key: envKeys.anthropic }
+    if (providerName === 'openai' && envKeys.openai)
+      return { key: envKeys.openai }
+    if (providerName === 'google' && envKeys.google)
+      return { key: envKeys.google }
+    const key = envKeys[providerName] ?? envKeys.openrouter
+    if (key) return { key }
     return undefined
   }
+
+  const config = loadCodefluffConfigFromDisk()
+  const keys = config.keys
+  const providerName = getProviderName(model)
+  let providerValue = keys[providerName]
+
+  // Fallback: if provider key not found, try openrouter
+  if (!providerValue && providerName !== 'openrouter') {
+    providerValue = keys.openrouter
+  }
+
+  if (!providerValue) return undefined
+
+  // String key (simple format)
+  if (typeof providerValue === 'string') {
+    if (providerName === 'anthropic') {
+      return { key: providerValue, style: 'anthropic' }
+    }
+    if (providerName === 'openai') {
+      return { key: providerValue, style: 'openai' }
+    }
+    if (providerName === 'google') {
+      return { key: providerValue, style: 'google' }
+    }
+    return { key: providerValue, style: 'openai' }
+  }
+
+  // Object config (custom provider)
+  if (typeof providerValue === 'object' && providerValue !== null) {
+    return {
+      key: providerValue.key ?? '',
+      baseURL: providerValue.baseURL,
+      style: (providerValue.style ?? 'openai') as
+        | 'openai'
+        | 'anthropic'
+        | 'google',
+    }
+  }
+
+  return undefined
 }
 
 function createCodefluffDirectModel(model: string): LanguageModel {
-  const apiKey = getCodefluffProviderKey(model)
+  const providerConfig = getCodefluffProviderConfig(model)
+  const modelId = getModelId(model)
 
-  if (!apiKey) {
+  if (!providerConfig || !providerConfig.key) {
+    const providerName = getProviderName(model)
     throw new Error(
-      `No API key configured for model "${model}". ` +
-        `Set the appropriate key in CODEFLUFF_BYOK_KEYS env var or in ~/.config/codefluff/config.json.`,
+      `No API key configured for provider "${providerName}" (model: "${model}"). ` +
+        `Add "${providerName}" to the "keys" section of ~/.config/codefluff/config.json.`,
     )
   }
 
-  if (model.startsWith('anthropic/')) {
-    const anthropicModelId = toAnthropicModelId(model)
-    const anthropic = createAnthropic({ apiKey })
+  const { key: apiKey, baseURL, style = 'openai' } = providerConfig
+  const providerName = getProviderName(model)
+
+  if (style === 'anthropic') {
+    const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
+    const anthropic = createAnthropic({
+      apiKey,
+      ...(baseURL ? { baseURL } : {}),
+    })
     return anthropic(anthropicModelId) as unknown as LanguageModel
   }
 
-  if (model.startsWith('openai/')) {
-    const openAIModelId = model.replace('openai/', '')
-    const { createOpenAI } = require('@ai-sdk/openai')
-    const openai = createOpenAI({ apiKey })
-    return openai(openAIModelId)
+  if (style === 'google') {
+    const google = createGoogleGenerativeAI({ apiKey, ...(baseURL ? { baseURL } : {}) })
+    return google(modelId) as unknown as LanguageModel
   }
 
-  if (model.startsWith('google/')) {
-    const googleModelId = model.replace('google/', '')
-    const { createGoogleGenerativeAI } = require('@ai-sdk/google')
-    const google = createGoogleGenerativeAI({ apiKey })
-    return google(googleModelId)
+  // OpenAI-compatible style (works for OpenAI-compatible providers, OpenRouter, StepFun, DeepSeek, etc.)
+  if (providerName === 'openai') {
+    const openai = createOpenAI({
+      apiKey,
+      ...(baseURL ? { baseURL } : {}),
+    })
+    return openai(modelId) as unknown as LanguageModel
   }
 
+  // Default: OpenRouter-compatible
   const openrouterUsage: OpenRouterUsageAccounting = {
     cost: null,
     costDetails: {
@@ -597,7 +650,7 @@ function createCodefluffDirectModel(model: string): LanguageModel {
   }
 
   return new OpenAICompatibleChatLanguageModel(model, {
-    provider: 'openrouter',
+    provider: providerName,
     url: () => 'https://openrouter.ai/api/v1/chat/completions',
     headers: () => ({
       Authorization: `Bearer ${apiKey}`,
@@ -648,7 +701,10 @@ export function isCodefluffMode(): boolean {
 }
 
 let _codefluffConfigCache: {
-  keys: Record<string, string>
+  keys: Record<
+    string,
+    string | { key: string; baseURL?: string; style?: string }
+  >
   mapping: Record<string, Record<string, string>>
   defaultMode: string
 } | null = null
@@ -671,24 +727,53 @@ function loadCodefluffConfigFromDisk() {
     const raw = readFileSync(configPath, 'utf8')
     const parsed = JSON.parse(raw)
 
-    const interpolatedKeys: Record<string, string> = {}
+    const interpolatedKeys: Record<
+      string,
+      string | { key: string; baseURL?: string; style?: string }
+    > = {}
     if (parsed.keys) {
-      for (const [key, value] of Object.entries(parsed.keys) as [
-        string,
-        string,
-      ][]) {
-        interpolatedKeys[key] = value.replace(
-          /\$\{([^}]+)\}/g,
-          (_, envVar: string) => {
-            const envValue = process.env[envVar]
-            if (!envValue) {
-              throw new Error(
-                `Environment variable ${envVar} is referenced in codefluff config but not set`,
+      for (const [key, value] of Object.entries(parsed.keys)) {
+        if (typeof value === 'string') {
+          interpolatedKeys[key] = value.replace(
+            /\$\{([^}]+)\}/g,
+            (_, envVar: string) => {
+              const envValue = process.env[envVar]
+              if (!envValue) {
+                throw new Error(
+                  `Environment variable ${envVar} is referenced in codefluff config but not set`,
+                )
+              }
+              return envValue
+            },
+          )
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          'key' in value
+        ) {
+          const providerConfig = value as Record<string, unknown>
+          const interpolated: Record<string, unknown> = {}
+          for (const [k, v] of Object.entries(providerConfig)) {
+            if (typeof v === 'string') {
+              interpolated[k] = v.replace(
+                /\$\{([^}]+)\}/g,
+                (_, envVar: string) => {
+                  const envValue = process.env[envVar]
+                  return envValue ?? v
+                },
               )
+            } else {
+              interpolated[k] = v
             }
-            return envValue
-          },
-        )
+          }
+          interpolatedKeys[key] = interpolated as {
+            key: string
+            baseURL?: string
+            style?: string
+          }
+        } else {
+          interpolatedKeys[key] = value as string
+        }
       }
     }
 
