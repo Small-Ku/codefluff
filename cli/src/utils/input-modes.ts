@@ -1,4 +1,4 @@
-import { IS_FREEBUFF } from './constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from './constants'
 
 // Input mode types and configurations
 // To add a new mode:

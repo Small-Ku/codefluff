@@ -1,5 +1,5 @@
 import { CREDITS_REFERRAL_BONUS } from '@codebuff/common/old-constants'
-import { WEBSITE_URL } from '@codebuff/sdk'
+import { getWebsiteUrl } from '@codebuff/sdk'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 
@@ -45,7 +45,7 @@ export const ReferralBanner = () => {
   })
 
   const referralCode = referralData?.referralCode ?? null
-  const referralLink = referralCode ? `${WEBSITE_URL}/referrals/${referralCode}` : null
+  const referralLink = referralCode ? `${getWebsiteUrl()}/referrals/${referralCode}` : null
   const referralCount = referralData?.referrals.length ?? null
   const referralLimit = referralData?.referralLimit ?? null
 

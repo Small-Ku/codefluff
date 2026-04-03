@@ -22,7 +22,19 @@ import type { Logger } from '@codebuff/common/types/contracts/logger'
 
 const databaseAgentCache: DatabaseAgentCache = new Map()
 
-export function getAgentRuntimeImpl(
+let mockServerStarted = false
+
+async function ensureMockServer(): Promise<void> {
+  if (mockServerStarted) return
+
+  const { startCodefluffMockServer } = await import('./codefluff-mock-server')
+  const { setMockServerUrl } = await import('../constants')
+  const handle = await startCodefluffMockServer()
+  setMockServerUrl(handle.url)
+  mockServerStarted = true
+}
+
+export async function getAgentRuntimeImpl(
   params: {
     logger?: Logger
     apiKey: string
@@ -37,7 +49,7 @@ export function getAgentRuntimeImpl(
     | 'sendAction'
     | 'sendSubagentChunk'
   >,
-): AgentRuntimeDeps & AgentRuntimeScopedDeps {
+): Promise<AgentRuntimeDeps & AgentRuntimeScopedDeps> {
   const {
     logger,
     apiKey,
@@ -50,6 +62,10 @@ export function getAgentRuntimeImpl(
     sendAction,
     sendSubagentChunk,
   } = params
+
+  if (process.env.CODEFLUFF_MODE === 'true') {
+    await ensureMockServer()
+  }
 
   return {
     // Environment

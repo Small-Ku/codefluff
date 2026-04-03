@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
 import { BottomBanner } from './bottom-banner'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { Button } from './button'
 import { useTheme } from '../hooks/use-theme'
 import { useChatStore } from '../state/chat-store'
@@ -20,7 +20,7 @@ type FlowState =
   | 'error'
 
 export const ClaudeConnectBanner = () => {
-  if (IS_FREEBUFF) return null
+  if (IS_FREEBUFF || IS_CODEFLUFF) return null
 
   const setInputMode = useChatStore((state) => state.setInputMode)
   const theme = useTheme()
@@ -75,10 +75,12 @@ export const ClaudeConnectBanner = () => {
         <box style={{ flexDirection: 'column', gap: 0, flexGrow: 1 }}>
           <text style={{ fg: theme.success }}>✓ Connected to Claude</text>
           <text style={{ fg: theme.warning, marginTop: 1 }}>
-            Deprecated — Claude subscription support will be removed March 1st, based on user reports of bans.
+            Deprecated — Claude subscription support will be removed March 1st,
+            based on user reports of bans.
           </text>
           <text style={{ fg: theme.muted, marginTop: 1 }}>
-            Use /subscribe to switch to Codebuff Strong for usage across all models.
+            Use /subscribe to switch to Codebuff Strong for usage across all
+            models.
           </text>
           <box style={{ flexDirection: 'row', gap: 2, marginTop: 1 }}>
             <text style={{ fg: theme.muted }}>Since {connectedDate}</text>
@@ -122,10 +124,12 @@ export const ClaudeConnectBanner = () => {
             here.
           </text>
           <text style={{ fg: theme.warning, marginTop: 1 }}>
-            Deprecated — Claude subscription support will be removed March 1st, based on user reports of bans.
+            Deprecated — Claude subscription support will be removed March 1st,
+            based on user reports of bans.
           </text>
           <text style={{ fg: theme.muted, marginTop: 1 }}>
-            Use /subscribe to switch to Codebuff Strong for usage across all models.
+            Use /subscribe to switch to Codebuff Strong for usage across all
+            models.
           </text>
         </box>
       </BottomBanner>
@@ -151,10 +155,12 @@ export const ClaudeConnectBanner = () => {
           </Button>
         </box>
         <text style={{ fg: theme.warning, marginTop: 1 }}>
-          Deprecated — Claude subscription support will be removed March 1st, based on user reports of bans.
+          Deprecated — Claude subscription support will be removed March 1st,
+          based on user reports of bans.
         </text>
         <text style={{ fg: theme.muted, marginTop: 1 }}>
-          Use /subscribe to switch to Codebuff Strong for usage across all models.
+          Use /subscribe to switch to Codebuff Strong for usage across all
+          models.
         </text>
       </box>
     </BottomBanner>

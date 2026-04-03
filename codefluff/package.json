@@ -1,0 +1,8 @@
+{
+  "name": "@codebuff/codefluff",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:binary": "bun cli/build.ts 0.0.0-dev"
+  }
+}

@@ -3,7 +3,11 @@ import { CLAUDE_OAUTH_ENABLED } from '@codebuff/common/constants/claude-oauth'
 import { safeOpen } from '../utils/open-url'
 
 import { handleAdsEnable, handleAdsDisable } from './ads'
-import { buildInterviewPrompt, buildPlanPrompt, buildReviewPromptFromArgs } from './prompt-builders'
+import {
+  buildInterviewPrompt,
+  buildPlanPrompt,
+  buildReviewPromptFromArgs,
+} from './prompt-builders'
 import { useThemeStore } from '../hooks/use-theme'
 import { handleHelpCommand } from './help'
 import { handleImageCommand } from './image'
@@ -17,7 +21,7 @@ import { useChatStore } from '../state/chat-store'
 import { useFeedbackStore } from '../state/feedback-store'
 import { useLoginStore } from '../state/login-store'
 import { getChatGptOAuthStatus } from '../utils/chatgpt-oauth'
-import { AGENT_MODES, IS_FREEBUFF } from '../utils/constants'
+import { AGENT_MODES, IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { getSystemMessage, getUserMessage } from '../utils/message-history'
 import { capturePendingAttachments } from '../utils/pending-attachments'
 import { getSkillByName } from '../utils/skill-registry'
@@ -178,9 +182,33 @@ const FREEBUFF_REMOVED_COMMANDS = new Set([
   'connect:claude',
 ])
 
-const FREEBUFF_ONLY_COMMANDS = new Set([
+const CODEFLUFF_REMOVED_COMMANDS = new Set([
+  'ads:enable',
+  'ads:disable',
+  'refer-friends',
+  'usage',
+  'subscribe',
+  'image',
+  'publish',
+  'gpt-5-agent',
+  'connect:claude',
+  'connect',
+  'login',
+  'logout',
+  'history',
+  'feedback',
+])
+
+const FREEBUFF_ONLY_COMMANDS = new Set(['connect', 'plan'])
+
+const CODEFLUFF_ONLY_COMMANDS = new Set([
   'connect',
   'plan',
+  'review',
+  'interview',
+  'history',
+  'feedback',
+  'logout',
 ])
 
 const ALL_COMMANDS: CommandDefinition[] = [
@@ -654,7 +682,9 @@ const ALL_COMMANDS: CommandDefinition[] = [
 
 export const COMMAND_REGISTRY: CommandDefinition[] = IS_FREEBUFF
   ? ALL_COMMANDS.filter((cmd) => !FREEBUFF_REMOVED_COMMANDS.has(cmd.name))
-  : ALL_COMMANDS.filter((cmd) => !FREEBUFF_ONLY_COMMANDS.has(cmd.name))
+  : IS_CODEFLUFF
+    ? ALL_COMMANDS.filter((cmd) => !CODEFLUFF_REMOVED_COMMANDS.has(cmd.name))
+    : ALL_COMMANDS.filter((cmd) => !FREEBUFF_ONLY_COMMANDS.has(cmd.name))
 
 export function findCommand(cmd: string): CommandDefinition | undefined {
   const lowerCmd = cmd.toLowerCase()
@@ -695,23 +725,30 @@ function createSkillCommand(skillName: string): CommandDefinition {
           getSystemMessage(`Skill not found: ${skillName}`),
         ])
         params.saveToHistory(params.inputValue.trim())
-        params.setInputValue({ text: '', cursorPosition: 0, lastEditDueToNav: false })
+        params.setInputValue({
+          text: '',
+          cursorPosition: 0,
+          lastEditDueToNav: false,
+        })
         return
       }
 
       const trimmed = params.inputValue.trim()
       params.saveToHistory(trimmed)
-      params.setInputValue({ text: '', cursorPosition: 0, lastEditDueToNav: false })
+      params.setInputValue({
+        text: '',
+        cursorPosition: 0,
+        lastEditDueToNav: false,
+      })
 
       // Build the message content with skill context and optional user args
       const skillContext = `<skill name="${skill.name}">
 ${skill.content}
 </skill>`
 
-      const userPrompt = `I invoke the following skill:\n\n${skillContext}\n\n`
-        + (args.trim()
-          ? `User request: ${args.trim()}`
-          : '')
+      const userPrompt =
+        `I invoke the following skill:\n\n${skillContext}\n\n` +
+        (args.trim() ? `User request: ${args.trim()}` : '')
 
       // Check streaming/queue state
       if (

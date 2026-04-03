@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 
 import { ShimmerText } from './shimmer-text'
 import { getActivityQueryData } from '../hooks/use-activity-query'
@@ -16,7 +16,7 @@ let creditsRestoredGlobal = false
 export const areCreditsRestored = () => creditsRestoredGlobal
 
 export const OutOfCreditsBanner = () => {
-  if (IS_FREEBUFF) return null
+  if (IS_FREEBUFF || IS_CODEFLUFF) return null
 
   const sessionCreditsUsed = useChatStore((state) => state.sessionCreditsUsed)
   const [creditsRestored, setCreditsRestored] = useState(false)
@@ -62,7 +62,7 @@ export const OutOfCreditsBanner = () => {
     if (!confirmedZeroBalance || remainingBalance <= 0 || creditsRestored) {
       return
     }
-    
+
     // Credits restored! Show the success state
     setCreditsRestored(true)
     creditsRestoredGlobal = true
@@ -99,8 +99,8 @@ export const OutOfCreditsBanner = () => {
           }}
         >
           <text style={{ fg: theme.success }}>
-            <ShimmerText 
-              text="✨ Credits acquired! ✨" 
+            <ShimmerText
+              text="✨ Credits acquired! ✨"
               primaryColor={theme.success}
               interval={120}
             />
@@ -108,9 +108,7 @@ export const OutOfCreditsBanner = () => {
           <text style={{ fg: theme.muted }}>
             Balance: {remainingBalance.toLocaleString()} credits
           </text>
-          <text style={{ fg: theme.foreground }}>
-            Press Enter to continue
-          </text>
+          <text style={{ fg: theme.foreground }}>Press Enter to continue</text>
         </box>
       </box>
     )
@@ -139,14 +137,11 @@ export const OutOfCreditsBanner = () => {
           gap: 0,
         }}
       >
-        <text style={{ fg: theme.warning }}>
-          Out of credits
-        </text>
+        <text style={{ fg: theme.warning }}>Out of credits</text>
+        <text style={{ fg: theme.muted }}>{statsText}</text>
         <text style={{ fg: theme.muted }}>
-          {statsText}
-        </text>
-        <text style={{ fg: theme.muted }}>
-          Note: Some credits are needed even with a Claude subscription for other model usage.
+          Note: Some credits are needed even with a Claude subscription for
+          other model usage.
         </text>
         <text style={{ fg: theme.foreground }}>
           Press Enter to buy more credits

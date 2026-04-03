@@ -6,7 +6,7 @@ import { Button } from './button'
 import { Clickable } from './clickable'
 import { useTerminalDimensions } from '../hooks/use-terminal-dimensions'
 import { useTheme } from '../hooks/use-theme'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 
 import type { AdResponse } from '../hooks/use-gravity-ad'
 
@@ -25,7 +25,11 @@ const extractDomain = (url: string): string => {
   }
 }
 
-export const AdBanner: React.FC<AdBannerProps> = ({ ad, onDisableAds, isFreeMode }) => {
+export const AdBanner: React.FC<AdBannerProps> = ({
+  ad,
+  onDisableAds,
+  isFreeMode,
+}) => {
   const theme = useTheme()
   const { separatorWidth, terminalWidth } = useTerminalDimensions()
   const [isLinkHovered, setIsLinkHovered] = useState(false)
@@ -99,7 +103,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({ ad, onDisableAds, isFreeMode
             >
               <text
                 style={{
-                  fg: isAdLabelHovered && !showInfoPanel ? theme.foreground : theme.muted,
+                  fg:
+                    isAdLabelHovered && !showInfoPanel
+                      ? theme.foreground
+                      : theme.muted,
                   flexShrink: 0,
                 }}
               >
@@ -165,7 +172,9 @@ export const AdBanner: React.FC<AdBannerProps> = ({ ad, onDisableAds, isFreeMode
             gap: 0,
           }}
         >
-          <text style={{ fg: theme.muted }}>{' ' + '┄'.repeat(separatorWidth - 2)}</text>
+          <text style={{ fg: theme.muted }}>
+            {' ' + '┄'.repeat(separatorWidth - 2)}
+          </text>
           <box
             style={{
               width: '100%',

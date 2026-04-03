@@ -10,7 +10,10 @@
 import path from 'path'
 
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { BYOK_OPENROUTER_HEADER } from '@codebuff/common/constants/byok'
+import {
+  BYOK_OPENROUTER_HEADER,
+  CODEFLUFF_BYOK_KEYS_ENV_VAR,
+} from '@codebuff/common/constants/byok'
 import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import {
   CHATGPT_BACKEND_BASE_URL,
@@ -31,12 +34,15 @@ import {
   VERSION,
 } from '@codebuff/internal/openai-compatible/index'
 
-import { WEBSITE_URL } from '../constants'
+import { getWebsiteUrl } from '../constants'
 import {
   getValidChatGptOAuthCredentials,
   getValidClaudeOAuthCredentials,
 } from '../credentials'
-import { getByokOpenrouterApiKeyFromEnv } from '../env'
+import {
+  getByokOpenrouterApiKeyFromEnv,
+  getCodefluffByokKeysFromEnv,
+} from '../env'
 import {
   createChatGptBackendFetch,
   extractChatGptAccountId,
@@ -146,7 +152,9 @@ interface ClaudeQuotaResponse {
  * Returns the earliest reset time (whichever limit is more restrictive).
  * Returns null if fetch fails or no reset time is available.
  */
-export async function fetchClaudeOAuthResetTime(accessToken: string): Promise<Date | null> {
+export async function fetchClaudeOAuthResetTime(
+  accessToken: string,
+): Promise<Date | null> {
   try {
     const response = await fetch('https://api.anthropic.com/api/oauth/usage', {
       method: 'GET',
@@ -170,8 +178,12 @@ export async function fetchClaudeOAuthResetTime(accessToken: string): Promise<Da
     const fiveHour = data.five_hour
     const sevenDay = data.seven_day
 
-    const fiveHourRemaining = fiveHour ? Math.max(0, 100 - fiveHour.utilization) : 100
-    const sevenDayRemaining = sevenDay ? Math.max(0, 100 - sevenDay.utilization) : 100
+    const fiveHourRemaining = fiveHour
+      ? Math.max(0, 100 - fiveHour.utilization)
+      : 100
+    const sevenDayRemaining = sevenDay
+      ? Math.max(0, 100 - sevenDay.utilization)
+      : 100
 
     // Return the reset time for whichever limit is more restrictive (lower remaining)
     if (fiveHourRemaining <= sevenDayRemaining && fiveHour?.resets_at) {
@@ -227,15 +239,32 @@ type OpenRouterUsageAccounting = {
  *
  * If Claude OAuth credentials are available and the model is a Claude model,
  * returns an Anthropic direct model. Otherwise, returns the Codebuff backend model.
- * 
+ *
  * This function is async because it may need to refresh the OAuth token.
  */
-export async function getModelForRequest(params: ModelRequestParams): Promise<ModelResult> {
+export async function getModelForRequest(
+  params: ModelRequestParams,
+): Promise<ModelResult> {
   const { apiKey, model, skipClaudeOAuth, skipChatGptOAuth, costMode } = params
+
+  if (isCodefluffMode()) {
+    const resolvedModel =
+      resolveCodefluffModel(costMode ?? 'normal', 'agent') ?? model
+    return {
+      model: createCodefluffDirectModel(resolvedModel),
+      isClaudeOAuth: false,
+      isChatGptOAuth: false,
+    }
+  }
 
   // Check if we should use Claude OAuth direct
   // Skip if feature disabled, explicitly requested, if rate-limited, or if not a Claude model
-  if (CLAUDE_OAUTH_ENABLED && !skipClaudeOAuth && !isClaudeOAuthRateLimited() && isClaudeModel(model)) {
+  if (
+    CLAUDE_OAUTH_ENABLED &&
+    !skipClaudeOAuth &&
+    !isClaudeOAuthRateLimited() &&
+    isClaudeModel(model)
+  ) {
     // Get valid credentials (will refresh if needed)
     const claudeOAuthCredentials = await getValidClaudeOAuthCredentials()
     if (claudeOAuthCredentials) {
@@ -271,7 +300,10 @@ export async function getModelForRequest(params: ModelRequestParams): Promise<Mo
 
       if (chatGptOAuthCredentials) {
         return {
-          model: createOpenAIOAuthModel(model, chatGptOAuthCredentials.accessToken),
+          model: createOpenAIOAuthModel(
+            model,
+            chatGptOAuthCredentials.accessToken,
+          ),
           isClaudeOAuth: false,
           isChatGptOAuth: true,
         }
@@ -298,7 +330,10 @@ export async function getModelForRequest(params: ModelRequestParams): Promise<Mo
  * Create an OpenAI model that routes through the ChatGPT backend API (Codex endpoint).
  * Uses a custom fetch that transforms between Chat Completions and Responses API formats.
  */
-function createOpenAIOAuthModel(model: string, oauthToken: string): LanguageModel {
+function createOpenAIOAuthModel(
+  model: string,
+  oauthToken: string,
+): LanguageModel {
   const openAIModelId = toOpenAIModelId(model)
   const accountId = extractChatGptAccountId(oauthToken)
 
@@ -439,7 +474,7 @@ function createCodebuffBackendModel(
   return new OpenAICompatibleChatLanguageModel(model, {
     provider: 'codebuff',
     url: ({ path: endpoint }) =>
-      new URL(path.join('/api/v1', endpoint), WEBSITE_URL).toString(),
+      new URL(path.join('/api/v1', endpoint), getWebsiteUrl()).toString(),
     headers: () => ({
       Authorization: `Bearer ${apiKey}`,
       'user-agent': `ai-sdk/openai-compatible/${VERSION}/codebuff`,
@@ -489,4 +524,199 @@ function createCodebuffBackendModel(
     includeUsage: undefined,
     supportsStructuredOutputs: true,
   })
+}
+
+// ============================================================================
+// Codefluff BYOK Direct Provider Routing
+// ============================================================================
+
+function getCodefluffProviderKey(model: string): string | undefined {
+  const envKeys = getCodefluffByokKeysFromEnv()
+  if (envKeys) {
+    if (model.startsWith('anthropic/')) return envKeys.anthropic
+    if (model.startsWith('openai/')) return envKeys.openai
+    if (model.startsWith('google/')) return envKeys.google
+    return envKeys.openrouter
+  }
+
+  // Fall back to config file
+  const { existsSync, readFileSync } = require('fs')
+  const { join } = require('path')
+  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? ''
+  const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
+  if (!existsSync(configPath)) return undefined
+
+  try {
+    const raw = readFileSync(configPath, 'utf8')
+    const config = JSON.parse(raw)
+    const keys = config.keys ?? {}
+    if (model.startsWith('anthropic/')) return keys.anthropic
+    if (model.startsWith('openai/')) return keys.openai
+    if (model.startsWith('google/')) return keys.google
+    return keys.openrouter
+  } catch {
+    return undefined
+  }
+}
+
+function createCodefluffDirectModel(model: string): LanguageModel {
+  const apiKey = getCodefluffProviderKey(model)
+
+  if (!apiKey) {
+    throw new Error(
+      `No API key configured for model "${model}". ` +
+        `Set the appropriate key in CODEFLUFF_BYOK_KEYS env var or in ~/.config/codefluff/config.json.`,
+    )
+  }
+
+  if (model.startsWith('anthropic/')) {
+    const anthropicModelId = toAnthropicModelId(model)
+    const anthropic = createAnthropic({ apiKey })
+    return anthropic(anthropicModelId) as unknown as LanguageModel
+  }
+
+  if (model.startsWith('openai/')) {
+    const openAIModelId = model.replace('openai/', '')
+    const { createOpenAI } = require('@ai-sdk/openai')
+    const openai = createOpenAI({ apiKey })
+    return openai(openAIModelId)
+  }
+
+  if (model.startsWith('google/')) {
+    const googleModelId = model.replace('google/', '')
+    const { createGoogleGenerativeAI } = require('@ai-sdk/google')
+    const google = createGoogleGenerativeAI({ apiKey })
+    return google(googleModelId)
+  }
+
+  const openrouterUsage: OpenRouterUsageAccounting = {
+    cost: null,
+    costDetails: {
+      upstreamInferenceCost: null,
+    },
+  }
+
+  return new OpenAICompatibleChatLanguageModel(model, {
+    provider: 'openrouter',
+    url: () => 'https://openrouter.ai/api/v1/chat/completions',
+    headers: () => ({
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://codebuff.com',
+      'X-Title': 'Codefluff',
+      'user-agent': `ai-sdk/openai-compatible/${VERSION}/codefluff`,
+    }),
+    metadataExtractor: {
+      extractMetadata: async ({ parsedBody }: { parsedBody: any }) => {
+        if (typeof parsedBody?.usage?.cost === 'number') {
+          openrouterUsage.cost = parsedBody.usage.cost
+        }
+        if (
+          typeof parsedBody?.usage?.cost_details?.upstream_inference_cost ===
+          'number'
+        ) {
+          openrouterUsage.costDetails.upstreamInferenceCost =
+            parsedBody.usage.cost_details.upstream_inference_cost
+        }
+        return { codebuff: { usage: openrouterUsage } }
+      },
+      createStreamExtractor: () => ({
+        processChunk: (parsedChunk: any) => {
+          if (typeof parsedChunk?.usage?.cost === 'number') {
+            openrouterUsage.cost = parsedChunk.usage.cost
+          }
+          if (
+            typeof parsedChunk?.usage?.cost_details?.upstream_inference_cost ===
+            'number'
+          ) {
+            openrouterUsage.costDetails.upstreamInferenceCost =
+              parsedChunk.usage.cost_details.upstream_inference_cost
+          }
+        },
+        buildMetadata: () => {
+          return { codebuff: { usage: openrouterUsage } }
+        },
+      }),
+    },
+    fetch: undefined,
+    includeUsage: undefined,
+    supportsStructuredOutputs: true,
+  })
+}
+
+export function isCodefluffMode(): boolean {
+  return process.env.CODEFLUFF_MODE === 'true'
+}
+
+let _codefluffConfigCache: {
+  keys: Record<string, string>
+  mapping: Record<string, Record<string, string>>
+  defaultMode: string
+} | null = null
+
+function loadCodefluffConfigFromDisk() {
+  if (_codefluffConfigCache) return _codefluffConfigCache
+
+  const { existsSync, readFileSync } = require('fs')
+  const { join } = require('path')
+
+  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? ''
+  const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
+
+  if (!homeDir || !existsSync(configPath)) {
+    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal' }
+    return _codefluffConfigCache
+  }
+
+  try {
+    const raw = readFileSync(configPath, 'utf8')
+    const parsed = JSON.parse(raw)
+
+    const interpolatedKeys: Record<string, string> = {}
+    if (parsed.keys) {
+      for (const [key, value] of Object.entries(parsed.keys) as [
+        string,
+        string,
+      ][]) {
+        interpolatedKeys[key] = value.replace(
+          /\$\{([^}]+)\}/g,
+          (_, envVar: string) => {
+            const envValue = process.env[envVar]
+            if (!envValue) {
+              throw new Error(
+                `Environment variable ${envVar} is referenced in codefluff config but not set`,
+              )
+            }
+            return envValue
+          },
+        )
+      }
+    }
+
+    _codefluffConfigCache = {
+      keys: interpolatedKeys,
+      mapping: parsed.mapping ?? {},
+      defaultMode: parsed.defaultMode ?? 'normal',
+    }
+    return _codefluffConfigCache
+  } catch {
+    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal' }
+    return _codefluffConfigCache
+  }
+}
+
+export function resolveCodefluffModel(
+  costMode: string,
+  operation: string,
+): string | null {
+  if (!isCodefluffMode()) return null
+
+  const config = loadCodefluffConfigFromDisk()
+  const modeMapping = config.mapping[costMode]
+  if (!modeMapping) return null
+
+  return modeMapping[operation] ?? null
+}
+
+export function getCodefluffDefaultMode(): string {
+  return loadCodefluffConfigFromDisk().defaultMode
 }

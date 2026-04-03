@@ -1,7 +1,7 @@
 import { CHATGPT_OAUTH_ENABLED } from '@codebuff/common/constants/chatgpt-oauth'
 import { CLAUDE_OAUTH_ENABLED } from '@codebuff/common/constants/claude-oauth'
 import React from 'react'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 
 import { ChatGptConnectBanner } from './chatgpt-connect-banner'
 import { ClaudeConnectBanner } from './claude-connect-banner'
@@ -27,13 +27,23 @@ const BANNER_REGISTRY: Record<
 > = {
   default: () => <PendingAttachmentsBanner />,
   image: () => <PendingAttachmentsBanner />,
-  ...(IS_FREEBUFF ? {} : { usage: ({ showTime }: { showTime: number }) => <UsageBanner showTime={showTime} /> }),
-  ...(IS_FREEBUFF ? {} : { referral: () => <ReferralBanner /> }),
+  ...(IS_FREEBUFF || IS_CODEFLUFF
+    ? {}
+    : {
+        usage: ({ showTime }: { showTime: number }) => (
+          <UsageBanner showTime={showTime} />
+        ),
+      }),
+  ...(IS_FREEBUFF || IS_CODEFLUFF
+    ? {}
+    : { referral: () => <ReferralBanner /> }),
   help: () => <HelpBanner />,
-  ...(CLAUDE_OAUTH_ENABLED && !IS_FREEBUFF
+  ...(CLAUDE_OAUTH_ENABLED && !IS_FREEBUFF && !IS_CODEFLUFF
     ? { 'connect:claude': () => <ClaudeConnectBanner /> }
     : {}),
-  ...(IS_FREEBUFF ? {} : { subscriptionLimit: () => <SubscriptionLimitBanner /> }),
+  ...(IS_FREEBUFF || IS_CODEFLUFF
+    ? {}
+    : { subscriptionLimit: () => <SubscriptionLimitBanner /> }),
   ...(CHATGPT_OAUTH_ENABLED
     ? { 'connect:chatgpt': () => <ChatGptConnectBanner /> }
     : {}),

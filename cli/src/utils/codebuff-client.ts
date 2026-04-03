@@ -8,6 +8,7 @@ import { loadAgentDefinitions } from './local-agent-registry'
 import { logger } from './logger'
 import { getRgPath } from '../native/ripgrep'
 import { getProjectRoot } from '../project-files'
+import { getConfiguredKeys } from '../config/codefluff-config'
 
 import type { ClientToolCall } from '@codebuff/common/tools/list'
 
@@ -47,8 +48,14 @@ export function resetCodebuffClient(): void {
 export async function getCodebuffClient(): Promise<CodebuffClient | null> {
   if (!clientInstance) {
     const { token: apiKey } = getAuthTokenDetails()
+    const isCodefluff = getCliEnv().CODEFLUFF_MODE === 'true'
 
-    if (!apiKey) {
+    // In codefluff mode, use the first available BYOK key as the API key
+    const effectiveApiKey = isCodefluff
+      ? Object.values(getConfiguredKeys())[0] || 'codefluff-local'
+      : apiKey
+
+    if (!effectiveApiKey) {
       logger.warn(
         {},
         `No authentication token found. Please run the login flow or set ${API_KEY_ENV_VAR}.`,
@@ -73,7 +80,7 @@ export async function getCodebuffClient(): Promise<CodebuffClient | null> {
     try {
       const agentDefinitions = loadAgentDefinitions()
       clientInstance = new CodebuffClient({
-        apiKey,
+        apiKey: effectiveApiKey,
         cwd: projectRoot,
         agentDefinitions,
         logger,

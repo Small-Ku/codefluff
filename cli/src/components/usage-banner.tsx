@@ -1,6 +1,6 @@
 import { CHATGPT_OAUTH_ENABLED } from '@codebuff/common/constants/chatgpt-oauth'
 import { CLAUDE_OAUTH_ENABLED } from '@codebuff/common/constants/claude-oauth'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { isChatGptOAuthValid, isClaudeOAuthValid } from '@codebuff/sdk'
 import { TextAttributes } from '@opentui/core'
 import { safeOpen } from '../utils/open-url'
@@ -15,14 +15,13 @@ import { useSubscriptionQuery } from '../hooks/use-subscription-query'
 import { useTheme } from '../hooks/use-theme'
 import { useUpdatePreference } from '../hooks/use-update-preference'
 import { usageQueryKeys, useUsageQuery } from '../hooks/use-usage-query'
-import { WEBSITE_URL } from '../login/constants'
+import { getWebsiteUrl } from '@codebuff/sdk'
 import { useChatStore } from '../state/chat-store'
 import { formatResetTime, formatResetTimeLong } from '../utils/time-format'
 import {
   getBannerColorLevel,
   generateLoadingBannerText,
 } from '../utils/usage-banner-state'
-
 
 const MANUAL_SHOW_TIMEOUT = 60 * 1000 // 1 minute
 const USAGE_POLL_INTERVAL = 30 * 1000 // 30 seconds
@@ -37,17 +36,17 @@ const formatRenewalDate = (dateStr: string | null): string => {
   const isToday = resetDate.toDateString() === today.toDateString()
   return isToday
     ? resetDate.toLocaleString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
+        hour: 'numeric',
+        minute: '2-digit',
+      })
     : resetDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
+        month: 'short',
+        day: 'numeric',
+      })
 }
 
 export const UsageBanner = ({ showTime }: { showTime: number }) => {
-  if (IS_FREEBUFF) return null
+  if (IS_FREEBUFF || IS_CODEFLUFF) return null
 
   const sessionCreditsUsed = useChatStore((state) => state.sessionCreditsUsed)
   const setInputMode = useChatStore((state) => state.setInputMode)
@@ -57,15 +56,18 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
   const isChatGptConnected = CHATGPT_OAUTH_ENABLED && isChatGptOAuthValid()
 
   // Fetch Claude quota data if connected
-  const { data: claudeQuota, isLoading: isClaudeLoading } = useClaudeQuotaQuery({
-    enabled: isClaudeConnected,
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds when banner is open
-  })
+  const { data: claudeQuota, isLoading: isClaudeLoading } = useClaudeQuotaQuery(
+    {
+      enabled: isClaudeConnected,
+      refetchInterval: 30 * 1000, // Refresh every 30 seconds when banner is open
+    },
+  )
 
   // Fetch subscription data
-  const { data: subscriptionData, isLoading: isSubscriptionLoading } = useSubscriptionQuery({
-    refetchInterval: 30 * 1000,
-  })
+  const { data: subscriptionData, isLoading: isSubscriptionLoading } =
+    useSubscriptionQuery({
+      refetchInterval: 30 * 1000,
+    })
 
   const {
     data: apiData,
@@ -111,10 +113,18 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
 
   const colorLevel = getBannerColorLevel(activeData.remainingBalance)
   const adCredits = activeData.balanceBreakdown?.ad
-  const renewalDate = activeData.next_quota_reset ? formatRenewalDate(activeData.next_quota_reset) : null
+  const renewalDate = activeData.next_quota_reset
+    ? formatRenewalDate(activeData.next_quota_reset)
+    : null
 
-  const activeSubscription = subscriptionData?.hasSubscription ? subscriptionData : null
-  const { rateLimit, subscription: subscriptionInfo, displayName } = activeSubscription ?? {}
+  const activeSubscription = subscriptionData?.hasSubscription
+    ? subscriptionData
+    : null
+  const {
+    rateLimit,
+    subscription: subscriptionInfo,
+    displayName,
+  } = activeSubscription ?? {}
 
   return (
     <BottomBanner
@@ -135,14 +145,16 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
         {/* Codebuff credits section - structured layout */}
         <Button
           onClick={() => {
-            safeOpen(WEBSITE_URL + '/usage')
+            safeOpen(getWebsiteUrl() + '/usage')
           }}
         >
           <box style={{ flexDirection: 'column', gap: 0 }}>
             {/* Main stats row */}
             <box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 1 }}>
               <text style={{ fg: theme.muted }}>Session:</text>
-              <text style={{ fg: theme.foreground }}>{sessionCreditsUsed.toLocaleString()} credits</text>
+              <text style={{ fg: theme.foreground }}>
+                {sessionCreditsUsed.toLocaleString()} credits
+              </text>
               <text style={{ fg: theme.muted }}>·</text>
               <text style={{ fg: theme.muted }}>Remaining:</text>
               {isLoadingData ? (
@@ -153,7 +165,9 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
                 </text>
               )}
               {adCredits != null && adCredits > 0 && (
-                <text style={{ fg: theme.muted }}>{`(${adCredits} from ads)`}</text>
+                <text
+                  style={{ fg: theme.muted }}
+                >{`(${adCredits} from ads)`}</text>
               )}
               {!activeSubscription && renewalDate && (
                 <>
@@ -163,7 +177,9 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
               )}
             </box>
             {/* See more link */}
-            <text style={{ fg: theme.muted }}>See more on {WEBSITE_URL} ↗</text>
+            <text style={{ fg: theme.muted }}>
+              See more on {getWebsiteUrl()} ↗
+            </text>
           </box>
         </Button>
 
@@ -175,22 +191,38 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
               <text style={{ fg: theme.muted }}>Loading quota...</text>
             ) : claudeQuota ? (
               <box style={{ flexDirection: 'column', gap: 0 }}>
-                <box style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <box
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}
+                >
                   <text style={{ fg: theme.muted }}>5-hour:</text>
-                  <ProgressBar value={claudeQuota.fiveHourRemaining} width={15} />
+                  <ProgressBar
+                    value={claudeQuota.fiveHourRemaining}
+                    width={15}
+                  />
                   {claudeQuota.fiveHourResetsAt && (
                     <text style={{ fg: theme.muted }}>
-                      (resets in {formatResetTime(claudeQuota.fiveHourResetsAt)})
+                      (resets in {formatResetTime(claudeQuota.fiveHourResetsAt)}
+                      )
                     </text>
                   )}
                 </box>
                 {/* Only show 7-day bar if the user has a 7-day limit */}
                 {claudeQuota.sevenDayResetsAt && (
-                  <box style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                  <box
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
                     <text style={{ fg: theme.muted }}>7-day: </text>
-                    <ProgressBar value={claudeQuota.sevenDayRemaining} width={15} />
+                    <ProgressBar
+                      value={claudeQuota.sevenDayRemaining}
+                      width={15}
+                    />
                     <text style={{ fg: theme.muted }}>
-                      (resets in {formatResetTime(claudeQuota.sevenDayResetsAt)})
+                      (resets in {formatResetTime(claudeQuota.sevenDayResetsAt)}
+                      )
                     </text>
                   </box>
                 )}
@@ -244,7 +276,10 @@ const SubscriptionUsageSection: React.FC<SubscriptionUsageSectionProps> = ({
 
   const blockPercent = useMemo(() => {
     if (rateLimit?.blockLimit == null || rateLimit.blockUsed == null) return 100
-    return Math.max(0, 100 - Math.round((rateLimit.blockUsed / rateLimit.blockLimit) * 100))
+    return Math.max(
+      0,
+      100 - Math.round((rateLimit.blockUsed / rateLimit.blockLimit) * 100),
+    )
   }, [rateLimit?.blockLimit, rateLimit?.blockUsed])
 
   const weeklyPercent = rateLimit ? 100 - rateLimit.weeklyPercentUsed : 100
@@ -264,8 +299,14 @@ const SubscriptionUsageSection: React.FC<SubscriptionUsageSectionProps> = ({
       ) : rateLimit ? (
         <box style={{ flexDirection: 'column', gap: 0 }}>
           <box style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>
-            <text style={{ fg: theme.muted }}>{`5-hour limit ${`${blockPercent}%`.padStart(4)} `}</text>
-            <ProgressBar value={blockPercent} width={12} showPercentage={false} />
+            <text
+              style={{ fg: theme.muted }}
+            >{`5-hour limit ${`${blockPercent}%`.padStart(4)} `}</text>
+            <ProgressBar
+              value={blockPercent}
+              width={12}
+              showPercentage={false}
+            />
             <text style={{ fg: theme.muted }}>
               {rateLimit.blockResetsAt
                 ? ` resets in ${formatResetTime(new Date(rateLimit.blockResetsAt))}`
@@ -273,8 +314,14 @@ const SubscriptionUsageSection: React.FC<SubscriptionUsageSectionProps> = ({
             </text>
           </box>
           <box style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>
-            <text style={{ fg: theme.muted }}>{`Weekly limit ${`${weeklyPercent}%`.padStart(4)} `}</text>
-            <ProgressBar value={weeklyPercent} width={12} showPercentage={false} />
+            <text
+              style={{ fg: theme.muted }}
+            >{`Weekly limit ${`${weeklyPercent}%`.padStart(4)} `}</text>
+            <ProgressBar
+              value={weeklyPercent}
+              width={12}
+              showPercentage={false}
+            />
             <text style={{ fg: theme.muted }}>
               {` resets in ${formatResetTimeLong(rateLimit.weeklyResetsAt)}`}
             </text>
@@ -284,12 +331,23 @@ const SubscriptionUsageSection: React.FC<SubscriptionUsageSectionProps> = ({
       <box style={{ flexDirection: 'column', gap: 0, marginTop: 1 }}>
         <box style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
           <text style={{ fg: theme.muted }}>Credit spending:</text>
-          <text style={{ fg: fallbackToALaCarte ? theme.foreground : theme.warning }}>
+          <text
+            style={{
+              fg: fallbackToALaCarte ? theme.foreground : theme.warning,
+            }}
+          >
             {fallbackToALaCarte ? 'enabled' : 'disabled'}
           </text>
-          <Button onClick={handleToggleFallbackToALaCarte} disabled={updatePreference.isPending}>
-            <text style={{ fg: theme.muted, attributes: TextAttributes.UNDERLINE }}>
-              {updatePreference.isPending ? '[updating...]' : `[${fallbackToALaCarte ? 'disable' : 'enable'}]`}
+          <Button
+            onClick={handleToggleFallbackToALaCarte}
+            disabled={updatePreference.isPending}
+          >
+            <text
+              style={{ fg: theme.muted, attributes: TextAttributes.UNDERLINE }}
+            >
+              {updatePreference.isPending
+                ? '[updating...]'
+                : `[${fallbackToALaCarte ? 'disable' : 'enable'}]`}
             </text>
           </Button>
         </box>

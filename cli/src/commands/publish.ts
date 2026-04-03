@@ -1,4 +1,4 @@
-import { WEBSITE_URL } from '@codebuff/sdk'
+import { getWebsiteUrl } from '@codebuff/sdk'
 
 import { getUserCredentials } from '../utils/auth'
 import { getApiClient, setApiClientAuthToken } from '../utils/codebuff-api'
@@ -69,7 +69,7 @@ async function publishAgentTemplates(
     if (err instanceof TypeError && err.message.includes('fetch')) {
       return {
         success: false,
-        error: `Network error: Unable to connect to ${WEBSITE_URL}. Please check your internet connection and try again.`,
+        error: `Network error: Unable to connect to ${getWebsiteUrl()}. Please check your internet connection and try again.`,
       }
     }
 
@@ -184,7 +184,7 @@ export async function handlePublish(agentIds: string[]): Promise<PublishResult> 
     if (result.error?.includes('Publisher field required')) {
       hint = 'Add a "publisher" field to your agent templates.'
     } else if (result.error?.includes('Publisher not found or not accessible')) {
-      hint = `Check that the publisher ID is correct and you have access to it. Visit ${WEBSITE_URL}/publishers to manage publishers.`
+      hint = `Check that the publisher ID is correct and you have access to it. Visit ${getWebsiteUrl()}/publishers to manage publishers.`
     }
 
     return {

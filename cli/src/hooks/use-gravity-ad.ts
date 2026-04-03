@@ -1,4 +1,4 @@
-import { WEBSITE_URL } from '@codebuff/sdk'
+import { getWebsiteUrl } from '@codebuff/sdk'
 import { useEffect, useRef, useState } from 'react'
 
 import { useTerminalLayout } from './use-terminal-layout'
@@ -125,7 +125,7 @@ export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState =>
     // Include mode in request - FREE mode should not grant credits
     const agentMode = useChatStore.getState().agentMode
 
-    fetch(`${WEBSITE_URL}/api/v1/ads/impression`, {
+    fetch(`${getWebsiteUrl()}/api/v1/ads/impression`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState =>
     }
 
     try {
-      const response = await fetch(`${WEBSITE_URL}/api/v1/ads`, {
+      const response = await fetch(`${getWebsiteUrl()}/api/v1/ads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -264,6 +264,15 @@ async function runOnce({
     })
   }
 
+  // Start mock server for codefluff mode before any SDK code runs
+  if (process.env.CODEFLUFF_MODE === 'true') {
+    const { startCodefluffMockServer } =
+      await import('./impl/codefluff-mock-server')
+    const { setMockServerUrl } = await import('./constants')
+    const handle = await startCodefluffMockServer()
+    setMockServerUrl(handle.url)
+  }
+
   let resolve: (value: RunReturnType) => any = () => {}
   let _reject: (error: any) => any = () => {}
   const promise = new Promise<RunReturnType>((res, rej) => {
@@ -277,15 +286,9 @@ async function runOnce({
     }
   }
 
-  /** Calculates the current session state if cancelled.
-   *
-   * This is used when callMainPrompt throws an error (the server never processed the request).
-   * We need to add the user's message here since the server didn't get a chance to add it.
-   */
   function getCancelledSessionState(message: string): SessionState {
     const state = cloneDeep(sessionState)
 
-    // Add the user's message since the server never processed it
     if (prompt || preparedContent) {
       state.mainAgentState.messageHistory.push({
         role: 'user' as const,
@@ -294,7 +297,6 @@ async function runOnce({
       })
     }
 
-    // Add error context message
     state.mainAgentState.messageHistory.push({
       role: 'user' as const,
       content: [{ type: 'text' as const, text: withSystemTags(message) }],
@@ -309,6 +311,24 @@ async function runOnce({
         type: 'error',
         message,
       },
+    }
+  }
+
+  const onSubagentResponseChunk = async (
+    action: ServerAction<'subagent-response-chunk'>,
+  ) => {
+    if (signal?.aborted) {
+      return
+    }
+    const { agentId, agentType, chunk } = action
+
+    if (handleStreamChunk && chunk) {
+      await handleStreamChunk({
+        type: 'subagent_chunk',
+        agentId,
+        agentType,
+        chunk,
+      })
     }
   }
 
@@ -338,25 +358,8 @@ async function runOnce({
       await handleStreamChunk(chunk)
     }
   }
-  const onSubagentResponseChunk = async (
-    action: ServerAction<'subagent-response-chunk'>,
-  ) => {
-    if (signal?.aborted) {
-      return
-    }
-    const { agentId, agentType, chunk } = action
 
-    if (handleStreamChunk && chunk) {
-      await handleStreamChunk({
-        type: 'subagent_chunk',
-        agentId,
-        agentType,
-        chunk,
-      })
-    }
-  }
-
-  const agentRuntimeImpl = getAgentRuntimeImpl({
+  const agentRuntimeImpl = await getAgentRuntimeImpl({
     logger,
     apiKey,
     handleStepsLogChunk: () => {
@@ -521,7 +524,8 @@ async function runOnce({
       error && typeof error === 'object' && 'responseBody' in error
         ? (error as { responseBody: unknown }).responseBody
         : undefined
-    const { errorCode, message: parsedMessage } = parseApiErrorResponseBody(responseBody)
+    const { errorCode, message: parsedMessage } =
+      parseApiErrorResponseBody(responseBody)
     if (parsedMessage) {
       errorMessage = parsedMessage
     }

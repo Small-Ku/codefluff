@@ -3,7 +3,7 @@ import React from 'react'
 import { BottomBanner } from './bottom-banner'
 import { useSubscriptionQuery } from '../hooks/use-subscription-query'
 import { useTheme } from '../hooks/use-theme'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { useChatStore } from '../state/chat-store'
 import { getChatGptOAuthStatus } from '../utils/chatgpt-oauth'
 
@@ -16,13 +16,7 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => {
 }
 
 /** Keyboard shortcut item */
-const Shortcut = ({
-  keys,
-  action,
-}: {
-  keys: string
-  action: string
-}) => {
+const Shortcut = ({ keys, action }: { keys: string; action: string }) => {
   const theme = useTheme()
   return (
     <box style={{ flexDirection: 'row', gap: 1 }}>
@@ -49,15 +43,19 @@ export const HelpBanner = () => {
   }, [setInputMode])
 
   return (
-    <BottomBanner
-      borderColorKey="info"
-      onClose={() => setInputMode('default')}
-    >
+    <BottomBanner borderColorKey="info" onClose={() => setInputMode('default')}>
       <box style={{ flexDirection: 'column', gap: 1, flexGrow: 1 }}>
         {/* Shortcuts Section */}
         <box style={{ flexDirection: 'column', gap: 0 }}>
           <SectionHeader>Shortcuts</SectionHeader>
-          <box style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 2, paddingLeft: 2 }}>
+          <box
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              columnGap: 2,
+              paddingLeft: 2,
+            }}
+          >
             <Shortcut keys="Ctrl+C / Esc" action="stop" />
             <Shortcut keys="Ctrl+J / Opt+Enter" action="newline" />
             <Shortcut keys="↑↓" action="history" />
@@ -68,7 +66,14 @@ export const HelpBanner = () => {
         {/* Features Section */}
         <box style={{ flexDirection: 'column', gap: 0 }}>
           <SectionHeader>Features</SectionHeader>
-          <box style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 2, paddingLeft: 2 }}>
+          <box
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              columnGap: 2,
+              paddingLeft: 2,
+            }}
+          >
             <Shortcut keys="/" action="commands" />
             <Shortcut keys="@files" action="mention" />
             <Shortcut keys="@agents" action="use agent" />
@@ -90,6 +95,12 @@ export const HelpBanner = () => {
                 Try workflow: /interview → /plan → implement → /review
               </text>
             )}
+            {IS_CODEFLUFF && (
+              <text style={{ fg: theme.muted }}>
+                Use your own API keys — configure them in settings or via
+                environment variables
+              </text>
+            )}
             <text style={{ fg: theme.muted }}>
               Use @ to reference agents to spawn or files to read
             </text>
@@ -99,12 +110,14 @@ export const HelpBanner = () => {
           </box>
         </box>
 
-        {/* Credits Section — hidden in Freebuff */}
-        {!IS_FREEBUFF && (
+        {/* Credits Section — hidden in Freebuff and Codefluff */}
+        {!IS_FREEBUFF && !IS_CODEFLUFF && (
           <box style={{ flexDirection: 'column', gap: 0 }}>
             <SectionHeader>Credits</SectionHeader>
             <box style={{ flexDirection: 'column', paddingLeft: 2 }}>
-              <box style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 1 }}>
+              <box
+                style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 1 }}
+              >
                 <text style={{ fg: theme.foreground }}>1 credit = 1 cent</text>
                 <text style={{ fg: theme.muted }}>·</text>
                 <text style={{ fg: theme.foreground }}>/subscribe</text>

@@ -7,10 +7,7 @@
  * - Binary build configuration
  */
 
-import type {
-  BaseEnv,
-  ClientEnv,
-} from '@codebuff/common/types/contracts/env'
+import type { BaseEnv, ClientEnv } from '@codebuff/common/types/contracts/env'
 
 /**
  * CLI-specific env vars for terminal/IDE detection and editor preferences.
@@ -74,6 +71,7 @@ export type CliEnv = BaseEnv & {
   CODEBUFF_SCROLL_MULTIPLIER?: string
   CODEBUFF_PERF_TEST?: string
   FREEBUFF_MODE?: string
+  CODEFLUFF_MODE?: string
 }
 
 /**

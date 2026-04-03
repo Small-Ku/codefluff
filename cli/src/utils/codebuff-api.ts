@@ -1,4 +1,4 @@
-import { WEBSITE_URL } from '@codebuff/sdk'
+import { getWebsiteUrl } from '@codebuff/sdk'
 
 import type {
   PublishAgentsResponse,
@@ -102,7 +102,7 @@ const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
  * Configuration for creating a Codebuff API client
  */
 export interface CodebuffApiClientConfig {
-  /** Base URL for API requests (defaults to WEBSITE_URL from SDK) */
+  /** Base URL for API requests (defaults to getWebsiteUrl() from SDK) */
   baseUrl?: string
   /** Auth token for Bearer authentication */
   authToken?: string
@@ -260,7 +260,7 @@ export function createCodebuffApiClient(
   config: CodebuffApiClientConfig = {},
 ): CodebuffApiClient {
   const {
-    baseUrl = WEBSITE_URL,
+    baseUrl = getWebsiteUrl(),
     authToken,
     fetch: fetchFn = fetch,
     defaultTimeoutMs = 30000,

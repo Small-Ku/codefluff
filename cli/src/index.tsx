@@ -27,13 +27,16 @@ import { trackEvent } from './utils/analytics'
 import { getAuthToken, getAuthTokenDetails } from './utils/auth'
 import { resetCodebuffClient } from './utils/codebuff-client'
 import { setApiClientAuthToken } from './utils/codebuff-api'
-import { IS_FREEBUFF } from './utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from './utils/constants'
 import { getCliEnv } from './utils/env'
 import { initializeAgentRegistry } from './utils/local-agent-registry'
 import { clearLogFile, logger } from './utils/logger'
 import { shouldShowProjectPicker } from './utils/project-picker'
 import { saveRecentProject } from './utils/recent-projects'
-import { installProcessCleanupHandlers, TERMINAL_RESET_SEQUENCES } from './utils/renderer-cleanup'
+import {
+  installProcessCleanupHandlers,
+  TERMINAL_RESET_SEQUENCES,
+} from './utils/renderer-cleanup'
 import { initializeSkillRegistry } from './utils/skill-registry'
 import { detectTerminalTheme } from './utils/terminal-color-detection'
 import { setOscDetectedTheme } from './utils/theme-system'
@@ -66,7 +69,7 @@ function loadPackageVersion(): string {
 // Without this, refetchInterval won't work because TanStack Query thinks the app is "unfocused"
 focusManager.setEventListener(() => {
   // No-op: no event listeners in CLI environment (no window focus/visibility events)
-  return () => { }
+  return () => {}
 })
 focusManager.setFocused(true)
 
@@ -115,8 +118,36 @@ function parseArgs(): ParsedArgs {
         '--cwd <directory>',
         'Set the working directory (default: current directory)',
       )
-      .addHelpText('after', '\nCommands:\n  login                          Log in to your account')
+      .addHelpText(
+        'after',
+        '\nCommands:\n  login                          Log in to your account',
+      )
       .helpOption('-h, --help', 'Show this help message')
+      .parse(process.argv)
+  } else if (IS_CODEFLUFF) {
+    // Codefluff: local BYOK variant with mode support
+    program
+      .name('codefluff')
+      .description('Codefluff - Local BYOK coding agent')
+      .version(loadPackageVersion(), '-v, --version', 'Print the CLI version')
+      .option(
+        '--continue [conversation-id]',
+        'Continue from a previous conversation (optionally specify a conversation id)',
+      )
+      .option(
+        '--cwd <directory>',
+        'Set the working directory (default: current directory)',
+      )
+      .option('--free', 'Start in FREE mode')
+      .option('--max', 'Start in MAX mode')
+      .option('--plan', 'Start in PLAN mode')
+      .option(
+        '--mode <mode>',
+        'Start in a specific mode (free, normal, max, experimental, ask)',
+      )
+      .helpOption('-h, --help', 'Show this help message')
+      .argument('[prompt...]', 'Initial prompt to send to the agent')
+      .allowExcessArguments(true)
       .parse(process.argv)
   } else {
     // Codebuff: full CLI with all options
@@ -128,7 +159,10 @@ function parseArgs(): ParsedArgs {
         '--agent <agent-id>',
         'Run a specific agent id (skips loading local .agents overrides)',
       )
-      .option('--clear-logs', 'Remove any existing CLI log files before starting')
+      .option(
+        '--clear-logs',
+        'Remove any existing CLI log files before starting',
+      )
       .option(
         '--continue [conversation-id]',
         'Continue from a previous conversation (optionally specify a conversation id)',
@@ -141,7 +175,10 @@ function parseArgs(): ParsedArgs {
       .option('--lite', 'Start in FREE mode (deprecated, use --free)')
       .option('--max', 'Start in MAX mode')
       .option('--plan', 'Start in PLAN mode')
-      .addHelpText('after', '\nCommands:\n  login                          Log in to your account\n  publish                        Publish agents to the registry')
+      .addHelpText(
+        'after',
+        '\nCommands:\n  login                          Log in to your account\n  publish                        Publish agents to the registry',
+      )
       .helpOption('-h, --help', 'Show this help message')
       .argument('[prompt...]', 'Initial prompt to send to the agent')
       .allowExcessArguments(true)
@@ -158,6 +195,23 @@ function parseArgs(): ParsedArgs {
   let initialMode: AgentMode | undefined
   if (IS_FREEBUFF) {
     initialMode = 'FREE'
+  } else if (IS_CODEFLUFF) {
+    if (options.mode) {
+      const modeMap: Record<string, AgentMode> = {
+        free: 'FREE',
+        normal: 'DEFAULT',
+        max: 'MAX',
+        experimental: 'DEFAULT',
+        ask: 'DEFAULT',
+      }
+      initialMode = modeMap[options.mode.toLowerCase()] ?? 'DEFAULT'
+    } else if (options.free) {
+      initialMode = 'FREE'
+    } else if (options.max) {
+      initialMode = 'MAX'
+    } else if (options.plan) {
+      initialMode = 'PLAN'
+    }
   } else {
     if (options.free || options.lite) initialMode = 'FREE'
     if (options.max) initialMode = 'MAX'
@@ -209,12 +263,21 @@ async function main(): Promise<void> {
 
   await initializeApp({ cwd })
 
-  // Set the auth token for the API client
-  setApiClientAuthToken(getAuthToken())
+  // Codefluff skips login - it uses local BYOK keys
+  if (!IS_CODEFLUFF) {
+    // Set the auth token for the API client
+    setApiClientAuthToken(getAuthToken())
 
-  // Handle login command before rendering the app
-  if (isLoginCommand) {
-    await runPlainLogin()
+    // Handle login command before rendering the app
+    if (isLoginCommand) {
+      await runPlainLogin()
+      return
+    }
+  } else if (isLoginCommand) {
+    console.log(
+      'Codefluff uses local API keys from ~/.config/codefluff/config.json',
+    )
+    console.log('No login required.')
     return
   }
 
@@ -234,6 +297,7 @@ async function main(): Promise<void> {
     continueChat,
     initialMode: initialMode ?? 'DEFAULT',
     isFreeBuff: IS_FREEBUFF,
+    isCodefluff: IS_CODEFLUFF,
   })
 
   // Initialize agent registry (loads user agents via SDK).
@@ -274,6 +338,15 @@ async function main(): Promise<void> {
     clearLogFile()
   }
 
+  // Start mock server for codefluff mode before React app renders
+  // This ensures all React Query hooks can hit the mock server on mount
+  if (IS_CODEFLUFF) {
+    const { startCodefluffMockServer, setMockServerUrl } =
+      await import('@codebuff/sdk')
+    const handle = await startCodefluffMockServer()
+    setMockServerUrl(handle.url)
+  }
+
   const queryClient = createQueryClient()
 
   const AppWithAsyncAuth = () => {
@@ -287,6 +360,13 @@ async function main(): Promise<void> {
       React.useState(showProjectPicker)
 
     React.useEffect(() => {
+      // Codefluff doesn't require auth - it uses local BYOK keys
+      if (IS_CODEFLUFF) {
+        setRequireAuth(false)
+        setHasInvalidCredentials(false)
+        return
+      }
+
       const apiKey = getAuthTokenDetails().token ?? ''
 
       if (!apiKey) {
@@ -401,6 +481,7 @@ async function main(): Promise<void> {
   process.removeListener('uncaughtException', earlyFatalHandler)
   process.removeListener('unhandledRejection', earlyFatalHandler)
   installProcessCleanupHandlers(renderer)
+
   createRoot(renderer).render(
     <QueryClientProvider client={queryClient}>
       <AppWithAsyncAuth />
@@ -408,4 +489,7 @@ async function main(): Promise<void> {
   )
 }
 
-void main()
+main().catch((error) => {
+  console.error('Fatal error in main():', error)
+  process.exit(1)
+})

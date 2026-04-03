@@ -57,3 +57,15 @@ export const getClaudeOAuthTokenFromEnv = (): string | undefined => {
 export const getChatGptOAuthTokenFromEnv = (): string | undefined => {
   return process.env[CHATGPT_OAUTH_TOKEN_ENV_VAR]
 }
+
+export const getCodefluffByokKeysFromEnv = ():
+  | Record<string, string>
+  | undefined => {
+  const raw = process.env.CODEFLUFF_BYOK_KEYS
+  if (!raw) return undefined
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}

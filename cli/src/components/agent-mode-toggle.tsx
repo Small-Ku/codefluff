@@ -4,7 +4,7 @@ import { Button } from './button'
 import { SegmentedControl } from './segmented-control'
 import { useTheme } from '../hooks/use-theme'
 import { useChatStore } from '../state/chat-store'
-import { AGENT_MODES, IS_FREEBUFF } from '../utils/constants'
+import { AGENT_MODES, IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { BORDER_CHARS } from '../utils/ui-constants'
 
 import type { Segment } from './segmented-control'

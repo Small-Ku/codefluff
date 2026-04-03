@@ -3,7 +3,7 @@ import React from 'react'
 import stringWidth from 'string-width'
 
 import { useTheme } from '../hooks/use-theme'
-import { IS_FREEBUFF } from '../utils/constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 
 interface ModeDividerProps {
   mode: string

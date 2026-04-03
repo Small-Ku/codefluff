@@ -11,11 +11,15 @@
 
 import { closeSync, constants, openSync, writeSync } from 'fs'
 
-import { IS_FREEBUFF } from './constants'
+import { IS_FREEBUFF, IS_CODEFLUFF } from './constants'
 import { getCliEnv } from './env'
 
 const MAX_TITLE_LENGTH = 60
-const TITLE_PREFIX = IS_FREEBUFF ? 'Freebuff: ' : 'Codebuff: '
+const TITLE_PREFIX = IS_CODEFLUFF
+  ? 'Codefluff: '
+  : IS_FREEBUFF
+    ? 'Freebuff: '
+    : 'Codebuff: '
 const OSC_TERMINATOR = '\x07' // BEL
 
 function isInTmux(env: ReturnType<typeof getCliEnv>): boolean {
@@ -31,7 +35,10 @@ function isInScreen(env: ReturnType<typeof getCliEnv>): boolean {
 /**
  * Build the OSC title sequence with tmux/screen passthrough if needed
  */
-function buildTitleSequence(title: string, env: ReturnType<typeof getCliEnv>): string {
+function buildTitleSequence(
+  title: string,
+  env: ReturnType<typeof getCliEnv>,
+): string {
   const osc = `\x1b]0;${title}${OSC_TERMINATOR}`
 
   // tmux passthrough: wrap in DCS and double ESC characters

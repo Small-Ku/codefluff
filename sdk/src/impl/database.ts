@@ -3,7 +3,7 @@ import { DynamicAgentTemplateSchema } from '@codebuff/common/types/dynamic-agent
 import { getErrorObject } from '@codebuff/common/util/error'
 import z from 'zod/v4'
 
-import { WEBSITE_URL } from '../constants'
+import { getWebsiteUrl } from '../constants'
 import {
   createAuthError,
   createNetworkError,
@@ -33,10 +33,7 @@ type CachedUserInfo = Partial<
   NonNullable<Awaited<GetUserInfoFromApiKeyOutput<UserColumn>>>
 >
 
-const userInfoCache: Record<
-  string,
-  CachedUserInfo | null
-> = {}
+const userInfoCache: Record<string, CachedUserInfo | null> = {}
 
 const agentsResponseSchema = z.object({
   version: z.string(),
@@ -82,7 +79,11 @@ async function fetchWithRetry(
 
       if (attempt < MAX_RETRIES_PER_MESSAGE) {
         logger?.warn(
-          { error: getErrorObject(lastError), attempt: attempt + 1, url: String(url) },
+          {
+            error: getErrorObject(lastError),
+            attempt: attempt + 1,
+            url: String(url),
+          },
           `Network error, retrying in ${backoffDelay}ms`,
         )
         await new Promise((resolve) => setTimeout(resolve, backoffDelay))
@@ -106,11 +107,11 @@ export async function getUserInfoFromApiKey<T extends UserColumn>(
   }
   if (
     cached &&
-    fields.every((field) =>
-      Object.prototype.hasOwnProperty.call(cached, field),
-    )
+    fields.every((field) => Object.prototype.hasOwnProperty.call(cached, field))
   ) {
-    return Object.fromEntries(fields.map((field) => [field, cached[field]])) as {
+    return Object.fromEntries(
+      fields.map((field) => [field, cached[field]]),
+    ) as {
       [K in T]: CachedUserInfo[K]
     } as Awaited<GetUserInfoFromApiKeyOutput<T>>
   }
@@ -124,7 +125,7 @@ export async function getUserInfoFromApiKey<T extends UserColumn>(
   const urlParams = new URLSearchParams({
     fields: fieldsToFetch.join(','),
   })
-  const url = new URL(`/api/v1/me?${urlParams}`, WEBSITE_URL)
+  const url = new URL(`/api/v1/me?${urlParams}`, getWebsiteUrl())
 
   let response: Response
   try {
@@ -147,7 +148,11 @@ export async function getUserInfoFromApiKey<T extends UserColumn>(
     throw createNetworkError('Network request failed')
   }
 
-  if (response.status === 401 || response.status === 403 || response.status === 404) {
+  if (
+    response.status === 401 ||
+    response.status === 403 ||
+    response.status === 404
+  ) {
     logger.error(
       { apiKey, fields, status: response.status },
       'getUserInfoFromApiKey authentication failed',
@@ -220,7 +225,7 @@ export async function fetchAgentFromDatabase(
 
   const url = new URL(
     `/api/v1/agents/${publisherId}/${agentId}/${version ? version : 'latest'}`,
-    WEBSITE_URL,
+    getWebsiteUrl(),
   )
 
   try {
@@ -304,7 +309,7 @@ export async function startAgentRun(
 ): ReturnType<StartAgentRunFn> {
   const { apiKey, agentId, ancestorRunIds, logger } = params
 
-  const url = new URL(`/api/v1/agent-runs`, WEBSITE_URL)
+  const url = new URL(`/api/v1/agent-runs`, getWebsiteUrl())
 
   try {
     const response = await fetchWithRetry(
@@ -358,7 +363,7 @@ export async function finishAgentRun(
     logger,
   } = params
 
-  const url = new URL(`/api/v1/agent-runs`, WEBSITE_URL)
+  const url = new URL(`/api/v1/agent-runs`, getWebsiteUrl())
 
   try {
     const response = await fetchWithRetry(
@@ -408,7 +413,7 @@ export async function addAgentStep(
     logger,
   } = params
 
-  const url = new URL(`/api/v1/agent-runs/${agentRunId}/steps`, WEBSITE_URL)
+  const url = new URL(`/api/v1/agent-runs/${agentRunId}/steps`, getWebsiteUrl())
 
   try {
     const response = await fetchWithRetry(

@@ -47,10 +47,7 @@ export type {
   LoadLocalAgentsResult,
   AgentValidationError,
 } from './agents/load-agents'
-export type {
-  MCPFileConfig,
-  LoadedMCPConfig,
-} from './agents/load-mcp-config'
+export type { MCPFileConfig, LoadedMCPConfig } from './agents/load-mcp-config'
 
 export { validateAgents } from './validate-agents'
 export type { ValidationResult, ValidateAgentsOptions } from './validate-agents'
@@ -95,3 +92,7 @@ export {
   resetChatGptOAuthRateLimit,
   resetClaudeOAuthRateLimit,
 } from './impl/model-provider'
+
+// Codefluff mock server
+export { startCodefluffMockServer } from './impl/codefluff-mock-server'
+export type { MockServerHandle } from './impl/codefluff-mock-server'

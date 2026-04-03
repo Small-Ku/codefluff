@@ -1,11 +1,10 @@
 import { CHATGPT_OAUTH_ENABLED } from '@codebuff/common/constants/chatgpt-oauth'
 import { CLAUDE_OAUTH_ENABLED } from '@codebuff/common/constants/claude-oauth'
-import { AGENT_MODES, IS_FREEBUFF } from '../utils/constants'
+import { AGENT_MODES, IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { getChatGptOAuthStatus } from '../utils/chatgpt-oauth'
 import { CREDITS_REFERRAL_BONUS } from '@codebuff/common/old-constants'
 
 import type { SkillsMap } from '@codebuff/common/types/skill'
-
 
 export interface SlashCommand {
   id: string
@@ -25,13 +24,14 @@ export interface SlashCommand {
 }
 
 // Generate mode commands from the AGENT_MODES constant (excluded in Freebuff)
-const MODE_COMMANDS: SlashCommand[] = IS_FREEBUFF
-  ? []
-  : AGENT_MODES.map((mode) => ({
-      id: `mode:${mode.toLowerCase()}`,
-      label: `mode:${mode.toLowerCase()}`,
-      description: `Switch to ${mode} mode`,
-    }))
+const MODE_COMMANDS: SlashCommand[] =
+  IS_FREEBUFF || IS_CODEFLUFF
+    ? []
+    : AGENT_MODES.map((mode) => ({
+        id: `mode:${mode.toLowerCase()}`,
+        label: `mode:${mode.toLowerCase()}`,
+        description: `Switch to ${mode} mode`,
+      }))
 
 const FREEBUFF_REMOVED_COMMAND_IDS = new Set([
   'connect:claude',
@@ -46,9 +46,36 @@ const FREEBUFF_REMOVED_COMMAND_IDS = new Set([
   'init',
 ])
 
-const FREEBUFF_ONLY_COMMAND_IDS = new Set([
+const CODEFLUFF_REMOVED_COMMAND_IDS = new Set([
+  'connect:claude',
+  'connect',
+  'ads:enable',
+  'ads:disable',
+  'refer-friends',
+  'usage',
+  'subscribe',
+  'agent:gpt-5',
+  'image',
+  'publish',
+  'init',
+  'review',
+  'plan',
+  'history',
+  'feedback',
+  'logout',
+  'login',
+])
+
+const FREEBUFF_ONLY_COMMAND_IDS = new Set(['connect', 'plan'])
+
+const CODEFLUFF_ONLY_COMMAND_IDS = new Set([
   'connect',
   'plan',
+  'review',
+  'interview',
+  'history',
+  'feedback',
+  'logout',
 ])
 
 const ALL_SLASH_COMMANDS: SlashCommand[] = [
@@ -127,7 +154,8 @@ const ALL_SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'interview',
     label: 'interview',
-    description: 'AI asks a series of questions to flesh out request into a spec',
+    description:
+      'AI asks a series of questions to flesh out request into a spec',
   },
   {
     id: 'plan',
@@ -167,7 +195,9 @@ const ALL_SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'feedback',
     label: 'feedback',
-    description: IS_FREEBUFF ? 'Share general feedback about Freebuff' : 'Share general feedback about Codebuff',
+    description: IS_FREEBUFF
+      ? 'Share general feedback about Freebuff'
+      : 'Share general feedback about Codebuff',
   },
   {
     id: 'bash',
@@ -212,9 +242,11 @@ export const SLASH_COMMANDS = IS_FREEBUFF
   ? ALL_SLASH_COMMANDS.filter(
       (cmd) => !FREEBUFF_REMOVED_COMMAND_IDS.has(cmd.id),
     )
-  : ALL_SLASH_COMMANDS.filter(
-      (cmd) => !FREEBUFF_ONLY_COMMAND_IDS.has(cmd.id),
-    )
+  : IS_CODEFLUFF
+    ? ALL_SLASH_COMMANDS.filter(
+        (cmd) => !CODEFLUFF_REMOVED_COMMAND_IDS.has(cmd.id),
+      )
+    : ALL_SLASH_COMMANDS.filter((cmd) => !FREEBUFF_ONLY_COMMAND_IDS.has(cmd.id))
 
 export const SLASHLESS_COMMAND_IDS = new Set(
   SLASH_COMMANDS.filter((cmd) => cmd.implicitCommand).map((cmd) =>

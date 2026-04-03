@@ -162,6 +162,10 @@ async function main() {
       `"${targetInfo.platform}-${targetInfo.arch}"`,
     ],
     ['process.env.FREEBUFF_MODE', `"${process.env.FREEBUFF_MODE ?? 'false'}"`],
+    [
+      'process.env.CODEFLUFF_MODE',
+      `"${process.env.CODEFLUFF_MODE ?? 'false'}"`,
+    ],
     ...nextPublicEnvVars,
   ]
 

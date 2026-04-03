@@ -8,6 +8,12 @@ import { getCliEnv } from './env'
  */
 export const IS_FREEBUFF = getCliEnv().FREEBUFF_MODE === 'true'
 
+/**
+ * Codefluff build-time flag. When true, the CLI is built as Codefluff (local BYOK variant).
+ * Injected via --define at compile time; enables dead-code elimination by the bundler.
+ */
+export const IS_CODEFLUFF = getCliEnv().CODEFLUFF_MODE === 'true'
+
 // Agent IDs that should not be rendered in the CLI UI
 export const HIDDEN_AGENT_IDS = ['codebuff/context-pruner'] as const
 
@@ -142,4 +148,7 @@ export const AGENT_MODE_TO_COST_MODE = {
   FREE: 'free',
   MAX: 'max',
   PLAN: 'normal',
-} as const satisfies Record<AgentMode, 'free' | 'normal' | 'max' | 'experimental' | 'ask'>
+} as const satisfies Record<
+  AgentMode,
+  'free' | 'normal' | 'max' | 'experimental' | 'ask'
+>
