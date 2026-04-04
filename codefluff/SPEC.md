@@ -1,5 +1,7 @@
 # Codefluff Spec
 
+> **Codefluff is a personal fork of [Codebuff](https://codebuff.com).**
+
 Codefluff is a local BYOK (Bring Your Own Key) variant of the Codebuff CLI, distributed as a separate npm package (`codefluff`). It reuses the entire `cli/` package but builds with a compile-time flag that routes all model calls directly to providers using user-configured API keys, with a configurable M:N mapping from providers/models to modes/operations.
 
 ---
@@ -31,7 +33,12 @@ This enables dead-code elimination in production builds.
     "openrouter": "${OPENROUTER_API_KEY}",
     "anthropic": "${ANTHROPIC_API_KEY}",
     "openai": "${OPENAI_API_KEY}",
-    "google": "${GOOGLE_API_KEY}"
+    "google": "${GOOGLE_API_KEY}",
+    "your-own-provider": {
+      "key": "sk-your-own-key",
+      "baseURL": "https://the.provider.com/v1",
+      "style": "openai"
+    }
   },
   "mapping": {
     "free": {
@@ -45,7 +52,7 @@ This enables dead-code elimination in production builds.
       "check-new-files": "anthropic/claude-sonnet-4"
     },
     "max": {
-      "agent": "anthropic/claude-sonnet-4.5",
+      "agent": "your-own-provider/your-model-name",
       "file-requests": "anthropic/claude-sonnet-4",
       "check-new-files": "anthropic/claude-sonnet-4"
     },

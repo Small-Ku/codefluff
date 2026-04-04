@@ -2,6 +2,7 @@
 
 Codebuff is an advanced coding agent with a composable agent framework. It also includes:
 - freebuff, the free coding agent
+- codefluff, a personal BYOK (Bring Your Own Key) fork
 
 ## Goal
 
@@ -24,6 +25,7 @@ Make an efficient learning agent that can do anything.
 - `agents/` — main agents shipped with codebuff
 - `.agents/` — local agent templates (prompt + programmatic agents)
 - `freebuff/` - a free coding agent built from configuring codebuff cli
+- `codefluff/` - a personal BYOK (Bring Your Own Key) fork with direct provider routing
 
 ## Conventions
 

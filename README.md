@@ -1,14 +1,21 @@
 # Codebuff & Freebuff
 
-**[Codebuff](https://codebuff.com)** is an open-source AI coding assistant that edits your codebase through natural language instructions. **[Freebuff](https://www.npmjs.com/package/freebuff)** is the free, ad-supported version — no subscription, no credits, no configuration.
+**[Codebuff](https://codebuff.com)** is an open-source AI coding assistant that edits your codebase through natural language instructions.
 
-Instead of using one model for everything, Codebuff coordinates specialized agents that work together to understand your project and make precise changes.
+**[Freebuff](https://www.npmjs.com/package/freebuff)** is the free, ad-supported variant — no subscription, no credits, no configuration.
 
 <div align="center">
   <img src="./assets/codebuff-vs-claude-code.png" alt="Codebuff vs Claude Code" width="400">
 </div>
 
 Codebuff beats Claude Code at 61% vs 53% on [our evals](evals/README.md) across 175+ coding tasks over multiple open-source repos that simulate real-world tasks.
+
+
+# Codefluff
+
+**Codefluff** is a personal fork for local BYOK (Bring Your Own Key) — your API keys, your models, complete independence. No server dependency, no ads, no login.
+
+Instead of using one model for everything, Codebuff coordinates specialized agents that work together to understand your project and make precise changes.
 
 
 ## How it works
@@ -161,6 +168,18 @@ freebuff
 
 Freebuff is ad-supported and uses models optimized for fast, high-quality assistance. It includes built-in web research, browser use, and more. Learn more in the [Freebuff README](./freebuff/README.md).
 
+## Codefluff: The local BYOK coding agent
+
+Want complete control? Codefluff is a personal fork of Codebuff for users who bring their own API keys. No subscriptions, no ads, no server dependency for inference.
+
+```bash
+npm install -g codefluff
+cd my-project
+codefluff
+```
+
+Codefluff supports **all 5 cost modes** (`free`, `normal`, `max`, `experimental`, `ask`) with fully configurable model mappings per provider and operation. Learn more in the [Codefluff README](./codefluff/README.md).
+
 ## Why choose Codebuff
 
 **Custom workflows**: TypeScript generators let you mix AI generation with programmatic control. Agents can spawn subagents, branch on conditions, and run multi-step processes.
@@ -231,6 +250,8 @@ Some ways you can help:
 **SDK**: `npm install @codebuff/sdk`
 
 **Freebuff (free)**: `npm install -g freebuff`
+
+**Codefluff (BYOK, personal fork)**: Not published yet.
 
 ### Resources
 
