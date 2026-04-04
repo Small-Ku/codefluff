@@ -129,10 +129,16 @@ Unlike Freebuff (FREE mode only), Codefluff supports ALL cost modes:
 - No login required (unless user opts into optional chat history sync)
 - No credits/subscription UI
 - No ads
-- No `/history` by default (local-only history available)
 - No `/feedback`, `/login`, `/logout`, `/connect:claude`, `/connect:chatgpt`
 - No `/subscribe`, `/usage`, `/credits`, `/buy-credits`
-- No `/ads:*`, `/refer-friends`, `/publish`, `/review`, `/agent:gpt-5`
+- No `/ads:*`, `/refer-friends`, `/publish`, `/agent:gpt-5`
+
+### Intentionally Kept (Diverges from Original Strip List)
+
+| Command | Rationale |
+|---------|-----------|
+| `/history` | Local-only history browsing — no server dependency |
+| `/review` | Builds review prompts from local workspace — no server dependency |
 
 ---
 
@@ -147,6 +153,8 @@ Unlike Freebuff (FREE mode only), Codefluff supports ALL cost modes:
 | `/exit` (+ `/quit`, `/q`)                 | Quit                                  |
 | `/mode:*`                                 | ALL mode commands available           |
 | `/skill:*`                                | Skill commands                        |
+| `/history`                                | Local-only history browsing           |
+| `/review`                                 | Local workspace review                |
 
 ---
 

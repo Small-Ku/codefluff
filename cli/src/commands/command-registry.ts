@@ -183,33 +183,26 @@ const FREEBUFF_REMOVED_COMMANDS = new Set([
 ])
 
 const CODEFLUFF_REMOVED_COMMANDS = new Set([
+  // OAuth/auth — not applicable for BYOK
+  'connect:claude',
+  'connect',
+  'login',
+  'logout',
+  // Monetization — no credit system in BYOK
   'ads:enable',
   'ads:disable',
   'refer-friends',
   'usage',
   'subscribe',
-  'image',
-  'publish',
+  // Paid agent — codefluff has its own model mapping
   'gpt-5-agent',
-  'connect:claude',
-  'connect',
-  'login',
-  'logout',
-  'history',
+  // Feedback points to original codebuff flow
   'feedback',
+  // Requires login — codefluff has no auth
+  'publish',
 ])
 
 const FREEBUFF_ONLY_COMMANDS = new Set(['connect', 'plan'])
-
-const CODEFLUFF_ONLY_COMMANDS = new Set([
-  'connect',
-  'plan',
-  'review',
-  'interview',
-  'history',
-  'feedback',
-  'logout',
-])
 
 const ALL_COMMANDS: CommandDefinition[] = [
   defineCommand({

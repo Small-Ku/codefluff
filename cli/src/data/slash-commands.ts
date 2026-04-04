@@ -25,7 +25,7 @@ export interface SlashCommand {
 
 // Generate mode commands from the AGENT_MODES constant (excluded in Freebuff)
 const MODE_COMMANDS: SlashCommand[] =
-  IS_FREEBUFF || IS_CODEFLUFF
+  IS_FREEBUFF
     ? []
     : AGENT_MODES.map((mode) => ({
         id: `mode:${mode.toLowerCase()}`,
@@ -47,36 +47,26 @@ const FREEBUFF_REMOVED_COMMAND_IDS = new Set([
 ])
 
 const CODEFLUFF_REMOVED_COMMAND_IDS = new Set([
+  // OAuth/auth — not applicable for BYOK
   'connect:claude',
   'connect',
+  'login',
+  'logout',
+  // Requires login — codefluff has no auth
+  'publish',
+  // Monetization — no credit system in BYOK
   'ads:enable',
   'ads:disable',
   'refer-friends',
   'usage',
   'subscribe',
+  // Paid agent — codefluff has its own model mapping
   'agent:gpt-5',
-  'image',
-  'publish',
-  'init',
-  'review',
-  'plan',
-  'history',
+  // Feedback points to original codebuff flow
   'feedback',
-  'logout',
-  'login',
 ])
 
 const FREEBUFF_ONLY_COMMAND_IDS = new Set(['connect', 'plan'])
-
-const CODEFLUFF_ONLY_COMMAND_IDS = new Set([
-  'connect',
-  'plan',
-  'review',
-  'interview',
-  'history',
-  'feedback',
-  'logout',
-])
 
 const ALL_SLASH_COMMANDS: SlashCommand[] = [
   {
