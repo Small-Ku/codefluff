@@ -48,8 +48,6 @@ export const handleWebSearch = (async (params: {
     userInputId,
 
     fetch,
-    clientEnv,
-    ciEnv,
   } = params
   const { query, depth } = toolCall.input
 
@@ -163,6 +161,7 @@ export const handleWebSearch = (async (params: {
     }
 
     // Default — Codebuff web API
+    const { clientEnv, ciEnv } = params
     webApi = await callWebSearchAPI({
       query,
       depth,

@@ -47,7 +47,12 @@ export function resolveModelForModeSafe(
 ): Model {
   try {
     return resolveModelForMode(costMode, operation)
-  } catch {
-    return getModelForMode(costMode, operation as Operation)
+  } catch (error) {
+    // Rethrow instead of falling back to Codebuff defaults —
+    // Codebuff's getModelForMode returns openrouter models that won't work
+    // without a Codebuff API key, which codefluff doesn't have.
+    throw new Error(
+      `Codefluff model resolution failed for mode "${costMode}", operation "${operation}": ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }

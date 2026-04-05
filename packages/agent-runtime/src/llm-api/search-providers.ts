@@ -1,6 +1,5 @@
-import { existsSync, readFileSync } from 'fs'
-import { join } from 'path'
 import { searchWeb } from './linkup-api'
+import { getSearchProviders } from '@codebuff/common/config/codefluff-config'
 
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 
@@ -21,54 +20,6 @@ export interface SearchProvider {
     logger: Logger
     fetch: typeof globalThis.fetch
   }): Promise<SearchProviderResult>
-}
-
-// ============================================================================
-// Inline config loader — reads ~/.config/codefluff/config.json searchProviders
-// (Can't import from sdk/model-provider due to package boundary)
-// ============================================================================
-
-interface SearchProviderConfig {
-  providers: Record<string, string>
-}
-
-function interpolateEnvVars(value: string): string {
-  return value.replace(/\$\{([^}]+)\}/g, (_, envVar: string) => {
-    const envValue = process.env[envVar]
-    if (!envValue) {
-      throw new Error(
-        `Environment variable ${envVar} is referenced in searchProviders config but not set`,
-      )
-    }
-    return envValue
-  })
-}
-
-function loadSearchProviderConfig(): SearchProviderConfig {
-  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? ''
-  if (!homeDir) return { providers: {} }
-
-  const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
-  if (!existsSync(configPath)) return { providers: {} }
-
-  try {
-    const raw = readFileSync(configPath, 'utf8')
-    const parsed = JSON.parse(raw)
-    const searchProviders = parsed.searchProviders
-    if (!searchProviders || typeof searchProviders !== 'object') {
-      return { providers: {} }
-    }
-
-    const providers: Record<string, string> = {}
-    for (const [key, value] of Object.entries(searchProviders)) {
-      if (typeof value === 'string') {
-        providers[key] = interpolateEnvVars(value)
-      }
-    }
-    return { providers }
-  } catch {
-    return { providers: {} }
-  }
 }
 
 // ============================================================================
@@ -359,7 +310,7 @@ function createSearXNGProvider(instanceUrl: string): SearchProvider {
 // The value in config is ignored; presence of the key enables it
 // ============================================================================
 
-const MAX_SEARX_SPACE_ATTEMPTS = 2
+const MAX_SEARX_SPACE_ATTEMPTS = 10
 
 function createSearXSpaceProvider(): SearchProvider {
   return {
@@ -428,8 +379,7 @@ function tryCreateProvider(
  * Used by the web-search handler to implement fallback chain.
  */
 export function getConfiguredSearchProviders(): SearchProvider[] {
-  const config = loadSearchProviderConfig()
-  const providersConfig = config.providers
+  const providersConfig = getSearchProviders()
 
   // Order: known providers first (in defined order), then any custom ones
   const order: string[] = [...KNOWN_PROVIDER_KEYS.filter(k => providersConfig[k])]

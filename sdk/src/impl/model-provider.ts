@@ -12,6 +12,7 @@ import path from 'path'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
+import { loadCodefluffConfig } from '@codebuff/common/config/codefluff-config'
 import { BYOK_OPENROUTER_HEADER } from '@codebuff/common/constants/byok'
 import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import {
@@ -449,8 +450,10 @@ function createAnthropicOAuthModel(
     fetch: customFetch as unknown as typeof globalThis.fetch,
   })
 
-  // Cast to LanguageModel since the AI SDK types may be slightly different versions
-  // Using unknown as intermediate to handle V2 vs V3 differences
+  // NOTE: The AI SDK has two independent copies of the LanguageModel type —
+  // one bundled inside the SDK build, one from the consumer's own ai package.
+  // Even at the same semantic version, the compiled .d.ts types don't structurally match.
+  // The `as unknown as LanguageModel` double-cast is the standard workaround.
   return anthropic(anthropicModelId) as unknown as LanguageModel
 }
 
@@ -563,8 +566,9 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
     return undefined
   }
 
-  const config = loadCodefluffConfigFromDisk()
-  const keys = config.keys
+  // Use shared config loader from common (Zod-validated with env-var interpolation)
+  const config = loadCodefluffConfig()
+  const keys = config.keys ?? {}
   const providerName = getProviderName(model)
   let providerValue = keys[providerName]
 
@@ -592,9 +596,9 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
   // Object config (custom provider)
   if (typeof providerValue === 'object' && providerValue !== null) {
     return {
-      key: providerValue.key ?? '',
-      baseURL: providerValue.baseURL,
-      style: (providerValue.style ?? 'openai') as
+      key: (providerValue as { key?: string }).key ?? '',
+      baseURL: (providerValue as { baseURL?: string }).baseURL,
+      style: ((providerValue as { style?: string }).style ?? 'openai') as
         | 'openai'
         | 'anthropic'
         | 'google',
@@ -630,6 +634,8 @@ function createCodefluffDirectModel(model: string): LanguageModel {
 
   if (style === 'google') {
     const google = createGoogleGenerativeAI({ apiKey, ...(baseURL ? { baseURL } : {}) })
+    // NOTE: Double-cast needed — same reason as createAnthropicOAuthModel above.
+    // The ai-sdk has independent copies of the LanguageModel type.
     return google(modelId) as unknown as LanguageModel
   }
 
@@ -639,6 +645,8 @@ function createCodefluffDirectModel(model: string): LanguageModel {
       apiKey,
       ...(baseURL ? { baseURL } : {}),
     })
+    // NOTE: Double-cast needed — same reason as createAnthropicOAuthModel above.
+    // The ai-sdk has independent copies of the LanguageModel type.
     return openai(modelId) as unknown as LanguageModel
   }
 
@@ -699,109 +707,6 @@ function createCodefluffDirectModel(model: string): LanguageModel {
 
 export { isCodefluffMode } from './codefluff'
 
-let _codefluffConfigCache: {
-  keys: Record<
-    string,
-    string | { key: string; baseURL?: string; style?: string }
-  >
-  mapping: Record<string, Record<string, string>>
-  defaultMode: string
-  searchProviders: Record<string, string>
-} | null = null
-
-function loadCodefluffConfigFromDisk() {
-  if (_codefluffConfigCache) return _codefluffConfigCache
-
-  const { existsSync, readFileSync } = require('fs')
-  const { join } = require('path')
-
-  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? ''
-  const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
-
-  if (!homeDir || !existsSync(configPath)) {
-    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal', searchProviders: {} }
-    return _codefluffConfigCache
-  }
-
-  try {
-    const raw = readFileSync(configPath, 'utf8')
-    const parsed = JSON.parse(raw)
-
-    const interpolatedKeys: Record<
-      string,
-      string | { key: string; baseURL?: string; style?: string }
-    > = {}
-    if (parsed.keys) {
-      for (const [key, value] of Object.entries(parsed.keys)) {
-        if (typeof value === 'string') {
-          interpolatedKeys[key] = value.replace(
-            /\$\{([^}]+)\}/g,
-            (_, envVar: string) => {
-              const envValue = process.env[envVar]
-              if (!envValue) {
-                throw new Error(
-                  `Environment variable ${envVar} is referenced in codefluff config but not set`,
-                )
-              }
-              return envValue
-            },
-          )
-        } else if (
-          typeof value === 'object' &&
-          value !== null &&
-          'key' in value
-        ) {
-          const providerConfig = value as Record<string, unknown>
-          const interpolated: Record<string, unknown> = {}
-          for (const [k, v] of Object.entries(providerConfig)) {
-            if (typeof v === 'string') {
-              interpolated[k] = v.replace(
-                /\$\{([^}]+)\}/g,
-                (_, envVar: string) => {
-                  const envValue = process.env[envVar]
-                  return envValue ?? v
-                },
-              )
-            } else {
-              interpolated[k] = v
-            }
-          }
-          interpolatedKeys[key] = interpolated as {
-            key: string
-            baseURL?: string
-            style?: string
-          }
-        } else {
-          interpolatedKeys[key] = value as string
-        }
-      }
-    }
-
-    // Interpolate searchProviders env vars
-    const interpolatedSearchProviders: Record<string, string> = {}
-    if (parsed.searchProviders) {
-      for (const [key, value] of Object.entries(parsed.searchProviders)) {
-        if (typeof value === 'string') {
-          interpolatedSearchProviders[key] = value.replace(
-            /\$\{([^}]+)\}/g,
-            (_, envVar: string) => process.env[envVar] ?? value,
-          )
-        }
-      }
-    }
-
-    _codefluffConfigCache = {
-      keys: interpolatedKeys,
-      mapping: parsed.mapping ?? {},
-      defaultMode: parsed.defaultMode ?? 'normal',
-      searchProviders: interpolatedSearchProviders,
-    }
-    return _codefluffConfigCache
-  } catch {
-    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal', searchProviders: {} }
-    return _codefluffConfigCache
-  }
-}
 
 export function resolveCodefluffModel(
   costMode: string,
@@ -809,13 +714,14 @@ export function resolveCodefluffModel(
 ): string | null {
   if (!isCodefluffMode()) return null
 
-  const config = loadCodefluffConfigFromDisk()
-  const modeMapping = config.mapping[costMode]
+  const config = loadCodefluffConfig()
+  const modeMapping = (config.mapping as Record<string, Record<string, string>> | undefined)?.[costMode]
   if (!modeMapping) return null
 
   return modeMapping[operation] ?? null
 }
 
 export function getCodefluffDefaultMode(): string {
-  return loadCodefluffConfigFromDisk().defaultMode
+  const config = loadCodefluffConfig()
+  return config.defaultMode ?? 'normal'
 }

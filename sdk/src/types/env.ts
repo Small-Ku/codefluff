@@ -24,6 +24,9 @@ export type SdkEnv = BaseEnv & {
   OVERRIDE_TARGET?: string
   OVERRIDE_PLATFORM?: string
   OVERRIDE_ARCH?: string
+
+  // Codefluff mode (used by SDK to detect BYOK mode)
+  CODEFLUFF_MODE?: string
 }
 
 /**

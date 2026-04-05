@@ -1,0 +1,187 @@
+/**
+ * Shared Codefluff config loader — single source of truth.
+ *
+ * Zod-validated schema with ${ENV_VAR} interpolation support for secrets.
+ * Replaces the three separate config loaders previously scattered across
+ * cli/config, sdk/model-provider, and agent-runtime/search-providers.
+ */
+
+import { existsSync, readFileSync } from 'fs'
+import { join } from 'path'
+import z from 'zod/v4'
+
+// ============================================================================
+// Schema
+// ============================================================================
+
+export const costModes = ['free', 'normal', 'max', 'experimental', 'ask'] as const
+export type CostMode = (typeof costModes)[number]
+
+export const operations = ['agent', 'file-requests', 'check-new-files'] as const
+export type Operation = (typeof operations)[number]
+
+const providerKeySchema = z.union([
+  z.string().min(1),
+  z.object({
+    key: z.string().min(1),
+    baseURL: z.string().min(1).optional(),
+    style: z.enum(['openai', 'anthropic', 'google']).optional(),
+  }),
+])
+
+const codefluffConfigSchema = z.object({
+  keys: z.record(z.string(), providerKeySchema).optional(),
+  mapping: z
+    .record(
+      z.string(),
+      z.object({
+        agent: z.string().min(1).optional(),
+        'file-requests': z.string().min(1).optional(),
+        'check-new-files': z.string().min(1).optional(),
+      }),
+    )
+    .optional(),
+  defaultMode: z.string().optional(),
+  searchProviders: z.record(z.string(), z.string().min(1)).optional(),
+})
+
+export type CodefluffConfig = z.infer<typeof codefluffConfigSchema>
+export type ProviderKeyConfig =
+  | string
+  | { key: string; baseURL?: string; style?: 'openai' | 'anthropic' | 'google' }
+
+// ============================================================================
+// Env-var interpolation
+// ============================================================================
+
+function interpolateEnvVars(value: string): string {
+  return value.replace(/\$\{([^}]+)\}/g, (_, envVar) => {
+    const envValue = process.env[envVar]
+    if (!envValue) {
+      throw new Error(
+        `Environment variable ${envVar} is referenced in codefluff config but not set`,
+      )
+    }
+    return envValue
+  })
+}
+
+function interpolateConfigKeys(
+  obj: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      result[key] = interpolateEnvVars(value)
+    } else if (typeof value === 'object' && value !== null && 'key' in value) {
+      const providerConfig = value as Record<string, unknown>
+      const interpolated: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(providerConfig)) {
+        if (typeof v === 'string') {
+          interpolated[k] = interpolateEnvVars(v)
+        } else {
+          interpolated[k] = v
+        }
+      }
+      result[key] = interpolated
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+// ============================================================================
+// Config path
+// ============================================================================
+
+function getConfigPath(): string {
+  const homeDir =
+    (process.env.HOME || process.env.USERPROFILE) ?? ''
+  if (!homeDir) {
+    throw new Error('Cannot determine home directory for codefluff config')
+  }
+  return join(homeDir, '.config', 'codefluff', 'config.json')
+}
+
+// ============================================================================
+// Loaded and validated config (cached)
+// ============================================================================
+
+let _cachedConfig: CodefluffConfig | null = null
+
+export function loadCodefluffConfig(): CodefluffConfig {
+  if (_cachedConfig !== null) return _cachedConfig
+
+  const configPath = getConfigPath()
+
+  if (!existsSync(configPath)) {
+    _cachedConfig = {}
+    return _cachedConfig
+  }
+
+  try {
+    const raw = readFileSync(configPath, 'utf8')
+    const parsed = JSON.parse(raw)
+
+    const interpolated = {
+      ...parsed,
+      ...(parsed.keys
+        ? {
+            keys: interpolateConfigKeys(parsed.keys as Record<string, unknown>),
+          }
+        : {}),
+      ...(parsed.searchProviders
+        ? {
+            searchProviders: Object.fromEntries(
+              Object.entries(parsed.searchProviders as Record<string, string>).map(
+                ([k, v]) => [k, typeof v === 'string' ? interpolateEnvVars(v) : v],
+              ),
+            ),
+          }
+        : {}),
+    }
+
+    const result = codefluffConfigSchema.parse(interpolated)
+    _cachedConfig = result
+    return result
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.warn(
+        `[codefluff] Invalid config at ${configPath}:\n${error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n')}`,
+      )
+    } else {
+      console.warn(
+        `[codefluff] Failed to parse config at ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+    _cachedConfig = {}
+    return _cachedConfig
+  }
+}
+
+/** Clear cached config — useful for tests */
+export function resetCodefluffConfigCache(): void {
+  _cachedConfig = null
+}
+
+// ============================================================================
+// Typed accessors
+// ============================================================================
+
+export function getConfiguredKeys(): Record<string, ProviderKeyConfig> {
+  const config = loadCodefluffConfig()
+  return (config.keys ?? {}) as Record<string, ProviderKeyConfig>
+}
+
+export function getDefaultMode(): CostMode {
+  const config = loadCodefluffConfig()
+  const mode = config.defaultMode ?? 'normal'
+  return costModes.includes(mode as CostMode) ? (mode as CostMode) : 'normal'
+}
+
+/** Returns searchProviders as a Record<string, string> for the agent-runtime consumer */
+export function getSearchProviders(): Record<string, string> {
+  const config = loadCodefluffConfig()
+  return config.searchProviders ?? {}
+}

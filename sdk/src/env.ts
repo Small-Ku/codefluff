@@ -29,6 +29,9 @@ export const getSdkEnv = (): SdkEnv => ({
   OVERRIDE_TARGET: process.env.OVERRIDE_TARGET,
   OVERRIDE_PLATFORM: process.env.OVERRIDE_PLATFORM,
   OVERRIDE_ARCH: process.env.OVERRIDE_ARCH,
+
+  // Codefluff mode
+  CODEFLUFF_MODE: process.env.CODEFLUFF_MODE,
 })
 
 export const getCodebuffApiKeyFromEnv = (): string | undefined => {
