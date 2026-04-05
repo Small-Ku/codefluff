@@ -170,6 +170,19 @@ Codefluff routes model calls directly to providers based on the model prefix:
 
 All calls use your configured API keys — no data goes through Codebuff servers.
 
+## Tool Availability
+
+Because codefluff runs standalone without the Codebuff web server, some tools that depend on server-hosted APIs are unavailable:
+
+| Tool | Status | Reason |
+|------|--------|--------|
+| `web_search` | ❌ Unavailable | Requires Codebuff web server for web search API and credit billing |
+| `read_docs` | ❌ Unavailable | Requires Codebuff web server for Context7 docs fetching and credit billing |
+
+> Token counting falls back to local estimation when the web API is unavailable — this is transparent and has no impact on functionality.
+
+All other tools (file read/write, shell execution, agent spawning, etc.) work normally.
+
 ## Relationship to Codebuff
 
 Codefluff is a **personal fork** of the [Codebuff](https://codebuff.com) project. It shares the same core architecture and multi-agent framework, but is distributed as a standalone npm package (`codefluff`) with a compile-time flag that:
