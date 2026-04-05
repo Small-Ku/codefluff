@@ -149,6 +149,33 @@ Set `defaultMode` to control which cost mode starts by default:
 }
 ```
 
+### Search Providers
+
+Codefluff supports pluggable web search providers with automatic fallback. Add `searchProviders` to your config:
+
+```json
+{
+  "searchProviders": {
+    "linkup": "${LINKUP_API_KEY}",
+    "langsearch": "${LANGSEARCH_API_KEY}",
+    "ollama": "${OLLAMA_API_KEY}",
+    "searxng": "https://searx.example.org",
+    "searx-space": "enabled"
+  }
+}
+```
+Supported providers:
+
+| Provider | Value | Description |
+|----------|-------|-------------|
+| `linkup` | API key | [Linkup](https://linkup.so) — AI-powered search |
+| `langsearch` | API key | [LangSearch](https://langsearch.com) — LLM-optimized web search |
+| `ollama` | API key | [Ollama Web Search](https://ollama.com) — Ollama's cloud search API |
+| `searxng` | Instance URL | [SearXNG](https://searx.space) — Specific SearXNG instance URL |
+| `searx-space` | Any value (presence enables it) | Auto-discovery from searx.space — fetches healthy instances, shuffles, and tries up to 15 with fallback |
+
+Providers are tried in the order they appear above (known providers first, then any custom ones). The first successful result is returned — if one provider fails, the next is automatically tried.
+
 ## CLI Usage
 
 ```bash
@@ -174,9 +201,9 @@ All calls use your configured API keys — no data goes through Codebuff servers
 
 Because codefluff runs standalone without the Codebuff web server, some tools that depend on server-hosted APIs are unavailable:
 
-| Tool | Status | Reason |
-|------|--------|--------|
-| `web_search` | ❌ Unavailable | Requires Codebuff web server for web search API and credit billing |
+| Tool | Status | Notes |
+|------|--------|-------|
+| `web_search` | ✅ Available | Configure via `searchProviders` in config (see below) |
 | `read_docs` | ❌ Unavailable | Requires Codebuff web server for Context7 docs fetching and credit billing |
 
 > Token counting falls back to local estimation when the web API is unavailable — this is transparent and has no impact on functionality.

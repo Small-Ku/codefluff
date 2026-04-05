@@ -707,6 +707,7 @@ let _codefluffConfigCache: {
   >
   mapping: Record<string, Record<string, string>>
   defaultMode: string
+  searchProviders: Record<string, string>
 } | null = null
 
 function loadCodefluffConfigFromDisk() {
@@ -719,7 +720,7 @@ function loadCodefluffConfigFromDisk() {
   const configPath = join(homeDir, '.config', 'codefluff', 'config.json')
 
   if (!homeDir || !existsSync(configPath)) {
-    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal' }
+    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal', searchProviders: {} }
     return _codefluffConfigCache
   }
 
@@ -777,14 +778,28 @@ function loadCodefluffConfigFromDisk() {
       }
     }
 
+    // Interpolate searchProviders env vars
+    const interpolatedSearchProviders: Record<string, string> = {}
+    if (parsed.searchProviders) {
+      for (const [key, value] of Object.entries(parsed.searchProviders)) {
+        if (typeof value === 'string') {
+          interpolatedSearchProviders[key] = value.replace(
+            /\$\{([^}]+)\}/g,
+            (_, envVar: string) => process.env[envVar] ?? value,
+          )
+        }
+      }
+    }
+
     _codefluffConfigCache = {
       keys: interpolatedKeys,
       mapping: parsed.mapping ?? {},
       defaultMode: parsed.defaultMode ?? 'normal',
+      searchProviders: interpolatedSearchProviders,
     }
     return _codefluffConfigCache
   } catch {
-    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal' }
+    _codefluffConfigCache = { keys: {}, mapping: {}, defaultMode: 'normal', searchProviders: {} }
     return _codefluffConfigCache
   }
 }

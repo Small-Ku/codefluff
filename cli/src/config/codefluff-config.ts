@@ -33,6 +33,7 @@ const codefluffConfigSchema = z.object({
     )
     .optional(),
   defaultMode: z.string().optional(),
+  searchProviders: z.record(z.string(), z.string().min(1)).optional(),
 })
 
 export type CodefluffConfig = z.infer<typeof codefluffConfigSchema>
@@ -138,4 +139,9 @@ export function getDefaultMode(): CostMode {
     'ask',
   ]
   return validModes.includes(mode as CostMode) ? (mode as CostMode) : 'normal'
+}
+
+export function getConfiguredSearchProviders(): Record<string, string> {
+  const config = loadCodefluffConfig()
+  return config.searchProviders ?? {}
 }

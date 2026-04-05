@@ -1,6 +1,8 @@
 import { jsonToolResult } from '@codebuff/common/util/messages'
 
 import { callWebSearchAPI } from '../../../llm-api/codebuff-web-api'
+import { getConfiguredSearchProviders } from '../../../llm-api/search-providers'
+import type { SearchProviderResult } from '../../../llm-api/search-providers'
 
 import type { CodebuffToolHandlerFunction } from '../handler-function-type'
 import type {
@@ -69,7 +71,99 @@ export const handleWebSearch = (async (params: {
   let creditsUsed = 0
 
   try {
-    const webApi = await callWebSearchAPI({
+    let webApi: { result?: string; error?: string; creditsUsed?: number }
+
+    // Codefluff BYOK mode — try all configured providers with fallback
+    if (process.env.CODEFLUFF_MODE === 'true') {
+      const providers = getConfiguredSearchProviders()
+      if (providers.length === 0) {
+        return {
+          output: jsonToolResult({
+            errorMessage:
+              'No search providers configured for web_search. Add "searchProviders" to ~/.config/codefluff/config.json. Supported: linkup, langsearch, ollama, searxng (your URL), searx-space (auto-discovery from searx.space).',
+          }),
+          creditsUsed: 0,
+        }
+      }
+
+      const errors: string[] = []
+
+      // Apply overall 60s timeout for the entire provider fallback chain
+      const timeoutPromise = new Promise<SearchProviderResult>((resolve) =>
+        setTimeout(() => resolve({ error: 'All search providers timed out after 60s' }), 60_000),
+      )
+
+      for (const provider of providers) {
+        const providerResult = await Promise.race([
+          provider.search({
+            query,
+            depth,
+            logger,
+            fetch,
+          }),
+          timeoutPromise,
+        ])
+
+        // Check if we hit the timeout
+        if (providerResult.error === 'All search providers timed out after 60s') {
+          errors.push(`Timeout: exceeded 60s (attempted: ${errors.length > 0 ? providers.slice(0, errors.length).map(p => p.name).join(', ') : providers[0]?.name ?? 'unknown'})`)
+          break
+        }
+
+        if (providerResult.error) {
+          errors.push(`${provider.name}: ${providerResult.error}`)
+          logger.warn(
+            {
+              ...searchContext,
+              usedDirectProvider: provider.name,
+              success: false,
+              error: providerResult.error,
+            },
+            `Provider ${provider.name} failed, trying next`,
+          )
+          continue
+        }
+
+        const searchDuration = Date.now() - searchStartTime
+        logger.info(
+          {
+            ...searchContext,
+            searchDuration,
+            usedDirectProvider: provider.name,
+            success: true,
+          },
+          'Search completed via direct provider',
+        )
+
+        return {
+          output: jsonToolResult({ result: providerResult.result ?? '' }),
+          creditsUsed: 0,
+        }
+      }
+
+      // All providers failed
+      const searchDuration = Date.now() - searchStartTime
+      logger.error(
+        {
+          ...searchContext,
+          searchDuration,
+          attemptedProviders: providers.map(p => p.name),
+          errors,
+          success: false,
+        },
+        'All search providers failed',
+      )
+
+      return {
+        output: jsonToolResult({
+          errorMessage: `All search providers failed:\n${errors.join('\n')}`,
+        }),
+        creditsUsed: 0,
+      }
+    }
+
+    // Default — Codebuff web API
+    webApi = await callWebSearchAPI({
       query,
       depth,
       repoUrl: repoUrl ?? null,

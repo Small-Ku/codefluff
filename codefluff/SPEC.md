@@ -76,8 +76,38 @@ This enables dead-code elimination in production builds.
 - `keys`: Provider → API key mapping. Supports `${ENV_VAR}` interpolation.
 - `mapping`: CostMode → Operation → Model mapping. All 5 cost modes supported.
 - `defaultMode`: One of `free`, `normal`, `max`, `experimental`, `ask`.
+- `searchProviders`: Search provider → API key or URL mapping. Supports `${ENV_VAR}` interpolation.
 - Config is empty by default — user must fill in everything.
 - Missing keys produce clear error messages on first use.
+
+### Search Providers
+
+Config key: `searchProviders`
+
+```json
+{
+  "searchProviders": {
+    "linkup": "${LINKUP_API_KEY}",
+    "langsearch": "${LANGSEARCH_API_KEY}",
+    "ollama": "${OLLAMA_API_KEY}",
+    "searxng": "https://searx.example.org"
+  }
+}
+```
+
+| Provider | Value Type | API |
+|----------|-----------|-----|
+| `linkup` | API key | `POST https://api.linkup.so/v1/search` |
+| `langsearch` | API key | `POST https://api.langsearch.com/v1/web-search` |
+| `ollama` | API key | `POST https://ollama.com/api/web_search` |
+| `searxng` | Instance URL | `GET {instanceUrl}/search?q=query&format=json` |
+| `searx-space` | Any value (presence enables it) | Fetches instances from `https://searx.space/data/instances.json`, filters healthy ones (HTTP 200, >80% search success, valid SearXNG), Fisher-Yates shuffles, tries up to 15 with 15s timeout each. |
+
+Fallback behavior:
+- Providers are tried in order: linkup → langsearch → ollama → searxng → searx-space → unknown custom providers
+- First successful result is returned immediately
+- If a provider fails, the next one in line is tried automatically
+- If all providers fail, an aggregated error message is returned listing each provider's failure reason
 
 ---
 
