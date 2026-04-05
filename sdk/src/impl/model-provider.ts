@@ -38,6 +38,7 @@ import {
   getValidChatGptOAuthCredentials,
   getValidClaudeOAuthCredentials,
 } from '../credentials'
+import { isCodefluffMode } from './codefluff'
 import {
   getByokOpenrouterApiKeyFromEnv,
   getCodefluffByokKeysFromEnv,
@@ -696,9 +697,7 @@ function createCodefluffDirectModel(model: string): LanguageModel {
   })
 }
 
-export function isCodefluffMode(): boolean {
-  return process.env.CODEFLUFF_MODE === 'true'
-}
+export { isCodefluffMode } from './codefluff'
 
 let _codefluffConfigCache: {
   keys: Record<

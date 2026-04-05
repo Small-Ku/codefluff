@@ -93,6 +93,7 @@ export {
   resetClaudeOAuthRateLimit,
 } from './impl/model-provider'
 
-// Codefluff mock server
+// Codefluff BYOK support
+export { ensureCodefluffSetup, isCodefluffMode } from './impl/codefluff'
 export { startCodefluffMockServer } from './impl/codefluff-mock-server'
 export type { MockServerHandle } from './impl/codefluff-mock-server'

@@ -264,14 +264,10 @@ async function runOnce({
     })
   }
 
-  // Start mock server for codefluff mode before any SDK code runs
-  if (process.env.CODEFLUFF_MODE === 'true') {
-    const { startCodefluffMockServer } =
-      await import('./impl/codefluff-mock-server')
-    const { setMockServerUrl } = await import('./constants')
-    const handle = await startCodefluffMockServer()
-    setMockServerUrl(handle.url)
-  }
+  // Start mock server for codefluff mode (ensures single setup across SDK)
+  const { ensureCodefluffSetup } = await import('./impl/codefluff')
+  await ensureCodefluffSetup()
+
 
   let resolve: (value: RunReturnType) => any = () => {}
   let _reject: (error: any) => any = () => {}

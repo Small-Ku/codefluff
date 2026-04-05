@@ -67,7 +67,12 @@ export function startCodefluffMockServer(): Promise<MockServerHandle> {
         return
       }
 
-      // Catch-all: return 200 for any other endpoint
+      // Catch-all: return 200 for any other endpoint, but log it
+      // Needed to be 200 for the codefluff-cli to work with the mock server, like fetching LLM response.
+      console.warn(
+        `[codefluff-mock-server] Unhandled endpoint: ${method} ${url} — returning 200. ` +
+        `If codefluff behavior is incorrect, this endpoint may need a proper mock handler.`,
+      )
       res.writeHead(200)
       res.end(JSON.stringify({}))
     })
