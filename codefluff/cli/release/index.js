@@ -30,6 +30,31 @@ const TERMINAL_RESET_SEQUENCES =
   '\x1b[?2004l' +
   '\x1b[?25h'
 
+/**
+ * Write escape sequences directly to the controlling terminal.
+ * Opens 'CON' on Windows or '/dev/tty' on Unix, writes synchronously, then closes.
+ * This bypasses any stdout buffering and guarantees the sequences reach the
+ * terminal before the wrapper process exits or spawns a new child.
+ */
+function writeToTty(sequence) {
+  const ttyPath = process.platform === 'win32' ? 'CON' : '/dev/tty'
+  let fd = null
+  try {
+    fd = fs.openSync(ttyPath, 'w')
+    fs.writeSync(fd, sequence)
+  } catch {
+    // TTY may not be available — silently ignore
+  } finally {
+    if (fd !== null) {
+      try {
+        fs.closeSync(fd)
+      } catch {
+        // Ignore close errors
+      }
+    }
+  }
+}
+
 function resetTerminal() {
   try {
     if (process.stdin.isTTY && process.stdin.setRawMode) {
@@ -38,13 +63,7 @@ function resetTerminal() {
   } catch {
     // stdin may be closed
   }
-  try {
-    if (process.stdout.isTTY) {
-      process.stdout.write(TERMINAL_RESET_SEQUENCES)
-    }
-  } catch {
-    // stdout may be closed
-  }
+  writeToTty(TERMINAL_RESET_SEQUENCES)
 }
 
 function createConfig(packageName) {

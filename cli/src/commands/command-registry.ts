@@ -15,6 +15,7 @@ import { handleInitializationFlowLocally } from './init'
 import { handleReferralCode } from './referral'
 import { runBashCommand } from './router'
 import { normalizeReferralCode } from './router-utils'
+import { cleanExit } from '../utils/renderer-cleanup'
 import { handleUsageCommand } from './usage'
 import { WEBSITE_URL } from '../login/constants'
 import { useChatStore } from '../state/chat-store'
@@ -349,7 +350,7 @@ const ALL_COMMANDS: CommandDefinition[] = [
     name: 'exit',
     aliases: ['quit', 'q'],
     handler: () => {
-      process.kill(process.pid, 'SIGINT')
+      cleanExit(0)
     },
   }),
   defineCommandWithArgs({

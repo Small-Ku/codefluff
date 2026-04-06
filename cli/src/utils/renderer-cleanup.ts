@@ -1,3 +1,5 @@
+import { closeSync, openSync, writeSync } from 'fs'
+
 import { resetTerminalTitle } from './terminal-title'
 
 import type { CliRenderer } from '@opentui/core'
@@ -9,7 +11,8 @@ let terminalStateReset = false
 
 /**
  * Terminal escape sequences to reset terminal state.
- * These are written directly to stdout to ensure they're sent even if the renderer is in a bad state.
+ * These are written directly to the controlling terminal to ensure they're sent
+ * even if the renderer is in a bad state.
  *
  * Sequences:
  * - \x1b[?1049l: Exit alternate screen buffer (restores main screen)
@@ -32,7 +35,55 @@ export const TERMINAL_RESET_SEQUENCES =
   '\x1b[?25h' // Show cursor
 
 /**
- * Reset terminal state by writing escape sequences directly to stdout.
+ * Write escape sequences directly to the controlling terminal using multiple fallback strategies.
+ * This is critical for compiled Bun binaries where async writes and certain fd access patterns
+ * may silently fail before process.exit() terminates the process.
+ *
+ * Strategy 1: Write to raw fd 1 (stdout) — bypasses all Bun stream buffering.
+ * Strategy 2: Open the controlling terminal device ('CON' on Windows, '/dev/tty' on Unix).
+ * Strategy 3: Last resort — async process.stdout.write (better than nothing).
+ */
+export function writeToTty(sequence: string): void {
+  // Strategy 1: Write directly to fd 1 (stdout) — bypasses all Bun stream buffering.
+  // This works even in compiled binaries where process.stdout.fd may be undefined.
+  try {
+    writeSync(1, sequence)
+    return
+  } catch {
+    // Fall through to next strategy
+  }
+
+  // Strategy 2: Try opening the controlling terminal device directly.
+  // On Windows this is 'CON', on Unix it's '/dev/tty'.
+  // Using literal 1 for O_WRONLY to avoid potential constants export bugs in Bun.
+  const ttyPath = process.platform === 'win32' ? 'CON' : '/dev/tty'
+  let fd: number | null = null
+  try {
+    fd = openSync(ttyPath, 1) // 1 = O_WRONLY
+    writeSync(fd, sequence)
+    return
+  } catch {
+    // Fall through to next strategy
+  } finally {
+    if (fd !== null) {
+      try {
+        closeSync(fd)
+      } catch {
+        // Ignore close errors
+      }
+    }
+  }
+
+  // Strategy 3: Last resort — async write (better than nothing)
+  try {
+    process.stdout.write(sequence)
+  } catch {
+    // Give up — at least we tried everything
+  }
+}
+
+/**
+ * Reset terminal state by writing escape sequences directly to the TTY.
  * This is called BEFORE renderer.destroy() to ensure sequences are sent
  * even if the renderer is in a bad state.
  *
@@ -53,13 +104,9 @@ function resetTerminalState(): void {
   try {
     // Reset terminal title to default
     resetTerminalTitle()
-    // Write directly to stdout - this is synchronous and will complete
-    // before the process exits, ensuring the terminal is reset
-    if (process.stdout.isTTY) {
-      process.stdout.write(TERMINAL_RESET_SEQUENCES)
-    }
+    writeToTty(TERMINAL_RESET_SEQUENCES)
   } catch {
-    // Ignore errors - stdout may already be closed
+    // Ignore errors - terminal may already be in a bad state
   }
 }
 
@@ -68,7 +115,7 @@ function resetTerminalState(): void {
  * This resets terminal state to prevent garbled output after exit.
  */
 function cleanup(): void {
-  // FIRST: Reset terminal state by writing escape sequences directly to stdout.
+  // FIRST: Reset terminal state by writing escape sequences directly to the controlling TTY.
   // This ensures mouse mode, focus reporting, etc. are disabled even if
   // renderer.destroy() fails or doesn't fully clean up.
   resetTerminalState()
@@ -81,6 +128,16 @@ function cleanup(): void {
     }
     renderer = null
   }
+}
+
+/**
+ * Clean up terminal state and exit synchronously. Call this directly instead of
+ * process.kill(process.pid, 'SIGINT') which doesn't work reliably on Windows
+ * in Bun compiled binaries.
+ */
+export function cleanExit(exitCode = 0): void {
+  cleanup()
+  process.exit(exitCode)
 }
 
 /**

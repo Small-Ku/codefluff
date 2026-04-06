@@ -36,6 +36,7 @@ import { saveRecentProject } from './utils/recent-projects'
 import {
   installProcessCleanupHandlers,
   TERMINAL_RESET_SEQUENCES,
+  writeToTty,
 } from './utils/renderer-cleanup'
 import { initializeSkillRegistry } from './utils/skill-registry'
 import { detectTerminalTheme } from './utils/terminal-color-detection'
@@ -455,11 +456,9 @@ async function main(): Promise<void> {
       // stdin may be closed
     }
     try {
-      if (process.stdout.isTTY) {
-        process.stdout.write(TERMINAL_RESET_SEQUENCES)
-      }
+      writeToTty(TERMINAL_RESET_SEQUENCES)
     } catch {
-      // stdout may be closed
+      // terminal may be in a bad state
     }
     try {
       console.error('Fatal error during startup:', error)
