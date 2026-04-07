@@ -1,41 +1,33 @@
-# Codebuff
+# Codefluff
 
-Codebuff is an advanced coding agent with a composable agent framework. It also includes:
-- freebuff, the free coding agent
-- codefluff, a personal BYOK (Bring Your Own Key) fork
+This is the **Codefluff** branch — a personal BYOK fork of [Codebuff](https://codebuff.com) that can merge upstream changes.
 
-## Goal
+## What is Codefluff?
 
-Make an efficient learning agent that can do anything.
-
-## Key Technologies
-
-- TypeScript monorepo (Bun workspaces)
-- Bun runtime + package manager
-- Next.js (web app + API routes)
-- Multiple LLM providers (Anthropic/OpenAI/Gemini/etc.)
+A local BYOK (Bring Your Own Key) variant of Codebuff: your API keys, your models, no server dependency for inference. See [codefluff/README.md](codefluff/README.md) for user-facing documentation.
 
 ## Repo Map
 
-- `cli/` — TUI client (OpenTUI + React) and local UX
-- `sdk/` — JS/TS SDK used by the CLI and external users
-- `web/` — Next.js app + API routes (the "web API")
-- `packages/agent-runtime/` — agent runtime + tool handling (server-side)
-- `common/` — shared types, tools, schemas, utilities
-- `agents/` — main agents shipped with codebuff
-- `.agents/` — local agent templates (prompt + programmatic agents)
-- `freebuff/` - a free coding agent built from configuring codebuff cli
-- `codefluff/` - a personal BYOK (Bring Your Own Key) fork with direct provider routing
+- `cli/` — TUI client and local UX
+- `sdk/` — JS/TS SDK
+- `web/` — Next.js app + API routes
+- `packages/agent-runtime/` — agent runtime + tool handling
+- `common/` — shared types, tools, schemas
+- `agents/` — main agents
+- `.agents/` — local agent templates
+- `codefluff/` — BYOK CLI package and build config
 
 ## Conventions
 
-- Never force-push `main` unless explicitly requested.
-- Run interactive git commands in tmux (anything that opens an editor or prompts).
+- Never force-push `main`
+- Run interactive git commands in tmux
+- Maintain merge compatibility with upstream
 
 ## Docs
 
 IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning. Always read the relevant docs below before implementing changes.
 
+- `codefluff/SPEC.md` — Codefluff implementation details
 - `docs/architecture.md` — Package dependency graph, per-package details, architectural patterns
 - `docs/request-flow.md` — Full request lifecycle from CLI through server and back
 - `docs/error-schema.md` — Server error response formats and client-side handling
