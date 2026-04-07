@@ -37,6 +37,7 @@ const result = spawnSync(
     env: {
       ...process.env,
       CODEFLUFF_MODE: 'true',
+      NEXT_PUBLIC_CB_ENVIRONMENT: 'prod',
     },
   },
 )

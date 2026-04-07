@@ -44,10 +44,12 @@ const credentialsSchema = z
 
 // Get the config directory path
 export const getConfigDir = (): string => {
+  const isCodefluff = process.env.CODEFLUFF_MODE === 'true'
+  const configDirName = isCodefluff ? 'codefluff' : 'manicode'
   return path.join(
     os.homedir(),
     '.config',
-    'manicode' +
+    configDirName +
       // on a development stack?
       (env.NEXT_PUBLIC_CB_ENVIRONMENT !== 'prod'
         ? `-${env.NEXT_PUBLIC_CB_ENVIRONMENT}`

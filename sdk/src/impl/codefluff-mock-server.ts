@@ -36,7 +36,7 @@ export function startCodefluffMockServer(): Promise<MockServerHandle> {
 
       if (method === 'GET' && url.startsWith('/api/v1/me')) {
         res.writeHead(200)
-        res.end(JSON.stringify({ id: 'codefluff-local' }))
+        res.end(JSON.stringify({ id: 'codefluff-local', email: 'local@codefluff' }))
         return
       }
 
