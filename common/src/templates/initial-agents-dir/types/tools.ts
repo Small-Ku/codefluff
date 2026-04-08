@@ -251,6 +251,8 @@ export interface RunTerminalCommandParams {
   cwd?: string
   /** Set to -1 for no timeout. Does not apply for BACKGROUND commands. Default 30 */
   timeout_seconds?: number
+  /** Shell to use for command execution. 'bash' uses Git Bash on Windows. 'powershell' uses Windows PowerShell. 'pwsh' uses PowerShell Core. 'cmd' uses Command Prompt. Default 'bash'. */
+  shell?: 'bash' | 'powershell' | 'pwsh' | 'cmd'
 }
 
 /**
@@ -263,7 +265,12 @@ export interface SetMessagesParams {
 /**
  * JSON object to set as the agent output. This completely replaces any previous output. If the agent was spawned, this value will be passed back to its parent. If the agent has an outputSchema defined, the output will be validated against it.
  */
-export interface SetOutputParams {}
+export interface SetOutputParams {
+  /** The output payload to set. */
+  output?: unknown
+  /** Optional alternate wrapper accepted by some tool implementations. */
+  data?: unknown
+}
 
 /**
  * Load a skill's full instructions when relevant to the current task. Skills are loaded on-demand - only load them when you need their specific guidance.

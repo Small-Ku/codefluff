@@ -26,6 +26,7 @@ export const handleRunTerminalCommand = (async ({
       process_type: toolCall.input.process_type,
       timeout_seconds: toolCall.input.timeout_seconds,
       cwd: toolCall.input.cwd,
+      shell: toolCall.input.shell,
     },
   }
   await previousToolCallFinished

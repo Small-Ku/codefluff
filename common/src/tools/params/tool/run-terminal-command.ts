@@ -123,6 +123,12 @@ const inputSchema = z
       .describe(
         `Set to -1 for no timeout. Does not apply for BACKGROUND commands. Default 30`,
       ),
+    shell: z
+      .enum(['bash', 'powershell', 'pwsh', 'cmd'])
+      .default('bash')
+      .describe(
+        `Shell to use for command execution. 'bash' uses Git Bash on Windows. 'powershell' uses Windows PowerShell. 'pwsh' uses PowerShell Core. 'cmd' uses Command Prompt. Default 'bash'.`,
+      ),
   })
   .describe(
     `Execute a CLI command from the **project root** (different from the user's cwd).`,

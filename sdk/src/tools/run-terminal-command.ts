@@ -116,18 +116,100 @@ To fix this, you have several options:
   )
 }
 
+/**
+ * Find PowerShell Core (pwsh) executable on Windows - STRICT.
+ * Only returns pwsh, never falls back to Windows PowerShell.
+ */
+function findPwshStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
+  // Check for PowerShell Core (pwsh) in known locations
+  const pwshPaths = [
+    'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+    'C:\\Program Files\\PowerShell\\6\\pwsh.exe',
+  ]
+  for (const pwshPath of pwshPaths) {
+    if (fs.existsSync(pwshPath)) {
+      return { shell: pwshPath, shellArgs: ['-Command'] }
+    }
+  }
+
+  // Check PATH for pwsh using the provided env
+  const pathEnv = env.PATH || env.Path || ''
+  const pathDirs = pathEnv.split(path.delimiter)
+  for (const dir of pathDirs) {
+    const pwshPath = path.join(dir, 'pwsh.exe')
+    if (fs.existsSync(pwshPath)) {
+      return { shell: pwshPath, shellArgs: ['-Command'] }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find Windows PowerShell (powershell.exe) executable on Windows - STRICT.
+ * Only returns Windows PowerShell, never falls back to pwsh.
+ */
+function findWindowsPowerShellStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
+  // Check known Windows PowerShell locations
+  const psPaths = [
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    'C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe',
+  ]
+  for (const psPath of psPaths) {
+    if (fs.existsSync(psPath)) {
+      return { shell: psPath, shellArgs: ['-Command'] }
+    }
+  }
+
+  // Check PATH for powershell using the provided env
+  const pathEnv = env.PATH || env.Path || ''
+  const pathDirs = pathEnv.split(path.delimiter)
+  for (const dir of pathDirs) {
+    const psPath = path.join(dir, 'powershell.exe')
+    if (fs.existsSync(psPath)) {
+      return { shell: psPath, shellArgs: ['-Command'] }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Find CMD executable on Windows.
+ */
+function findWindowsCmd(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
+  const cmdPath = 'C:\\Windows\\System32\\cmd.exe'
+  if (fs.existsSync(cmdPath)) {
+    return { shell: cmdPath, shellArgs: ['/c'] }
+  }
+
+  // Check PATH using the provided env
+  const pathEnv = env.PATH || env.Path || ''
+  const pathDirs = pathEnv.split(path.delimiter)
+  for (const dir of pathDirs) {
+    const cmdPathInPath = path.join(dir, 'cmd.exe')
+    if (fs.existsSync(cmdPathInPath)) {
+      return { shell: cmdPathInPath, shellArgs: ['/c'] }
+    }
+  }
+
+  return null
+}
+
 export function runTerminalCommand({
   command,
   process_type,
   cwd,
   timeout_seconds,
   env,
+  shell: shellPreference,
 }: {
   command: string
   process_type: 'SYNC' | 'BACKGROUND'
   cwd: string
   timeout_seconds: number
   env?: NodeJS.ProcessEnv
+  shell?: 'bash' | 'powershell' | 'pwsh' | 'cmd'
 }): Promise<CodebuffToolOutput<'run_terminal_command'>> {
   if (process_type === 'BACKGROUND') {
     throw new Error('BACKGROUND process_type not implemented')
@@ -143,15 +225,75 @@ export function runTerminalCommand({
     let shell: string
     let shellArgs: string[]
 
+    // Determine shell based on preference and platform
+    const preferredShell = shellPreference || 'bash'
+
     if (isWindows) {
-      const bashPath = findWindowsBash(processEnv)
-      if (!bashPath) {
-        reject(createWindowsBashNotFoundError())
+      switch (preferredShell) {
+        case 'pwsh': {
+          const pwshResult = findPwshStrict(processEnv)
+          if (!pwshResult) {
+            reject(new Error(
+              `PowerShell Core (pwsh) was requested but not found on this Windows system.\n\n` +
+              `To install PowerShell Core:\n` +
+              `  winget install Microsoft.PowerShell\n` +
+              `Or download from: https://github.com/PowerShell/PowerShell/releases\n\n` +
+              `Alternatively, use shell: 'powershell' for Windows PowerShell (if available).`
+            ))
+            return
+          }
+          shell = pwshResult.shell
+          shellArgs = pwshResult.shellArgs
+          break
+        }
+        case 'powershell': {
+          const psResult = findWindowsPowerShellStrict(processEnv)
+          if (!psResult) {
+            reject(new Error(
+              `Windows PowerShell was requested but not found on this Windows system.\n\n` +
+              `This is unexpected as Windows PowerShell is included with Windows.\n` +
+              `Your PATH may be misconfigured.\n\n` +
+              `Alternatively, use shell: 'pwsh' for PowerShell Core, or 'cmd' for Command Prompt.`
+            ))
+            return
+          }
+          shell = psResult.shell
+          shellArgs = psResult.shellArgs
+          break
+        }
+        case 'cmd': {
+          const cmdResult = findWindowsCmd(processEnv)
+          if (!cmdResult) {
+            reject(new Error(
+              `Command Prompt (cmd) was requested but not found on this Windows system.\n\n` +
+              `This is unusual as cmd.exe should be available by default.`
+            ))
+            return
+          }
+          shell = cmdResult.shell
+          shellArgs = cmdResult.shellArgs
+          break
+        }
+        case 'bash':
+        default: {
+          const bashPath = findWindowsBash(processEnv)
+          if (!bashPath) {
+            reject(createWindowsBashNotFoundError())
+            return
+          }
+          shell = bashPath
+          shellArgs = ['-c']
+          break
+        }
+      }
+    } else {
+      // Non-Windows: only bash is supported
+      if (preferredShell !== 'bash') {
+        reject(new Error(
+          `Shell '${preferredShell}' is only supported on Windows. On this platform, only 'bash' is available.`
+        ))
         return
       }
-      shell = bashPath
-      shellArgs = ['-c']
-    } else {
       shell = 'bash'
       shellArgs = ['-c']
     }
@@ -218,7 +360,7 @@ export function runTerminalCommand({
         remove: 'MIDDLE',
       })
 
-      // Include stderr in stdout for compatibility with existing behavior
+      // Keep stdout/stderr separate (preferred); some consumers rely on stderr directly.
       const combinedOutput = {
         command,
         stdout: truncatedStdout,
