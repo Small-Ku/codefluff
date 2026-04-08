@@ -49,8 +49,8 @@ describe('model-listing', () => {
       overrideHome()
       writeConfig({ keys: {} })
 
-      const result = await listModelsForProvider('nvidia')
-      expect(result.provider).toBe('nvidia')
+      const result = await listModelsForProvider('nvidia-nim')
+      expect(result.provider).toBe('nvidia-nim')
       expect(result.models).toEqual([])
       expect(result.error).toContain('No configuration found')
       restoreHome()
@@ -64,8 +64,8 @@ describe('model-listing', () => {
         },
       })
 
-      const result = await listModelsForProvider('nvidia')
-      expect(result.provider).toBe('nvidia')
+      const result = await listModelsForProvider('nvidia-nim')
+      expect(result.provider).toBe('nvidia-nim')
       expect(result.models).toEqual([])
       expect(result.error).toContain('No configuration found')
       restoreHome()

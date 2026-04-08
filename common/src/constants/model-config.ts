@@ -7,7 +7,7 @@ export const ALLOWED_MODEL_PREFIXES = [
   'google',
   'x-ai',
   'deepseek',
-  'nvidia',
+  'nvidia-nim',
   'new-api',
 ] as const
 

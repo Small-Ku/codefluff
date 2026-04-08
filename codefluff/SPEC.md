@@ -55,7 +55,7 @@ This enables dead-code elimination in production builds.
   "keys": {
     "openrouter": "${OPENROUTER_API_KEY}",
     "anthropic": "${ANTHROPIC_API_KEY}",
-    "nvidia": {
+    "nvidia-nim": {
       "key": "${NVIDIA_API_KEY}",
       "baseURL": "https://integrate.api.nvidia.com/v1",
       "style": "openai"
@@ -72,7 +72,7 @@ This enables dead-code elimination in production builds.
     }
   },
   "models": {
-    "nvidia/moonshotai/kimi-k2.5": {
+    "nvidia-nim/moonshotai/kimi-k2.5": {
       "extraBody": {
         "chat_template_kwargs": {
           "thinking": true
@@ -97,7 +97,7 @@ This enables dead-code elimination in production builds.
       "check-new-files": "anthropic/claude-sonnet-4"
     },
     "max": {
-      "agent": "nvidia/moonshotai/kimi-k2.5",
+      "agent": "nvidia-nim/moonshotai/kimi-k2.5",
       "file-requests": "deepseek/deepseek-chat",
       "check-new-files": "anthropic/claude-opus-4"
     },
@@ -224,7 +224,8 @@ When `IS_CODEFLUFF`:
 | `openrouter/` | OpenRouter | Unified API for multiple providers. |
 | `deepseek/` | DeepSeek API | OpenAI-compatible. Base URL: `https://api.deepseek.com/v1` |
 | `xai/` or `grok/` | XAI API | Grok models. OpenAI-compatible. Base URL: `https://api.x.ai/v1` |
-| `nvidia/` | Nvidia NIM | OpenAI-compatible. Base URL: `https://integrate.api.nvidia.com/v1` |
+| `nvidia-nim/` | Nvidia NIM | OpenAI-compatible. Base URL: `https://integrate.api.nvidia.com/v1` |
+| `openrouter/` | OpenRouter | Unified API. Base URL: `https://openrouter.ai/api/v1` |
 | `new-api/` | New-API compatible | Generic OpenAI-compatible provider. Requires custom `baseURL`. |
 
 All OpenAI-compatible providers support custom `baseURL` and `headers` configuration.
@@ -239,7 +240,7 @@ Codefluff supports listing available models from configured providers via the SD
 import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
 
 // List models from a specific provider
-const result = await listModelsForProvider('nvidia')
+const result = await listModelsForProvider('nvidia-nim')
 console.log(result.models)
 
 // List all configured providers

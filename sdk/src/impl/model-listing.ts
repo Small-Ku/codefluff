@@ -25,7 +25,7 @@ const PROVIDER_BASE_URLS: Record<string, string> = {
   google: 'https://generativelanguage.googleapis.com/v1beta',
   deepseek: 'https://api.deepseek.com/v1',
   xai: 'https://api.x.ai/v1',
-  nvidia: 'https://integrate.api.nvidia.com/v1',
+  'nvidia-nim': 'https://integrate.api.nvidia.com/v1',
   openrouter: 'https://openrouter.ai/api/v1',
 }
 
@@ -196,7 +196,7 @@ export async function listModelsForProvider(provider: string): Promise<ProviderM
       case 'openai':
       case 'deepseek':
       case 'xai':
-      case 'nvidia':
+      case 'nvidia-nim':
       case 'openrouter':
       case 'new-api':
       default: {

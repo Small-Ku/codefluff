@@ -580,12 +580,7 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
   const config = loadCodefluffConfig()
   const keys = config.keys ?? {}
   const providerName = getProviderName(model)
-  let providerValue = keys[providerName]
-
-  // Fallback: if provider key not found, try openrouter
-  if (!providerValue && providerName !== 'openrouter') {
-    providerValue = keys.openrouter
-  }
+  const providerValue = keys[providerName]
 
   if (!providerValue) return undefined
 
@@ -632,7 +627,7 @@ const PROVIDER_BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',
   deepseek: 'https://api.deepseek.com/v1',
   xai: 'https://api.x.ai/v1',
-  nvidia: 'https://integrate.api.nvidia.com/v1',
+  'nvidia-nim': 'https://integrate.api.nvidia.com/v1',
   openrouter: 'https://openrouter.ai/api/v1',
 }
 
@@ -682,13 +677,13 @@ function createCodefluffDirectModel(model: string): LanguageModel {
     return openai(modelId) as unknown as LanguageModel
   }
 
-  // Handle new providers: deepseek, xai, nvidia, new-api, etc.
+  // Handle new providers: deepseek, xai, nvidia-nim, new-api, etc.
   // They all use OpenAI-compatible APIs
-  if (['deepseek', 'xai', 'nvidia', 'new-api'].includes(providerName)) {
+  if (['deepseek', 'xai', 'nvidia-nim', 'new-api'].includes(providerName)) {
     const resolvedBaseURL = baseURL || PROVIDER_BASE_URLS[providerName] || 'https://api.openai.com/v1'
     
     // Use custom OpenAICompatible provider for better control
-    if (providerName === 'nvidia' || providerName === 'new-api' || baseURL) {
+    if (providerName === 'nvidia-nim' || providerName === 'new-api' || baseURL) {
       const customProvider = createOpenAICompatible({
         baseURL: resolvedBaseURL,
         name: providerName,

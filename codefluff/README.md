@@ -204,7 +204,8 @@ Codefluff routes model calls directly to providers based on the model prefix:
 | `openrouter/` | OpenRouter API | `https://openrouter.ai/api/v1` |
 | `deepseek/` | DeepSeek API | `https://api.deepseek.com/v1` |
 | `xai/` | XAI (Grok) API | `https://api.x.ai/v1` |
-| `nvidia/` | Nvidia NIM API | `https://integrate.api.nvidia.com/v1` |
+| `nvidia-nim/` | Nvidia NIM API | `https://integrate.api.nvidia.com/v1` |
+| `openrouter/` | OpenRouter API | `https://openrouter.ai/api/v1` |
 | `new-api/` | Custom OpenAI-compatible | Configurable via `baseURL` |
 
 All calls use your configured API keys — no data goes through Codebuff servers.
@@ -218,7 +219,7 @@ For OpenAI-compatible providers, you can specify additional options:
 ```json
 {
   "keys": {
-    "nvidia": {
+    "nvidia-nim": {
       "key": "${NVIDIA_API_KEY}",
       "baseURL": "https://integrate.api.nvidia.com/v1",
       "style": "openai",
@@ -244,7 +245,7 @@ Configure specific parameters for individual models using the `models` section:
 ```json
 {
   "models": {
-    "nvidia/moonshotai/kimi-k2.5": {
+    "nvidia-nim/moonshotai/kimi-k2.5": {
       "extraBody": {
         "chat_template_kwargs": {
           "thinking": true
@@ -270,7 +271,7 @@ List available models from configured providers using the SDK:
 import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
 
 // List from a specific provider
-const nvidiaModels = await listModelsForProvider('nvidia')
+const nvidiaModels = await listModelsForProvider('nvidia-nim')
 
 // List from all configured providers
 const allModels = await listAllModels()
