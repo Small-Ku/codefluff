@@ -12,7 +12,7 @@ import path from 'path'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
-import { loadCodefluffConfig } from '@codebuff/common/config/codefluff-config'
+import { loadCodefluffConfig, getModelConfig } from '@codebuff/common/config/codefluff-config'
 import { BYOK_OPENROUTER_HEADER } from '@codebuff/common/constants/byok'
 import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import {
@@ -33,6 +33,7 @@ import {
   OpenAICompatibleChatLanguageModel,
   VERSION,
 } from '@codebuff/internal/openai-compatible/index'
+import { createOpenAICompatible } from '@codebuff/internal/openai-compatible/openai-compatible-provider'
 
 import { getWebsiteUrl } from '../constants'
 import {
@@ -537,6 +538,7 @@ type ProviderConfig = {
   key: string
   baseURL?: string
   style?: 'openai' | 'anthropic' | 'google'
+  headers?: Record<string, string>
 }
 
 function getProviderName(model: string): string {
@@ -556,13 +558,21 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
   if (envKeys) {
     const providerName = getProviderName(model)
     if (providerName === 'anthropic' && envKeys.anthropic)
-      return { key: envKeys.anthropic }
+      return { key: envKeys.anthropic, style: 'anthropic' }
     if (providerName === 'openai' && envKeys.openai)
-      return { key: envKeys.openai }
+      return { key: envKeys.openai, style: 'openai' }
     if (providerName === 'google' && envKeys.google)
-      return { key: envKeys.google }
+      return { key: envKeys.google, style: 'google' }
+    // For other providers from env, check if they have a known baseURL
     const key = envKeys[providerName] ?? envKeys.openrouter
-    if (key) return { key }
+    if (key) {
+      const baseURL = PROVIDER_BASE_URLS[providerName]
+      return {
+        key,
+        style: 'openai',
+        ...(baseURL && { baseURL }),
+      }
+    }
     return undefined
   }
 
@@ -581,6 +591,9 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
 
   // String key (simple format)
   if (typeof providerValue === 'string') {
+    // Check if this is a known provider that needs a specific baseURL
+    const baseURL = PROVIDER_BASE_URLS[providerName]
+
     if (providerName === 'anthropic') {
       return { key: providerValue, style: 'anthropic' }
     }
@@ -590,7 +603,12 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
     if (providerName === 'google') {
       return { key: providerValue, style: 'google' }
     }
-    return { key: providerValue, style: 'openai' }
+    // For new providers (deepseek, xai, nvidia, etc.), include the baseURL
+    return {
+      key: providerValue,
+      style: 'openai',
+      ...(baseURL && { baseURL }),
+    } as ProviderConfig
   }
 
   // Object config (custom provider)
@@ -602,10 +620,20 @@ function getCodefluffProviderConfig(model: string): ProviderConfig | undefined {
         | 'openai'
         | 'anthropic'
         | 'google',
+      headers: (providerValue as { headers?: Record<string, string> }).headers,
     }
   }
 
   return undefined
+}
+
+// Default base URLs for providers
+const PROVIDER_BASE_URLS: Record<string, string> = {
+  openai: 'https://api.openai.com/v1',
+  deepseek: 'https://api.deepseek.com/v1',
+  xai: 'https://api.x.ai/v1',
+  nvidia: 'https://integrate.api.nvidia.com/v1',
+  openrouter: 'https://openrouter.ai/api/v1',
 }
 
 function createCodefluffDirectModel(model: string): LanguageModel {
@@ -620,8 +648,12 @@ function createCodefluffDirectModel(model: string): LanguageModel {
     )
   }
 
-  const { key: apiKey, baseURL, style = 'openai' } = providerConfig
+  const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
   const providerName = getProviderName(model)
+
+  // Get model-specific extraBody
+  const modelConfig = getModelConfig(model)
+  const extraBody = modelConfig?.extraBody
 
   if (style === 'anthropic') {
     const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
@@ -629,13 +661,13 @@ function createCodefluffDirectModel(model: string): LanguageModel {
       apiKey,
       ...(baseURL ? { baseURL } : {}),
     })
+    // Note: Anthropic SDK doesn't support extraBody in the same way
     return anthropic(anthropicModelId) as unknown as LanguageModel
   }
 
   if (style === 'google') {
     const google = createGoogleGenerativeAI({ apiKey, ...(baseURL ? { baseURL } : {}) })
-    // NOTE: Double-cast needed — same reason as createAnthropicOAuthModel above.
-    // The ai-sdk has independent copies of the LanguageModel type.
+    // Note: Google SDK doesn't support extraBody in the same way
     return google(modelId) as unknown as LanguageModel
   }
 
@@ -644,9 +676,46 @@ function createCodefluffDirectModel(model: string): LanguageModel {
     const openai = createOpenAI({
       apiKey,
       ...(baseURL ? { baseURL } : {}),
+      ...(headers ? { defaultHeaders: headers } : {}),
+      ...(extraBody ? { extraBody } : {}),
     })
-    // NOTE: Double-cast needed — same reason as createAnthropicOAuthModel above.
-    // The ai-sdk has independent copies of the LanguageModel type.
+    return openai(modelId) as unknown as LanguageModel
+  }
+
+  // Handle new providers: deepseek, xai, nvidia, new-api, etc.
+  // They all use OpenAI-compatible APIs
+  if (['deepseek', 'xai', 'nvidia', 'new-api'].includes(providerName)) {
+    const resolvedBaseURL = baseURL || PROVIDER_BASE_URLS[providerName] || 'https://api.openai.com/v1'
+    
+    // Use custom OpenAICompatible provider for better control
+    if (providerName === 'nvidia' || providerName === 'new-api' || baseURL) {
+      const customProvider = createOpenAICompatible({
+        baseURL: resolvedBaseURL,
+        name: providerName,
+        apiKey,
+        headers: headers,
+        extraBody: extraBody,
+      })
+      return customProvider.chatModel(modelId) as unknown as LanguageModel
+    }
+    
+    const openai = createOpenAI({
+      apiKey,
+      baseURL: resolvedBaseURL,
+      ...(headers ? { defaultHeaders: headers } : {}),
+      ...(extraBody ? { extraBody } : {}),
+    })
+    return openai(modelId) as unknown as LanguageModel
+  }
+
+  // Handle custom providers with a configured baseURL (e.g., maoleio, etc.)
+  if (baseURL) {
+    const openai = createOpenAI({
+      apiKey,
+      baseURL,
+      ...(headers ? { defaultHeaders: headers } : {}),
+      ...(extraBody ? { extraBody } : {}),
+    })
     return openai(modelId) as unknown as LanguageModel
   }
 
@@ -706,6 +775,7 @@ function createCodefluffDirectModel(model: string): LanguageModel {
 }
 
 export { isCodefluffMode } from './codefluff'
+export { resetCodefluffConfigCache } from '@codebuff/common/config/codefluff-config'
 
 
 export function resolveCodefluffModel(
@@ -725,3 +795,16 @@ export function getCodefluffDefaultMode(): string {
   const config = loadCodefluffConfig()
   return config.defaultMode ?? 'normal'
 }
+
+/**
+ * Get extra body parameters for a specific model
+ */
+export function getModelExtraBody(model: string): Record<string, unknown> | undefined {
+  const modelConfig = getModelConfig(model)
+  return modelConfig?.extraBody
+}
+
+/**
+ * Get max_tokens for a specific model
+ */
+export { getModelMaxTokens } from '@codebuff/common/config/codefluff-config'

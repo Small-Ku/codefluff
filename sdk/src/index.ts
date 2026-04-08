@@ -97,3 +97,12 @@ export {
 export { ensureCodefluffSetup, isCodefluffMode } from './impl/codefluff'
 export { startCodefluffMockServer } from './impl/codefluff-mock-server'
 export type { MockServerHandle } from './impl/codefluff-mock-server'
+
+// Model listing for codefluff
+export {
+  listModelsForProvider,
+  listAllModels,
+  formatModelList,
+  type ModelInfo,
+  type ProviderModels,
+} from './impl/model-listing'

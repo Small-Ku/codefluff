@@ -6,6 +6,9 @@ export const ALLOWED_MODEL_PREFIXES = [
   'openai',
   'google',
   'x-ai',
+  'deepseek',
+  'nvidia',
+  'new-api',
 ] as const
 
 export const costModes = [

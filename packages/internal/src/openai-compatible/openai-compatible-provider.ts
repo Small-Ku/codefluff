@@ -88,6 +88,12 @@ Include usage information in streaming responses.
    * Whether the provider supports structured outputs in chat models.
    */
   supportsStructuredOutputs?: boolean;
+
+  /**
+   * Optional extra body parameters to include in API requests.
+   * These will be merged with the request body.
+   */
+  extraBody?: Record<string, unknown>;
 }
 
 /**
@@ -145,6 +151,7 @@ export function createOpenAICompatible<
       ...getCommonModelConfig('chat'),
       includeUsage: options.includeUsage,
       supportsStructuredOutputs: options.supportsStructuredOutputs,
+      extraBody: options.extraBody,
     });
 
   const createCompletionModel = (modelId: COMPLETION_MODEL_IDS) =>

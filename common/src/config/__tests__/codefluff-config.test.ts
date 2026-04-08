@@ -8,6 +8,7 @@ import {
   getConfiguredKeys,
   getDefaultMode,
   getSearchProviders,
+  getModelConfig,
   resetCodefluffConfigCache,
 } from '../codefluff-config'
 
@@ -273,6 +274,174 @@ describe('codefluff-config', () => {
 
       const providers = getSearchProviders()
       expect(providers.linkup).toBe('lk-interpolated')
+      restoreHome()
+    })
+  })
+
+  // ---- Provider config with headers ----
+
+  describe('provider config with advanced options', () => {
+    test('parses provider config with headers', () => {
+      overrideHome()
+      writeConfig({
+        keys: {
+          customprovider: {
+            key: 'sk-123',
+            baseURL: 'https://api.example.com/v1',
+            style: 'openai',
+            headers: {
+              'X-Custom-Header': 'value',
+              'X-Another-Header': 'another-value',
+            },
+          },
+        },
+      })
+
+      const config = loadCodefluffConfig()
+      expect(config.keys?.customprovider).toEqual({
+        key: 'sk-123',
+        baseURL: 'https://api.example.com/v1',
+        style: 'openai',
+        headers: {
+          'X-Custom-Header': 'value',
+          'X-Another-Header': 'another-value',
+        },
+      })
+      restoreHome()
+    })
+
+    test('interpolates env vars in provider headers', () => {
+      overrideHome()
+      process.env.CUSTOM_HEADER = 'header-value'
+      writeConfig({
+        keys: {
+          myprovider: {
+            key: 'sk-123',
+            headers: {
+              'X-Custom': '${CUSTOM_HEADER}',
+            },
+          },
+        },
+      })
+
+      const config = loadCodefluffConfig()
+      const providerConfig = config.keys?.myprovider as {
+        key: string
+        headers: Record<string, string>
+      }
+      expect(providerConfig.headers['X-Custom']).toBe('header-value')
+      restoreHome()
+    })
+  })
+
+  // ---- Model config (per-model extraBody and max_tokens) ----
+
+  describe('getModelConfig', () => {
+    test('returns model-specific config', () => {
+      overrideHome()
+      writeConfig({
+        models: {
+          'nvidia/moonshotai/kimi-k2.5': {
+            extraBody: {
+              chat_template_kwargs: {
+                thinking: true,
+              },
+            },
+            max_tokens: 16384,
+          },
+          'deepseek/deepseek-reasoner': {
+            extraBody: {
+              enable_thinking: true,
+            },
+          },
+        },
+      })
+
+      const nvidiaConfig = getModelConfig('nvidia/moonshotai/kimi-k2.5')
+      expect(nvidiaConfig?.extraBody).toEqual({
+        chat_template_kwargs: {
+          thinking: true,
+        },
+      })
+      expect(nvidiaConfig?.max_tokens).toBe(16384)
+
+      const deepseekConfig = getModelConfig('deepseek/deepseek-reasoner')
+      expect(deepseekConfig?.extraBody).toEqual({
+        enable_thinking: true,
+      })
+      expect(deepseekConfig?.max_tokens).toBeUndefined()
+      restoreHome()
+    })
+
+    test('returns undefined for unconfigured model', () => {
+      overrideHome()
+      writeConfig({
+        models: {
+          'anthropic/claude-sonnet-4': {
+            extraBody: {},
+          },
+        },
+      })
+
+      const config = getModelConfig('unconfigured/model')
+      expect(config).toBeUndefined()
+      restoreHome()
+    })
+
+    test('returns undefined when no models section', () => {
+      overrideHome()
+      writeConfig({
+        keys: {
+          openai: 'sk-123',
+        },
+      })
+
+      const config = getModelConfig('openai/gpt-4')
+      expect(config).toBeUndefined()
+      restoreHome()
+    })
+
+    test('rejects negative max_tokens', () => {
+      overrideHome()
+      writeConfig({
+        models: {
+          'openai/gpt-4': {
+            max_tokens: -100,
+          },
+        },
+      })
+
+      const warnFn = mock(() => {})
+      const origWarn = console.warn
+      console.warn = warnFn
+
+      const config = getModelConfig('openai/gpt-4')
+      expect(config).toBeUndefined()
+      expect(warnFn).toHaveBeenCalled()
+
+      console.warn = origWarn
+      restoreHome()
+    })
+
+    test('rejects non-integer max_tokens', () => {
+      overrideHome()
+      writeConfig({
+        models: {
+          'openai/gpt-4': {
+            max_tokens: 1000.5,
+          },
+        },
+      })
+
+      const warnFn = mock(() => {})
+      const origWarn = console.warn
+      console.warn = warnFn
+
+      const config = getModelConfig('openai/gpt-4')
+      expect(config).toBeUndefined()
+      expect(warnFn).toHaveBeenCalled()
+
+      console.warn = origWarn
       restoreHome()
     })
   })

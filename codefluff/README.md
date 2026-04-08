@@ -9,7 +9,11 @@ Codefluff is a **local BYOK (Bring Your Own Key) variant** of Codebuff. It gives
 - **BYOK** — Use your own API keys. No subscription or credits.
 - **No server dependency** — All inference is between your machine and the model provider.
 - **M:N Model Mapping** — Map any provider/model to any cost mode and operation independently.
-- **Direct provider routing** — Calls go straight to Anthropic, OpenAI, Google, or OpenRouter.
+- **Direct provider routing** — Calls go straight to Anthropic, OpenAI, Google, OpenRouter, or any OpenAI-compatible provider.
+- **Extended provider support** — Native support for DeepSeek, XAI (Grok), Nvidia NIM, and custom OpenAI-compatible APIs.
+- **Model listing** — List available models from all configured providers via SDK.
+- **Per-model configuration** — Configure extra request parameters (e.g., `chat_template_kwargs` for Nvidia NIM) per specific model.
+- **Custom headers** — Add custom HTTP headers for providers that need them.
 - **Privacy** — Prompts and code stay between you and the model provider.
 - **No ads, no login** — Completely standalone.
 - **Environment variable interpolation** — Reference `${ENV_VAR}` in your config.
@@ -96,12 +100,16 @@ codefluff
 
 Supported providers:
 
-| Provider     | Key Name     | Example Key Format         |
-| ------------ | ------------ | -------------------------- |
-| OpenRouter   | `openrouter` | `sk-or-...`                |
-| Anthropic    | `anthropic`  | `sk-ant-...`               |
-| OpenAI       | `openai`     | `sk-...`                   |
-| Google       | `google`     | `AIza...`                  |
+| Provider | Key Name | Example Key Format | API Style |
+|----------|----------|-------------------|-----------|
+| OpenRouter | `openrouter` | `sk-or-...` | OpenAI-compatible |
+| Anthropic | `anthropic` | `sk-ant-...` | Native Anthropic |
+| OpenAI | `openai` | `sk-...` | Native OpenAI |
+| Google | `google` | `AIza...` | Native Gemini |
+| DeepSeek | `deepseek` | `sk-...` | OpenAI-compatible |
+| XAI (Grok) | `xai` | `xai-...` | OpenAI-compatible |
+| Nvidia NIM | `nvidia` | `nvapi-...` | OpenAI-compatible |
+| Custom | any name | varies | OpenAI-compatible |
 
 Custom providers with their own API endpoint:
 
@@ -188,14 +196,86 @@ codefluff "Fix the bug"      # Run with a prompt
 
 Codefluff routes model calls directly to providers based on the model prefix:
 
-| Prefix                 | Provider          |
-| ---------------------- | ----------------- |
-| `anthropic/`           | Anthropic API     |
-| `openai/`              | OpenAI API        |
-| `google/`              | Google Gemini API |
-| `openrouter/` or other | OpenRouter API    |
+| Prefix | Provider | Base URL (default) |
+|--------|----------|-------------------|
+| `anthropic/` | Anthropic API | `https://api.anthropic.com/v1` |
+| `openai/` | OpenAI API | `https://api.openai.com/v1` |
+| `google/` | Google Gemini API | `https://generativelanguage.googleapis.com/v1beta` |
+| `openrouter/` | OpenRouter API | `https://openrouter.ai/api/v1` |
+| `deepseek/` | DeepSeek API | `https://api.deepseek.com/v1` |
+| `xai/` | XAI (Grok) API | `https://api.x.ai/v1` |
+| `nvidia/` | Nvidia NIM API | `https://integrate.api.nvidia.com/v1` |
+| `new-api/` | Custom OpenAI-compatible | Configurable via `baseURL` |
 
 All calls use your configured API keys — no data goes through Codebuff servers.
+
+### Advanced Configuration
+
+#### Provider Options
+
+For OpenAI-compatible providers, you can specify additional options:
+
+```json
+{
+  "keys": {
+    "nvidia": {
+      "key": "${NVIDIA_API_KEY}",
+      "baseURL": "https://integrate.api.nvidia.com/v1",
+      "style": "openai",
+      "headers": {
+        "X-Custom-Header": "value"
+      }
+    }
+  }
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `key` | API key (required) |
+| `baseURL` | Custom API endpoint |
+| `style` | API style: `"openai"`, `"anthropic"`, or `"google"` |
+| `headers` | Custom HTTP headers |
+
+#### Per-Model Configuration
+
+Configure specific parameters for individual models using the `models` section:
+
+```json
+{
+  "models": {
+    "nvidia/moonshotai/kimi-k2.5": {
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking": true
+        }
+      }
+    },
+    "deepseek/deepseek-reasoner": {
+      "extraBody": {
+        "enable_thinking": true
+      }
+    }
+  }
+}
+```
+
+Each model can have its own `extraBody` configuration for provider-specific parameters.
+
+### Model Listing
+
+List available models from configured providers using the SDK:
+
+```typescript
+import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
+
+// List from a specific provider
+const nvidiaModels = await listModelsForProvider('nvidia')
+
+// List from all configured providers
+const allModels = await listAllModels()
+console.log(formatModelList(allModels))
+```
 
 ## Tool Availability
 

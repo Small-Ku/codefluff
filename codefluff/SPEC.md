@@ -27,17 +27,62 @@ This enables dead-code elimination in production builds.
 
 ### Config File: `~/.config/codefluff/config.json`
 
+#### Basic Configuration
+
 ```json
 {
   "keys": {
     "openrouter": "${OPENROUTER_API_KEY}",
     "anthropic": "${ANTHROPIC_API_KEY}",
     "openai": "${OPENAI_API_KEY}",
-    "google": "${GOOGLE_API_KEY}",
-    "your-own-provider": {
-      "key": "sk-your-own-key",
-      "baseURL": "https://the.provider.com/v1",
+    "google": "${GOOGLE_API_KEY}"
+  },
+  "mapping": {
+    "normal": {
+      "agent": "anthropic/claude-sonnet-4",
+      "file-requests": "anthropic/claude-3.5-haiku",
+      "check-new-files": "anthropic/claude-sonnet-4"
+    }
+  },
+  "defaultMode": "normal"
+}
+```
+
+#### Advanced Configuration with New Providers
+
+```json
+{
+  "keys": {
+    "openrouter": "${OPENROUTER_API_KEY}",
+    "anthropic": "${ANTHROPIC_API_KEY}",
+    "nvidia": {
+      "key": "${NVIDIA_API_KEY}",
+      "baseURL": "https://integrate.api.nvidia.com/v1",
       "style": "openai"
+    },
+    "deepseek": "${DEEPSEEK_API_KEY}",
+    "xai": "${XAI_API_KEY}",
+    "custom-provider": {
+      "key": "sk-xxxxx",
+      "baseURL": "https://api.custom-provider.com/v1",
+      "style": "openai",
+      "headers": {
+        "X-Custom-Header": "value"
+      }
+    }
+  },
+  "models": {
+    "nvidia/moonshotai/kimi-k2.5": {
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking": true
+        }
+      }
+    },
+    "deepseek/deepseek-reasoner": {
+      "extraBody": {
+        "enable_thinking": true
+      }
     }
   },
   "mapping": {
@@ -52,14 +97,14 @@ This enables dead-code elimination in production builds.
       "check-new-files": "anthropic/claude-sonnet-4"
     },
     "max": {
-      "agent": "your-own-provider/your-model-name",
-      "file-requests": "anthropic/claude-sonnet-4",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "agent": "nvidia/moonshotai/kimi-k2.5",
+      "file-requests": "deepseek/deepseek-chat",
+      "check-new-files": "anthropic/claude-opus-4"
     },
     "experimental": {
       "agent": "google/gemini-2.5-pro",
-      "file-requests": "anthropic/claude-sonnet-4",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "file-requests": "xai/grok-4",
+      "check-new-files": "custom-provider/custom-model"
     },
     "ask": {
       "agent": "google/gemini-2.5-pro",
@@ -74,11 +119,60 @@ This enables dead-code elimination in production builds.
 ### Schema Rules
 
 - `keys`: Provider → API key mapping. Supports `${ENV_VAR}` interpolation.
+  - Simple string: `"provider": "api-key"`
+  - Object with options: `"provider": { "key": "api-key", "baseURL": "...", "style": "openai", "headers": {...} }`
+- `models`: Per-model configuration (key format: `"provider/model-id"`).
+  - `extraBody`: Extra request body parameters for specific models (e.g., Nvidia NIM's `chat_template_kwargs`).
 - `mapping`: CostMode → Operation → Model mapping. All 5 cost modes supported.
 - `defaultMode`: One of `free`, `normal`, `max`, `experimental`, `ask`.
 - `searchProviders`: Search provider → API key or URL mapping. Supports `${ENV_VAR}` interpolation.
 - Config is empty by default — user must fill in everything.
 - Missing keys produce clear error messages on first use.
+
+### Provider Key Options
+
+When using object format for provider keys:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `key` | string | **Required.** API key for the provider. |
+| `baseURL` | string | Custom base URL for the provider API. |
+| `style` | string | Provider style: `"openai"`, `"anthropic"`, or `"google"`. Defaults to `"openai"`. |
+| `headers` | object | Custom HTTP headers to send with each request. |
+
+### Per-Model Configuration
+
+The `models` section allows fine-grained control over individual models:
+
+```json
+{
+  "models": {
+    "nvidia/moonshotai/kimi-k2.5": {
+      "max_tokens": 16384,
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking": true
+        }
+      }
+    },
+    "deepseek/deepseek-reasoner": {
+      "max_tokens": 8192,
+      "extraBody": {
+        "enable_thinking": true
+      }
+    }
+  }
+}
+```
+
+Each model can have:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `max_tokens` | number | Maximum number of tokens to generate. Use this to prevent truncation on providers with low defaults (e.g., Nvidia NIM). |
+| `extraBody` | object | Extra request body parameters for provider-specific settings. |
+
+**Note:** Some providers (like Nvidia NIM) have very low default `max_tokens` (256-512), which causes responses to be truncated mid-sentence. Always set `max_tokens` for these providers.
 
 ### Search Providers
 
@@ -122,10 +216,46 @@ When `IS_CODEFLUFF`:
 
 ### Provider Routing
 
-- Models with `openrouter/` prefix → OpenRouter API
-- Models with `anthropic/` prefix → Anthropic API
-- Models with `openai/` prefix → OpenAI API
-- Models with `google/` prefix → Google Vertex AI / Gemini API
+| Prefix | Provider | Notes |
+|--------|----------|-------|
+| `anthropic/` | Anthropic API | Claude models. Native SDK. |
+| `openai/` | OpenAI API | GPT models. Native SDK. |
+| `google/` | Google Gemini API | Gemini models. Native SDK. |
+| `openrouter/` | OpenRouter | Unified API for multiple providers. |
+| `deepseek/` | DeepSeek API | OpenAI-compatible. Base URL: `https://api.deepseek.com/v1` |
+| `xai/` or `grok/` | XAI API | Grok models. OpenAI-compatible. Base URL: `https://api.x.ai/v1` |
+| `nvidia/` | Nvidia NIM | OpenAI-compatible. Base URL: `https://integrate.api.nvidia.com/v1` |
+| `new-api/` | New-API compatible | Generic OpenAI-compatible provider. Requires custom `baseURL`. |
+
+All OpenAI-compatible providers support custom `baseURL` and `headers` configuration.
+
+---
+
+## 3.5 Model Listing
+
+Codefluff supports listing available models from configured providers via the SDK:
+
+```typescript
+import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
+
+// List models from a specific provider
+const result = await listModelsForProvider('nvidia')
+console.log(result.models)
+
+// List all configured providers
+const allModels = await listAllModels()
+console.log(formatModelList(allModels))
+```
+
+Supported providers for model listing:
+- OpenAI (`/v1/models` endpoint)
+- Google Gemini (`/v1beta/models` endpoint)
+- DeepSeek (`/v1/models` endpoint)
+- XAI (`/v1/models` endpoint)
+- Nvidia NIM (`/v1/models` endpoint)
+- OpenRouter (`/api/v1/models` endpoint)
+- New-API compatible providers (`/v1/models` endpoint)
+- Anthropic (returns known models list)
 
 ---
 

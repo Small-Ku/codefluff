@@ -26,11 +26,23 @@ const providerKeySchema = z.union([
     key: z.string().min(1),
     baseURL: z.string().min(1).optional(),
     style: z.enum(['openai', 'anthropic', 'google']).optional(),
+    // Optional extra headers for providers like New-API
+    headers: z.record(z.string(), z.string()).optional(),
   }),
 ])
 
+// Per-model configuration
+const modelConfigSchema = z.object({
+  // Extra body parameters for this specific model (e.g., Nvidia NIM chat_template_kwargs)
+  extraBody: z.record(z.string(), z.unknown()).optional(),
+  // Maximum number of tokens to generate for this model
+  max_tokens: z.number().int().positive().optional(),
+})
+
 const codefluffConfigSchema = z.object({
   keys: z.record(z.string(), providerKeySchema).optional(),
+  // Per-model configuration (key: "provider/model-id")
+  models: z.record(z.string(), modelConfigSchema).optional(),
   mapping: z
     .record(
       z.string(),
@@ -48,7 +60,13 @@ const codefluffConfigSchema = z.object({
 export type CodefluffConfig = z.infer<typeof codefluffConfigSchema>
 export type ProviderKeyConfig =
   | string
-  | { key: string; baseURL?: string; style?: 'openai' | 'anthropic' | 'google' }
+  | {
+      key: string
+      baseURL?: string
+      style?: 'openai' | 'anthropic' | 'google'
+      headers?: Record<string, string>
+    }
+export type ModelConfig = z.infer<typeof modelConfigSchema>
 
 // ============================================================================
 // Env-var interpolation
@@ -66,6 +84,23 @@ function interpolateEnvVars(value: string): string {
   })
 }
 
+function interpolateEnvVarsInValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return interpolateEnvVars(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(interpolateEnvVarsInValue)
+  }
+  if (typeof value === 'object' && value !== null) {
+    const result: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = interpolateEnvVarsInValue(v)
+    }
+    return result
+  }
+  return value
+}
+
 function interpolateConfigKeys(
   obj: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -74,16 +109,8 @@ function interpolateConfigKeys(
     if (typeof value === 'string') {
       result[key] = interpolateEnvVars(value)
     } else if (typeof value === 'object' && value !== null && 'key' in value) {
-      const providerConfig = value as Record<string, unknown>
-      const interpolated: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries(providerConfig)) {
-        if (typeof v === 'string') {
-          interpolated[k] = interpolateEnvVars(v)
-        } else {
-          interpolated[k] = v
-        }
-      }
-      result[key] = interpolated
+      // Provider config object - interpolate all nested values
+      result[key] = interpolateEnvVarsInValue(value)
     } else {
       result[key] = value
     }
@@ -184,4 +211,16 @@ export function getDefaultMode(): CostMode {
 export function getSearchProviders(): Record<string, string> {
   const config = loadCodefluffConfig()
   return config.searchProviders ?? {}
+}
+
+/** Returns model-specific configuration */
+export function getModelConfig(model: string): ModelConfig | undefined {
+  const config = loadCodefluffConfig()
+  return config.models?.[model]
+}
+
+/** Returns max_tokens for a specific model */
+export function getModelMaxTokens(model: string): number | undefined {
+  const config = getModelConfig(model)
+  return config?.max_tokens
 }

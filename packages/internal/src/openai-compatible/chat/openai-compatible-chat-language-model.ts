@@ -60,6 +60,12 @@ export type OpenAICompatibleChatConfig = {
    * The supported URLs for the model.
    */
   supportedUrls?: () => LanguageModelV2['supportedUrls'];
+
+  /**
+   * Optional extra body parameters to include in API requests.
+   * These will be merged with the request body.
+   */
+  extraBody?: Record<string, unknown>;
 };
 
 export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
@@ -210,6 +216,9 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         // tools:
         tools: openaiTools,
         tool_choice: openaiToolChoice,
+
+        // extra body parameters from provider config:
+        ...this.config.extraBody,
       },
       warnings: [...warnings, ...toolWarnings],
     };

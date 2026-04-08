@@ -1,4 +1,5 @@
 import { globalStopSequence } from './constants'
+import { getModelMaxTokens } from '@codebuff/common/config/codefluff-config'
 
 import type { AgentTemplate } from './templates/types'
 import type { TrackEventFn } from '@codebuff/common/types/contracts/analytics'
@@ -79,7 +80,7 @@ export const getAgentStreamFromTemplate = (params: {
     includeCacheControl,
     logger,
     localAgentTemplates,
-    maxOutputTokens: undefined,
+    maxOutputTokens: getModelMaxTokens(model),
     maxRetries: 3,
     messages,
     model,

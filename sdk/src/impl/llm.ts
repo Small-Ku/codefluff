@@ -23,6 +23,9 @@ import {
   getModelForRequest,
   markChatGptOAuthRateLimited,
   markClaudeOAuthRateLimited,
+  getModelExtraBody,
+  getModelMaxTokens,
+  isCodefluffMode,
 } from './model-provider'
 import { getValidClaudeOAuthCredentials, refreshClaudeOAuthToken, refreshChatGptOAuthToken } from '../credentials'
 import { getErrorStatusCode } from '../error-utils'
@@ -71,7 +74,7 @@ function getProviderOptions(params: {
   n?: number
   costMode?: string
   cacheDebugCorrelation?: string
-}): { codebuff: JSONObject } {
+}): Record<string, JSONObject> {
   const {
     model,
     runId,
@@ -98,7 +101,14 @@ function getProviderOptions(params: {
     }
   }
 
-  return {
+  // Get extra body from model config for codefluff mode
+  const extraBody = isCodefluffMode() ? getModelExtraBody(model) : undefined
+
+  // Get max_tokens from model config for codefluff mode
+  // This ensures providers with low defaults (e.g., Nvidia NIM) get a reasonable limit
+  const maxTokens = isCodefluffMode() ? getModelMaxTokens(model) : undefined
+
+  const result: Record<string, JSONObject> = {
     ...providerOptions,
     // Could either be "codebuff" or "openaiCompatible"
     codebuff: {
@@ -116,6 +126,19 @@ function getProviderOptions(params: {
       provider: providerConfig,
     },
   }
+
+  // Add extra body for OpenAI-compatible providers in codefluff mode
+  // Also add max_tokens if configured to ensure it's always set in the request
+  if (extraBody || maxTokens) {
+    result.openai = {
+      extraBody: {
+        ...extraBody,
+        ...(maxTokens && { max_tokens: maxTokens }),
+      },
+    } as JSONObject
+  }
+
+  return result
 }
 
 // Usage accounting type for OpenRouter/Codebuff backend responses
