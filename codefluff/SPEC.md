@@ -2,7 +2,7 @@
 
 > **Codefluff is a personal fork of [Codebuff](https://codebuff.com).**
 
-Codefluff is a local BYOK (Bring Your Own Key) variant of the Codebuff CLI, distributed as a separate npm package (`codefluff`). It reuses the entire `cli/` package but builds with a compile-time flag that routes all model calls directly to providers using user-configured API keys, with a configurable M:N mapping from providers/models to modes/operations.
+Codefluff is a local BYOK (Bring Your Own Key) variant of the Codebuff CLI, distributed as a separate npm package (`codefluff`). It reuses the entire `cli/` package but builds with a compile-time flag that routes all model calls directly to providers using user-configured API keys, with a configurable M:N mapping from providers/models to cost modes and agents.
 
 ---
 
@@ -39,9 +39,8 @@ This enables dead-code elimination in production builds.
   },
   "mapping": {
     "normal": {
-      "agent": "anthropic/claude-sonnet-4",
-      "file-requests": "anthropic/claude-3.5-haiku",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "base": "anthropic/claude-sonnet-4",
+      "file-picker": "google/gemini-2.5-flash-lite"
     }
   },
   "defaultMode": "normal"
@@ -87,29 +86,25 @@ This enables dead-code elimination in production builds.
   },
   "mapping": {
     "free": {
-      "agent": "google/gemini-2.5-flash-lite",
-      "file-requests": "google/gemini-2.5-flash-lite",
-      "check-new-files": "google/gemini-2.5-flash-lite"
+      "base": "google/gemini-2.5-flash-lite"
     },
     "normal": {
-      "agent": "anthropic/claude-sonnet-4",
-      "file-requests": "anthropic/claude-3.5-haiku",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "base": "anthropic/claude-sonnet-4",
+      "file-picker": "google/gemini-2.5-flash-lite",
+      "editor": "anthropic/claude-opus-4"
     },
     "max": {
-      "agent": "nvidia-nim/moonshotai/kimi-k2.5",
-      "file-requests": "deepseek/deepseek-chat",
-      "check-new-files": "anthropic/claude-opus-4"
+      "base": "nvidia-nim/moonshotai/kimi-k2.5",
+      "file-picker": "google/gemini-2.5-flash-lite",
+      "editor": "anthropic/claude-opus-4",
+      "thinker": "anthropic/claude-opus-4"
     },
     "experimental": {
-      "agent": "google/gemini-2.5-pro",
-      "file-requests": "xai/grok-4",
-      "check-new-files": "custom-provider/custom-model"
+      "base": "google/gemini-2.5-pro",
+      "editor": "xai/grok-4"
     },
     "ask": {
-      "agent": "google/gemini-2.5-pro",
-      "file-requests": "anthropic/claude-3.5-haiku",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "base": "google/gemini-2.5-pro"
     }
   },
   "defaultMode": "normal"
@@ -123,11 +118,74 @@ This enables dead-code elimination in production builds.
   - Object with options: `"provider": { "key": "api-key", "baseURL": "...", "style": "openai", "headers": {...} }`
 - `models`: Per-model configuration (key format: `"provider/model-id"`).
   - `extraBody`: Extra request body parameters for specific models (e.g., Nvidia NIM's `chat_template_kwargs`).
-- `mapping`: CostMode → Operation → Model mapping. All 5 cost modes supported.
+  - `max_tokens`: Maximum tokens to generate (must be a numeric literal, not an env var).
+- `mapping`: CostMode → Agent → Model mapping. All 5 cost modes supported.
+  - `base`: Required. The default model for agents not explicitly listed.
+  - Additional keys: Agent IDs with their specific models (overrides `base`).
 - `defaultMode`: One of `free`, `normal`, `max`, `experimental`, `ask`.
+  - Note: if you set `defaultMode` to `experimental` or `ask` today, it currently behaves the same as `normal` (DEFAULT UI mode).
+
+**Important:** While 5 cost modes are recognized by the schema (`free`, `normal`, `max`, `experimental`, `ask`), only `free`, `normal`, and `max` are exposed as user-facing CLI/GUI modes today.
+
+- `experimental` and `ask` currently exist mainly as **configuration targets**.
+- Even if you pass `--mode experimental` or `--mode ask`, they currently behave the same as `--mode normal` (DEFAULT UI mode).
+- They only become active if some code path explicitly sets `costMode` to `experimental` or `ask`.
+
+For most users, configuring `free`, `normal`, and `max` is sufficient.
+
 - `searchProviders`: Search provider → API key or URL mapping. Supports `${ENV_VAR}` interpolation.
 - Config is empty by default — user must fill in everything.
 - Missing keys produce clear error messages on first use.
+
+#### Environment Variable Interpolation
+
+Environment variables can be interpolated using `${ENV_VAR}` syntax in:
+- `keys` (both string and object values)
+- `models` (string values within the structure)
+- `searchProviders` (string values)
+
+**Important:** Environment variable interpolation is **string substitution only**. Fields that expect numeric values (like `max_tokens`) must be specified as numeric literals, not env var references. For example:
+
+```json
+{
+  "models": {
+    "nvidia-nim/moonshotai/kimi-k2.5": {
+      "max_tokens": 16384,
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking": true,
+          "custom_param": "${CUSTOM_VALUE}"
+        }
+      }
+    }
+  }
+}
+```
+
+- ✅ `max_tokens: 16384` — numeric literal (correct)
+- ❌ `max_tokens: "${MAX_TOKENS}"` — string after interpolation (will fail validation)
+
+#### Model Resolution
+
+When resolving a model for an agent:
+
+1. Check if the agent ID has a specific mapping in the current mode: `mapping[mode][agentId]`
+2. If not found, fall back to: `mapping[mode].base`
+3. If `base` is not defined, throw an error
+
+Example resolution for `editor` agent in `normal` mode:
+```json
+{
+  "mapping": {
+    "normal": {
+      "base": "anthropic/claude-sonnet-4",
+      "editor": "anthropic/claude-opus-4"
+    }
+  }
+}
+```
+- `editor` agent → uses `claude-opus-4` (explicit mapping)
+- `file-picker` agent → uses `claude-sonnet-4` (falls back to `base`)
 
 ### Provider Key Options
 
@@ -147,7 +205,7 @@ The `models` section allows fine-grained control over individual models:
 ```json
 {
   "models": {
-    "nvidia/moonshotai/kimi-k2.5": {
+    "nvidia-nim/moonshotai/kimi-k2.5": {
       "max_tokens": 16384,
       "extraBody": {
         "chat_template_kwargs": {
@@ -209,7 +267,9 @@ Fallback behavior:
 
 When `IS_CODEFLUFF`:
 
-1. Model resolution reads from user config's `mapping[mode][operation]`
+1. Model resolution reads from user config's `mapping[mode]`:
+   - Check for agent-specific mapping: `mapping[mode][agentId]`
+   - Fall back to: `mapping[mode].base`
 2. All model calls go directly to providers using configured BYOK keys
 3. No Codebuff backend involvement for inference
 4. Each provider (OpenRouter, Anthropic, OpenAI, Google) gets its own direct model creation
@@ -276,12 +336,18 @@ Supported providers for model listing:
 
 ## 5. Mode Support
 
-Unlike Freebuff (FREE mode only), Codefluff supports ALL cost modes:
+Codefluff recognizes 5 cost modes in configuration:
 
 - `free`, `normal`, `max`, `experimental`, `ask`
-- Mode switching fully functional
-- `defaultMode` from config or CLI `--mode` flag
-- Mode preferences saved locally
+
+In the current UI/CLI mode picker, only `free`, `normal`, and `max` are exposed as distinct user-facing modes.
+
+- `experimental` and `ask` are currently **config-only targets** (accepted by schema).
+- Passing `--mode experimental` / `--mode ask` currently falls back to the normal/default UI flow.
+
+So, for most users, `free`, `normal`, and `max` are the only ones you need to set up.
+
+(If you want to actually use `experimental` or `ask`, you will need to change the CLI/UI to set `costMode` to those values.)
 
 ---
 
@@ -383,8 +449,8 @@ Add `CODEFLUFF_MODE` to the define flags:
 
 ### Phase 5: Mode Support
 
-14. Enable all cost modes
-15. Update chat-store and input-modes
+14. (Planned) Enable all cost modes as distinct user-facing modes
+15. (Planned) Update chat-store and input-modes
 
 ### Phase 6: Testing
 

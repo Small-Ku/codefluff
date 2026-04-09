@@ -8,7 +8,7 @@ Codefluff is a **local BYOK (Bring Your Own Key) variant** of Codebuff. It gives
 
 - **BYOK** — Use your own API keys. No subscription or credits.
 - **No server dependency** — All inference is between your machine and the model provider.
-- **M:N Model Mapping** — Map any provider/model to any cost mode and operation independently.
+- **M:N Model Mapping** — Map any provider/model to any cost mode and agent independently.
 - **Direct provider routing** — Calls go straight to Anthropic, OpenAI, Google, OpenRouter, or any OpenAI-compatible provider.
 - **Extended provider support** — Native support for DeepSeek, XAI (Grok), Nvidia NIM, and custom OpenAI-compatible APIs.
 - **Model listing** — List available models from all configured providers via SDK.
@@ -45,19 +45,16 @@ Create `~/.config/codefluff/config.json`:
   },
   "mapping": {
     "normal": {
-      "agent": "anthropic/claude-sonnet-4",
-      "file-requests": "anthropic/claude-3.5-haiku",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "base": "anthropic/claude-sonnet-4",
+      "file-picker": "google/gemini-2.5-flash-lite",
+      "editor": "anthropic/claude-opus-4"
     },
     "max": {
-      "agent": "your-own-provider/your-model-name",
-      "file-requests": "anthropic/claude-sonnet-4",
-      "check-new-files": "anthropic/claude-sonnet-4"
+      "base": "anthropic/claude-opus-4",
+      "editor": "openai/gpt-5"
     },
     "free": {
-      "agent": "google/gemini-2.5-flash-lite",
-      "file-requests": "google/gemini-2.5-flash-lite",
-      "check-new-files": "google/gemini-2.5-flash-lite"
+      "base": "google/gemini-2.5-flash-lite"
     }
   },
   "defaultMode": "normal"
@@ -77,9 +74,7 @@ Custom provider example:
   },
   "mapping": {
     "normal": {
-      "agent": "your-own-provider/your-model-name",
-      "file-requests": "your-own-provider/your-model-name",
-      "check-new-files": "your-own-provider/your-model-name"
+      "base": "your-own-provider/your-model-name"
     }
   }
 }
@@ -108,7 +103,7 @@ Supported providers:
 | Google | `google` | `AIza...` | Native Gemini |
 | DeepSeek | `deepseek` | `sk-...` | OpenAI-compatible |
 | XAI (Grok) | `xai` | `xai-...` | OpenAI-compatible |
-| Nvidia NIM | `nvidia` | `nvapi-...` | OpenAI-compatible |
+| Nvidia NIM | `nvidia-nim` | `nvapi-...` | OpenAI-compatible |
 | Custom | any name | varies | OpenAI-compatible |
 
 Custom providers with their own API endpoint:
@@ -128,24 +123,105 @@ Custom providers with their own API endpoint:
 
 ### Mapping
 
-The `mapping` object defines which model to use for each **cost mode** and **operation**:
+The `mapping` object defines which model to use for each **cost mode**. Within each mode, you can configure:
+
+- **`base`**: The default model for all agents not explicitly listed
+- **Agent IDs**: Specific models for individual agents (optional, overrides `base`)
 
 ```json
 {
   "mapping": {
     "<costMode>": {
-      "agent": "<model>",
-      "file-requests": "<model>",
-      "check-new-files": "<model>"
+      "base": "<default-model>",
+      "<agent-id>": "<specific-model>",
+      "<another-agent>": "<specific-model>"
     }
   }
 }
 ```
 
-- **Cost modes**: `free`, `normal`, `max`, `experimental`, `ask`
-- **Operations**: `agent` (main agent work), `file-requests` (context gathering), `check-new-files` (code review)
+- **Cost modes**: `free`, `normal`, `max` (primary modes)
+- **`base`**: Required. The fallback model for any agent not explicitly configured
+- **Agent IDs**: Optional. Specific models for individual agents (see Available Agents below)
+
+#### `experimental` and `ask` (config-only)
+
+There are two kinds of "modes" in this repo:
+
+- **UI modes** (what the TUI exposes): `default`, `free`, `max`, `plan`
+- **Cost modes** (what you configure in `mapping`): `free`, `normal`, `max`, `experimental`, `ask`
+
+The config schema recognizes `experimental` and `ask`, but they are **not exposed as distinct user-facing modes** in the current Codefluff UI.
+
+- The TUI mode picker only offers the primary cost modes: `free`, `normal`, `max` (plus `plan`, which is a UI-only planning mode).
+- `--mode experimental` and `--mode ask` currently behave the same as `--mode normal` (DEFAULT UI mode).
+- These two cost modes are effectively **configuration targets only** unless you modify the CLI/UI to explicitly set `costMode` to `experimental` or `ask`.
+
+For most users, configuring **only** `free`, `normal`, and `max` is the right setup.
 
 Model IDs use OpenRouter format: `provider/model-name` (e.g., `anthropic/claude-sonnet-4`, `google/gemini-2.5-pro`, `openai/gpt-4o`).
+
+**Example with per-agent configuration:**
+
+```json
+{
+  "mapping": {
+    "normal": {
+      "base": "anthropic/claude-sonnet-4",
+      "file-picker": "google/gemini-2.5-flash-lite",
+      "editor": "anthropic/claude-opus-4",
+      "thinker": "anthropic/claude-opus-4",
+      "code-reviewer": "google/gemini-2.5-pro"
+    }
+  }
+}
+```
+
+In this example:
+- Most agents use `claude-sonnet-4` (the `base`)
+- `file-picker` uses the faster, cheaper `gemini-2.5-flash-lite`
+- `editor` and `thinker` use the more capable `claude-opus-4`
+- `code-reviewer` uses `gemini-2.5-pro`
+
+#### Available Agents
+
+These are the agent IDs you can use in your mapping configuration:
+
+| Agent ID | Description |
+|----------|-------------|
+| **File Operations** ||
+| `file-picker` | Selects relevant files from the codebase |
+| `file-picker-max` | Enhanced file picker (MAX mode only) |
+| `file-lister` | Lists files in directories |
+| `code-searcher` | Searches code using patterns |
+| `directory-lister` | Lists directory contents |
+| `glob-matcher` | Finds files matching glob patterns |
+| **Research** ||
+| `researcher-web` | Web search and research |
+| `researcher-docs` | Documentation lookup |
+| **Editing** ||
+| `editor` | Code editing and file modifications |
+| `editor-multi-prompt` | Multi-prompt editing (MAX mode only) |
+| `editor-lite` | Lightweight editor |
+| **Review** ||
+| `code-reviewer` | Code review and analysis |
+| `code-reviewer-lite` | Lightweight code review (FREE mode only) |
+| `code-reviewer-multi-prompt` | Multi-prompt review (MAX mode only) |
+| **Thinking** ||
+| `thinker` | Problem solving and analysis |
+| `thinker-gpt` | Alternative thinker using GPT models |
+| `thinker-best-of-n-opus` | Multi-sample thinking (MAX mode only) |
+| **Tools** ||
+| `basher` | Terminal command execution |
+| `pwsher` | PowerShell command execution |
+| `tmux-cli` | Terminal multiplexer control |
+| `browser-use` | Browser automation |
+| **Advanced** ||
+| `opus-agent` | Claude Opus for complex tasks |
+| `gpt-5-agent` | GPT-5 for complex tasks |
+| `context-pruner` | Manages conversation context |
+
+**Note:** Some agents are only available in specific modes (e.g., `file-picker-max` only in MAX mode).
 
 ### Default Mode
 
@@ -262,6 +338,11 @@ Configure specific parameters for individual models using the `models` section:
 ```
 
 Each model can have its own `extraBody` configuration for provider-specific parameters.
+
+**Note on Environment Variable Interpolation:**
+- String values in `models` (including nested values in `extraBody`) support `${ENV_VAR}` interpolation
+- Numeric fields like `max_tokens` must be specified as numeric literals, not env var references
+- Example: `"custom_param": "${CUSTOM_VALUE}"` works, but `max_tokens: "${MAX_TOKENS}"` will fail validation
 
 ### Model Listing
 

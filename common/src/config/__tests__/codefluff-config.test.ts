@@ -64,9 +64,9 @@ describe('codefluff-config', () => {
         },
         mapping: {
           normal: {
-            agent: 'anthropic/claude-sonnet-4',
-            'file-requests': 'openai/gpt-4o',
-            'check-new-files': 'anthropic/claude-sonnet-4',
+            base: 'anthropic/claude-sonnet-4',
+            'file-picker': 'google/gemini-2.5-flash-lite',
+            editor: 'anthropic/claude-opus-4',
           },
         },
         defaultMode: 'normal',
@@ -81,7 +81,9 @@ describe('codefluff-config', () => {
         openai: 'sk-abc',
         anthropic: 'sk-def',
       })
-      expect(config.mapping?.normal?.agent).toBe('anthropic/claude-sonnet-4')
+      expect(config.mapping?.normal?.base).toBe('anthropic/claude-sonnet-4')
+      expect(config.mapping?.normal?.['file-picker']).toBe('google/gemini-2.5-flash-lite')
+      expect(config.mapping?.normal?.editor).toBe('anthropic/claude-opus-4')
       expect(config.defaultMode).toBe('normal')
       expect(config.searchProviders?.linkup).toBe('lk-123')
       restoreHome()
@@ -169,6 +171,29 @@ describe('codefluff-config', () => {
       writeConfig({
         keys: {
           openai: 42, // should be a string or object
+        },
+      })
+
+      const warnFn = mock(() => {})
+      const origWarn = console.warn
+      console.warn = warnFn
+
+      const config = loadCodefluffConfig()
+
+      expect(warnFn).toHaveBeenCalled()
+      expect(config).toEqual({})
+
+      console.warn = origWarn
+      restoreHome()
+    })
+
+    test('rejects mapping modes without base', () => {
+      overrideHome()
+      writeConfig({
+        mapping: {
+          normal: {
+            editor: 'anthropic/claude-opus-4',
+          },
         },
       })
 
@@ -341,7 +366,7 @@ describe('codefluff-config', () => {
       overrideHome()
       writeConfig({
         models: {
-          'nvidia/moonshotai/kimi-k2.5': {
+          'nvidia-nim/moonshotai/kimi-k2.5': {
             extraBody: {
               chat_template_kwargs: {
                 thinking: true,
@@ -357,7 +382,7 @@ describe('codefluff-config', () => {
         },
       })
 
-      const nvidiaConfig = getModelConfig('nvidia/moonshotai/kimi-k2.5')
+      const nvidiaConfig = getModelConfig('nvidia-nim/moonshotai/kimi-k2.5')
       expect(nvidiaConfig?.extraBody).toEqual({
         chat_template_kwargs: {
           thinking: true,
@@ -437,6 +462,55 @@ describe('codefluff-config', () => {
       const origWarn = console.warn
       console.warn = warnFn
 
+      const config = getModelConfig('openai/gpt-4')
+      expect(config).toBeUndefined()
+      expect(warnFn).toHaveBeenCalled()
+
+      console.warn = origWarn
+      restoreHome()
+    })
+
+    test('interpolates env vars in models.extraBody', () => {
+      overrideHome()
+      process.env.NVIDIA_TEMPLATE_VAR = 'thinking-mode'
+      writeConfig({
+        models: {
+          'nvidia/moonshotai/kimi-k2.5': {
+            extraBody: {
+              chat_template_kwargs: {
+                mode: '${NVIDIA_TEMPLATE_VAR}',
+              },
+            },
+          },
+        },
+      })
+
+      const config = getModelConfig('nvidia/moonshotai/kimi-k2.5')
+      expect(config?.extraBody).toEqual({
+        chat_template_kwargs: {
+          mode: 'thinking-mode',
+        },
+      })
+      restoreHome()
+    })
+
+    test('string env var in max_tokens fails validation (must be numeric literal)', () => {
+      overrideHome()
+      process.env.MAX_TOKENS = '8192'
+      writeConfig({
+        models: {
+          'openai/gpt-4': {
+            max_tokens: '${MAX_TOKENS}',
+          },
+        },
+      })
+
+      const warnFn = mock(() => {})
+      const origWarn = console.warn
+      console.warn = warnFn
+
+      // After interpolation, max_tokens becomes the string "8192", not the number 8192
+      // This fails schema validation which expects a number
       const config = getModelConfig('openai/gpt-4')
       expect(config).toBeUndefined()
       expect(warnFn).toHaveBeenCalled()

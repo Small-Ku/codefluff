@@ -214,6 +214,8 @@ export interface ModelRequestParams {
   skipChatGptOAuth?: boolean
   /** Cost mode (e.g. 'free') — affects fallback behavior for OAuth routes */
   costMode?: string
+  /** Agent ID for per-agent model resolution (Codefluff only) */
+  agentId?: string
 }
 
 /**
@@ -251,7 +253,7 @@ export async function getModelForRequest(
 
   if (isCodefluffMode()) {
     const resolvedModel =
-      resolveCodefluffModel(costMode ?? 'normal', 'agent') ?? model
+      resolveCodefluffModel(costMode ?? 'normal', params.agentId) ?? model
     return {
       model: createCodefluffDirectModel(resolvedModel),
       isClaudeOAuth: false,
@@ -646,9 +648,16 @@ function createCodefluffDirectModel(model: string): LanguageModel {
   const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
   const providerName = getProviderName(model)
 
-  // Get model-specific extraBody
+  // Get model-specific extraBody and max_tokens
   const modelConfig = getModelConfig(model)
   const extraBody = modelConfig?.extraBody
+  const maxTokens = modelConfig?.max_tokens
+
+  // Merge max_tokens into extraBody if configured
+  // This ensures providers like Nvidia NIM get the correct max_tokens in the request
+  const mergedExtraBody = maxTokens
+    ? { ...extraBody, max_tokens: maxTokens }
+    : extraBody
 
   if (style === 'anthropic') {
     const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
@@ -672,7 +681,7 @@ function createCodefluffDirectModel(model: string): LanguageModel {
       apiKey,
       ...(baseURL ? { baseURL } : {}),
       ...(headers ? { defaultHeaders: headers } : {}),
-      ...(extraBody ? { extraBody } : {}),
+      ...(mergedExtraBody ? { extraBody: mergedExtraBody } : {}),
     })
     return openai(modelId) as unknown as LanguageModel
   }
@@ -689,16 +698,16 @@ function createCodefluffDirectModel(model: string): LanguageModel {
         name: providerName,
         apiKey,
         headers: headers,
-        extraBody: extraBody,
+        extraBody: mergedExtraBody,
       })
       return customProvider.chatModel(modelId) as unknown as LanguageModel
     }
-    
+
     const openai = createOpenAI({
       apiKey,
       baseURL: resolvedBaseURL,
       ...(headers ? { defaultHeaders: headers } : {}),
-      ...(extraBody ? { extraBody } : {}),
+      ...(mergedExtraBody ? { extraBody: mergedExtraBody } : {}),
     })
     return openai(modelId) as unknown as LanguageModel
   }
@@ -709,7 +718,7 @@ function createCodefluffDirectModel(model: string): LanguageModel {
       apiKey,
       baseURL,
       ...(headers ? { defaultHeaders: headers } : {}),
-      ...(extraBody ? { extraBody } : {}),
+      ...(mergedExtraBody ? { extraBody: mergedExtraBody } : {}),
     })
     return openai(modelId) as unknown as LanguageModel
   }
@@ -773,17 +782,40 @@ export { isCodefluffMode } from './codefluff'
 export { resetCodefluffConfigCache } from '@codebuff/common/config/codefluff-config'
 
 
+/**
+ * SDK model resolver - returns null on missing configuration.
+ *
+ * Returns null to allow graceful fallback to passed model in getModelForRequest.
+ * Checks for agent-specific mapping first, then falls back to 'base'.
+ *
+ * @param costMode - The cost mode (free, normal, max, experimental, ask)
+ * @param agentId - The agent ID to look up (optional)
+ * @returns The model string, or null if not configured
+ *
+ * @note This differs from CLI's resolveModelForMode which throws errors.
+ * The SDK returns null so getModelForRequest can fall back to the agent's hardcoded model.
+ */
 export function resolveCodefluffModel(
   costMode: string,
-  operation: string,
+  agentId?: string,
 ): string | null {
   if (!isCodefluffMode()) return null
 
   const config = loadCodefluffConfig()
-  const modeMapping = (config.mapping as Record<string, Record<string, string>> | undefined)?.[costMode]
+  const modeMapping = config.mapping?.[costMode]
   if (!modeMapping) return null
 
-  return modeMapping[operation] ?? null
+  // Check for agent-specific mapping first
+  // Strip version suffix (e.g., "file-picker@1.0.0" -> "file-picker")
+  if (agentId) {
+    const baseAgentId = agentId.split('@')[0]
+    if (modeMapping[baseAgentId]) {
+      return modeMapping[baseAgentId]
+    }
+  }
+
+  // Fall back to 'base' as the default model
+  return modeMapping['base'] ?? null
 }
 
 export function getCodefluffDefaultMode(): string {

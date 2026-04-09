@@ -5,6 +5,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'fs'
 
 import {
   getModelExtraBody,
+  getModelMaxTokens,
   resetCodefluffConfigCache,
 } from '../model-provider'
 import { resetCodefluffConfigCache as resetCommonCache } from '@codebuff/common/config/codefluff-config'
@@ -62,10 +63,10 @@ describe('model-provider extraBody', () => {
       overrideHome()
       writeConfig({
         keys: {
-          nvidia: 'nvapi-123',
+          'nvidia-nim': 'nvapi-123',
         },
         models: {
-          'nvidia/moonshotai/kimi-k2.5': {
+          'nvidia-nim/moonshotai/kimi-k2.5': {
             extraBody: {
               chat_template_kwargs: {
                 thinking: true,
@@ -75,7 +76,7 @@ describe('model-provider extraBody', () => {
         },
       })
 
-      const extraBody = getModelExtraBody('nvidia/moonshotai/kimi-k2.5')
+      const extraBody = getModelExtraBody('nvidia-nim/moonshotai/kimi-k2.5')
       expect(extraBody).toEqual({
         chat_template_kwargs: {
           thinking: true,
@@ -116,6 +117,62 @@ describe('model-provider extraBody', () => {
 
       const extraBody = getModelExtraBody('unconfigured/model')
       expect(extraBody).toBeUndefined()
+      restoreHome()
+    })
+  })
+
+  describe('getModelMaxTokens', () => {
+    test('returns undefined when no max_tokens configured', () => {
+      overrideHome()
+      writeConfig({
+        keys: {
+          openai: 'sk-123',
+        },
+        models: {
+          'openai/gpt-4': {
+            extraBody: {},
+          },
+        },
+      })
+
+      const maxTokens = getModelMaxTokens('openai/gpt-4')
+      expect(maxTokens).toBeUndefined()
+      restoreHome()
+    })
+
+    test('returns model-level max_tokens', () => {
+      overrideHome()
+      writeConfig({
+        keys: {
+          'nvidia-nim': 'nvapi-123',
+        },
+        models: {
+          'nvidia-nim/moonshotai/kimi-k2.5': {
+            max_tokens: 16384,
+            extraBody: {
+              chat_template_kwargs: {
+                thinking: true,
+              },
+            },
+          },
+        },
+      })
+
+      const maxTokens = getModelMaxTokens('nvidia-nim/moonshotai/kimi-k2.5')
+      expect(maxTokens).toBe(16384)
+      restoreHome()
+    })
+
+    test('returns undefined for unconfigured model', () => {
+      overrideHome()
+      writeConfig({
+        keys: {
+          openai: 'sk-123',
+        },
+      })
+
+      const maxTokens = getModelMaxTokens('unconfigured/model')
+      expect(maxTokens).toBeUndefined()
       restoreHome()
     })
   })

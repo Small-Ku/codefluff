@@ -9,13 +9,11 @@ export {
   getDefaultMode,
   getSearchProviders as getConfiguredSearchProviders,
   costModes,
-  operations,
   resetCodefluffConfigCache,
 } from '@codebuff/common/config/codefluff-config'
 
 export type {
   CodefluffConfig,
   CostMode,
-  Operation,
   ProviderKeyConfig,
 } from '@codebuff/common/config/codefluff-config'

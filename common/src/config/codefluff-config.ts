@@ -17,9 +17,6 @@ import z from 'zod/v4'
 export const costModes = ['free', 'normal', 'max', 'experimental', 'ask'] as const
 export type CostMode = (typeof costModes)[number]
 
-export const operations = ['agent', 'file-requests', 'check-new-files'] as const
-export type Operation = (typeof operations)[number]
-
 const providerKeySchema = z.union([
   z.string().min(1),
   z.object({
@@ -39,20 +36,20 @@ const modelConfigSchema = z.object({
   max_tokens: z.number().int().positive().optional(),
 })
 
+const modeMappingSchema = z
+  .record(z.string(), z.string().min(1))
+  .refine((mapping) => 'base' in mapping && mapping.base.length > 0, {
+    message: 'Each cost mode mapping must define a "base" model',
+    path: ['base'],
+  })
+
 const codefluffConfigSchema = z.object({
   keys: z.record(z.string(), providerKeySchema).optional(),
   // Per-model configuration (key: "provider/model-id")
   models: z.record(z.string(), modelConfigSchema).optional(),
-  mapping: z
-    .record(
-      z.string(),
-      z.object({
-        agent: z.string().min(1).optional(),
-        'file-requests': z.string().min(1).optional(),
-        'check-new-files': z.string().min(1).optional(),
-      }),
-    )
-    .optional(),
+  // Mapping from cost mode to agent model configuration.
+  // Each mode must define 'base' as the default model.
+  mapping: z.record(z.string(), modeMappingSchema).optional(),
   defaultMode: z.string().optional(),
   searchProviders: z.record(z.string(), z.string().min(1)).optional(),
 })
@@ -158,6 +155,11 @@ export function loadCodefluffConfig(): CodefluffConfig {
             keys: interpolateConfigKeys(parsed.keys as Record<string, unknown>),
           }
         : {}),
+      ...(parsed.models
+        ? {
+            models: interpolateEnvVarsInValue(parsed.models) as Record<string, unknown>,
+          }
+        : {}),
       ...(parsed.searchProviders
         ? {
             searchProviders: Object.fromEntries(
@@ -170,6 +172,7 @@ export function loadCodefluffConfig(): CodefluffConfig {
     }
 
     const result = codefluffConfigSchema.parse(interpolated)
+
     _cachedConfig = result
     return result
   } catch (error) {
