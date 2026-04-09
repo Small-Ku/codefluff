@@ -44,7 +44,6 @@ export const COLLAPSED_BY_DEFAULT_AGENT_IDS = [
   'thinker-selector',
   'best-of-n-selector',
   'basher',
-  'pwsher',
   'code-searcher',
   'directory-lister',
   'glob-matcher',

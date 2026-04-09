@@ -125,9 +125,9 @@ const inputSchema = z
       ),
     shell: z
       .enum(['bash', 'powershell', 'pwsh', 'cmd'])
-      .default('bash')
+      .optional()
       .describe(
-        `Shell to use for command execution. 'bash' uses Git Bash on Windows. 'powershell' uses Windows PowerShell. 'pwsh' uses PowerShell Core. 'cmd' uses Command Prompt. Default 'bash'.`,
+        `Shell to use for command execution. If omitted, the client chooses a platform-appropriate default. 'bash' uses Git Bash on Windows. 'powershell' uses Windows PowerShell. 'pwsh' uses PowerShell Core. 'cmd' uses Command Prompt.`,
       ),
   })
   .describe(

@@ -213,7 +213,6 @@ These are the agent IDs you can use in your mapping configuration:
 | `thinker-best-of-n-opus` | Multi-sample thinking (MAX mode only) |
 | **Tools** ||
 | `basher` | Terminal command execution |
-| `pwsher` | PowerShell command execution |
 | `tmux-cli` | Terminal multiplexer control |
 | `browser-use` | Browser automation |
 | **Advanced** ||

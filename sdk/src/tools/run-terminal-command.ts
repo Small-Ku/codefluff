@@ -22,10 +22,7 @@ const GIT_BASH_COMMON_PATHS = [
 
 // WSL bash paths that are often unreliable (VM may not be running, quote escaping issues)
 // These are checked last as a fallback only
-const WSL_BASH_PATH_PATTERNS = [
-  'system32',
-  'windowsapps',
-]
+const WSL_BASH_PATH_PATTERNS = ['system32', 'windowsapps']
 
 /**
  * Find bash executable on Windows.
@@ -34,47 +31,38 @@ const WSL_BASH_PATH_PATTERNS = [
  * 2. Common Git Bash installation locations (most reliable)
  * 3. Non-WSL bash in PATH (e.g., Git Bash added to PATH)
  * 4. WSL bash in PATH (last resort - System32, WindowsApps)
- * 
- * WSL bash is deprioritized because it can fail with cryptic errors when:
- * - The WSL VM is not running
- * - Quote/argument escaping issues between Windows and Linux
- * - UTF-16 encoding mismatches
  */
 function findWindowsBash(env: NodeJS.ProcessEnv): string | null {
-  // Check for user-specified path via environment variable
   const customPath = env.CODEBUFF_GIT_BASH_PATH
   if (customPath && fs.existsSync(customPath)) {
     return customPath
   }
 
-  // Check common Git Bash installation locations first (most reliable)
   for (const commonPath of GIT_BASH_COMMON_PATHS) {
     if (fs.existsSync(commonPath)) {
       return commonPath
     }
   }
 
-  // Fall back to bash.exe in PATH, but skip WSL paths initially
   const pathEnv = env.PATH || env.Path || ''
   const pathDirs = pathEnv.split(path.delimiter)
   const wslFallbackPaths: string[] = []
-  
+
   for (const dir of pathDirs) {
     const dirLower = dir.toLowerCase()
-    const isWslPath = WSL_BASH_PATH_PATTERNS.some(pattern => dirLower.includes(pattern))
-    
+    const isWslPath = WSL_BASH_PATH_PATTERNS.some((pattern) =>
+      dirLower.includes(pattern),
+    )
+
     const bashPath = path.join(dir, 'bash.exe')
     if (fs.existsSync(bashPath)) {
       if (isWslPath) {
-        // Save WSL paths for last resort
         wslFallbackPaths.push(bashPath)
       } else {
-        // Non-WSL bash in PATH (e.g., Git Bash added to PATH)
         return bashPath
       }
     }
-    
-    // Also check for just 'bash' (without .exe)
+
     const bashPathNoExt = path.join(dir, 'bash')
     if (fs.existsSync(bashPathNoExt)) {
       if (isWslPath) {
@@ -85,8 +73,6 @@ function findWindowsBash(env: NodeJS.ProcessEnv): string | null {
     }
   }
 
-  // Last resort: use WSL bash if nothing else is available
-  // WSL can be unreliable (VM not running, quote escaping issues, UTF-16 encoding)
   if (wslFallbackPaths.length > 0) {
     return wslFallbackPaths[0]
   }
@@ -94,25 +80,9 @@ function findWindowsBash(env: NodeJS.ProcessEnv): string | null {
   return null
 }
 
-/**
- * Create an error message for Windows users when bash is not available.
- */
 function createWindowsBashNotFoundError(): Error {
   return new Error(
-    `Bash is required but was not found on this Windows system.
-
-To fix this, you have several options:
-
-1. Install Git for Windows (includes bash.exe):
-   Download from: https://git-scm.com/download/win
-
-2. Use WSL (Windows Subsystem for Linux):
-   Run in PowerShell (Admin): wsl --install
-   Then run Codebuff inside WSL.
-
-3. Set a custom bash path:
-   Set the CODEBUFF_GIT_BASH_PATH environment variable to your bash.exe location.
-   Example: set CODEBUFF_GIT_BASH_PATH=C:\\path\\to\\bash.exe`,
+    `Bash is required but was not found on this Windows system.\n\nTo fix this, you have several options:\n\n1. Install Git for Windows (includes bash.exe):\n   Download from: https://git-scm.com/download/win\n\n2. Use WSL (Windows Subsystem for Linux):\n   Run in PowerShell (Admin): wsl --install\n   Then run Codebuff inside WSL.\n\n3. Set a custom bash path:\n   Set the CODEBUFF_GIT_BASH_PATH environment variable to your bash.exe location.\n   Example: set CODEBUFF_GIT_BASH_PATH=C:\\path\\to\\bash.exe`,
   )
 }
 
@@ -120,8 +90,10 @@ To fix this, you have several options:
  * Find PowerShell Core (pwsh) executable on Windows - STRICT.
  * Only returns pwsh, never falls back to Windows PowerShell.
  */
-function findPwshStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
-  // Check for PowerShell Core (pwsh) in known locations
+function findPwshStrict(env: NodeJS.ProcessEnv): {
+  shell: string
+  shellArgs: string[]
+} | null {
   const pwshPaths = [
     'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
     'C:\\Program Files\\PowerShell\\6\\pwsh.exe',
@@ -132,7 +104,6 @@ function findPwshStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: str
     }
   }
 
-  // Check PATH for pwsh using the provided env
   const pathEnv = env.PATH || env.Path || ''
   const pathDirs = pathEnv.split(path.delimiter)
   for (const dir of pathDirs) {
@@ -149,8 +120,10 @@ function findPwshStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: str
  * Find Windows PowerShell (powershell.exe) executable on Windows - STRICT.
  * Only returns Windows PowerShell, never falls back to pwsh.
  */
-function findWindowsPowerShellStrict(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
-  // Check known Windows PowerShell locations
+function findWindowsPowerShellStrict(env: NodeJS.ProcessEnv): {
+  shell: string
+  shellArgs: string[]
+} | null {
   const psPaths = [
     'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
     'C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe',
@@ -161,7 +134,6 @@ function findWindowsPowerShellStrict(env: NodeJS.ProcessEnv): { shell: string; s
     }
   }
 
-  // Check PATH for powershell using the provided env
   const pathEnv = env.PATH || env.Path || ''
   const pathDirs = pathEnv.split(path.delimiter)
   for (const dir of pathDirs) {
@@ -177,13 +149,15 @@ function findWindowsPowerShellStrict(env: NodeJS.ProcessEnv): { shell: string; s
 /**
  * Find CMD executable on Windows.
  */
-function findWindowsCmd(env: NodeJS.ProcessEnv): { shell: string; shellArgs: string[] } | null {
+function findWindowsCmd(env: NodeJS.ProcessEnv): {
+  shell: string
+  shellArgs: string[]
+} | null {
   const cmdPath = 'C:\\Windows\\System32\\cmd.exe'
   if (fs.existsSync(cmdPath)) {
     return { shell: cmdPath, shellArgs: ['/c'] }
   }
 
-  // Check PATH using the provided env
   const pathEnv = env.PATH || env.Path || ''
   const pathDirs = pathEnv.split(path.delimiter)
   for (const dir of pathDirs) {
@@ -225,7 +199,6 @@ export function runTerminalCommand({
     let shell: string
     let shellArgs: string[]
 
-    // Determine shell based on preference and platform
     const preferredShell = shellPreference || 'bash'
 
     if (isWindows) {
@@ -233,13 +206,15 @@ export function runTerminalCommand({
         case 'pwsh': {
           const pwshResult = findPwshStrict(processEnv)
           if (!pwshResult) {
-            reject(new Error(
-              `PowerShell Core (pwsh) was requested but not found on this Windows system.\n\n` +
-              `To install PowerShell Core:\n` +
-              `  winget install Microsoft.PowerShell\n` +
-              `Or download from: https://github.com/PowerShell/PowerShell/releases\n\n` +
-              `Alternatively, use shell: 'powershell' for Windows PowerShell (if available).`
-            ))
+            reject(
+              new Error(
+                `PowerShell Core (pwsh) was requested but not found on this Windows system.\n\n` +
+                  `To install PowerShell Core:\n` +
+                  `  winget install Microsoft.PowerShell\n` +
+                  `Or download from: https://github.com/PowerShell/PowerShell/releases\n\n` +
+                  `Alternatively, use shell: 'powershell' for Windows PowerShell (if available).`,
+              ),
+            )
             return
           }
           shell = pwshResult.shell
@@ -249,12 +224,14 @@ export function runTerminalCommand({
         case 'powershell': {
           const psResult = findWindowsPowerShellStrict(processEnv)
           if (!psResult) {
-            reject(new Error(
-              `Windows PowerShell was requested but not found on this Windows system.\n\n` +
-              `This is unexpected as Windows PowerShell is included with Windows.\n` +
-              `Your PATH may be misconfigured.\n\n` +
-              `Alternatively, use shell: 'pwsh' for PowerShell Core, or 'cmd' for Command Prompt.`
-            ))
+            reject(
+              new Error(
+                `Windows PowerShell was requested but not found on this Windows system.\n\n` +
+                  `This is unexpected as Windows PowerShell is included with Windows.\n` +
+                  `Your PATH may be misconfigured.\n\n` +
+                  `Alternatively, use shell: 'pwsh' for PowerShell Core, or 'cmd' for Command Prompt.`,
+              ),
+            )
             return
           }
           shell = psResult.shell
@@ -264,10 +241,12 @@ export function runTerminalCommand({
         case 'cmd': {
           const cmdResult = findWindowsCmd(processEnv)
           if (!cmdResult) {
-            reject(new Error(
-              `Command Prompt (cmd) was requested but not found on this Windows system.\n\n` +
-              `This is unusual as cmd.exe should be available by default.`
-            ))
+            reject(
+              new Error(
+                `Command Prompt (cmd) was requested but not found on this Windows system.\n\n` +
+                  `This is unusual as cmd.exe should be available by default.`,
+              ),
+            )
             return
           }
           shell = cmdResult.shell
@@ -287,18 +266,18 @@ export function runTerminalCommand({
         }
       }
     } else {
-      // Non-Windows: only bash is supported
       if (preferredShell !== 'bash') {
-        reject(new Error(
-          `Shell '${preferredShell}' is only supported on Windows. On this platform, only 'bash' is available.`
-        ))
+        reject(
+          new Error(
+            `Shell '${preferredShell}' is only supported on Windows. On this platform, only 'bash' is available.`,
+          ),
+        )
         return
       }
       shell = 'bash'
       shellArgs = ['-c']
     }
 
-    // Resolve cwd to absolute path
     const resolvedCwd = path.resolve(cwd)
 
     const childProcess = spawn(shell, [...shellArgs, command], {
@@ -312,7 +291,6 @@ export function runTerminalCommand({
     let timer: NodeJS.Timeout | null = null
     let processFinished = false
 
-    // Set up timeout if timeout_seconds >= 0 (infinite timeout when < 0)
     if (timeout_seconds >= 0) {
       timer = setTimeout(() => {
         if (!processFinished) {
@@ -321,24 +299,19 @@ export function runTerminalCommand({
           if (!success) {
             childProcess.kill('SIGKILL')
           }
-          reject(
-            new Error(`Command timed out after ${timeout_seconds} seconds`),
-          )
+          reject(new Error(`Command timed out after ${timeout_seconds} seconds`))
         }
       }, timeout_seconds * 1000)
     }
 
-    // Collect stdout
     childProcess.stdout.on('data', (data: Buffer) => {
       stdout += data.toString()
     })
 
-    // Collect stderr
     childProcess.stderr.on('data', (data: Buffer) => {
       stderr += data.toString()
     })
 
-    // Handle process completion
     childProcess.on('close', (exitCode) => {
       if (processFinished) return
       processFinished = true
@@ -347,7 +320,6 @@ export function runTerminalCommand({
         clearTimeout(timer)
       }
 
-      // Truncate stdout to prevent excessive output
       const truncatedStdout = truncateStringWithMessage({
         str: stripColors(stdout),
         maxLength: COMMAND_OUTPUT_LIMIT,
@@ -360,7 +332,6 @@ export function runTerminalCommand({
         remove: 'MIDDLE',
       })
 
-      // Keep stdout/stderr separate (preferred); some consumers rely on stderr directly.
       const combinedOutput = {
         command,
         stdout: truncatedStdout,
@@ -371,7 +342,6 @@ export function runTerminalCommand({
       resolve([{ type: 'json', value: combinedOutput }])
     })
 
-    // Handle spawn errors
     childProcess.on('error', (error) => {
       if (processFinished) return
       processFinished = true

@@ -31,7 +31,6 @@ export const FREE_MODE_AGENT_MODELS: Record<string, Set<string>> = {
 
   // Command execution
   'basher': new Set(['google/gemini-3.1-flash-lite-preview']),
-  'pwsher': new Set(['google/gemini-3.1-flash-lite-preview']),
 
   // Editor for free mode
   'editor-lite': new Set(['minimax/minimax-m2.5']),
@@ -61,7 +60,6 @@ export const FREE_TIER_AGENTS = new Set([
   'file-lister',
   'researcher-web',
   'researcher-docs',
-  'pwsher',
 ])
 
 /**

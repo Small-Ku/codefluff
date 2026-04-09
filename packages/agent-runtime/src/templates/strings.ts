@@ -109,12 +109,6 @@ export async function formatPrompt(
     [PLACEHOLDER.GIT_CHANGES_PROMPT]: () => getGitChangesPrompt(fileContext),
     [PLACEHOLDER.REMAINING_STEPS]: () => `${agentState.stepsRemaining!}`,
     [PLACEHOLDER.PROJECT_ROOT]: () => fileContext.projectRoot,
-    [PLACEHOLDER.SHELL_AGENT_PROMPT]: () => {
-      // Return platform-appropriate shell agent name
-      // Use optional chaining for defensive access
-      const isWindows = fileContext.systemInfo?.platform === 'win32'
-      return isWindows ? 'pwsher (PowerShell on Windows)' : 'basher (bash)'
-    },
     [PLACEHOLDER.SYSTEM_INFO_PROMPT]: () => getSystemInfoPrompt(fileContext),
     [PLACEHOLDER.USER_CWD]: () => fileContext.cwd,
     [PLACEHOLDER.USER_INPUT_PROMPT]: () => escapeString(lastUserInput ?? ''),

@@ -50,7 +50,6 @@ const definition: AgentDefinition = {
       'researcher-web',
       'researcher-docs',
       'basher',
-      'pwsher',
       'code-reviewer',
       'code-reviewer-multi-prompt',
       'librarian',

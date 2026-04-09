@@ -1,6 +1,7 @@
 # Codefluff
 
 This is the **Codefluff** branch — a personal BYOK fork of [Codebuff](https://codebuff.com) that can merge upstream changes.
+BREAKING CHANGES are expected since we are a new fork that didn't release yet.
 
 ## What is Codefluff?
 

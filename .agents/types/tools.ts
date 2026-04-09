@@ -261,7 +261,10 @@ export interface SetMessagesParams {
 /**
  * JSON object to set as the agent output. This completely replaces any previous output. If the agent was spawned, this value will be passed back to its parent. If the agent has an outputSchema defined, the output will be validated against it.
  */
-export interface SetOutputParams {}
+export type SetOutputParams = {
+  /** Optional alternate wrapper accepted by the runtime tool. */
+  data?: unknown
+} & Record<string, unknown>
 
 /**
  * Spawn multiple agents and send a prompt and/or parameters to each of them. These agents will run in parallel. Note that that means they will run independently. If you need to run agents sequentially, use spawn_agents with one agent at a time instead.

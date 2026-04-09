@@ -66,6 +66,13 @@ describe('commander agent', () => {
       expect(schema?.params?.required).not.toContain('rawOutput')
     })
 
+    test('has optional shell parameter', () => {
+      const schema = commander.inputSchema
+      const shellProp = schema?.params?.properties?.shell
+      expect(shellProp && typeof shellProp === 'object' && 'type' in shellProp && shellProp.type).toBe('string')
+      expect(schema?.params?.required).not.toContain('shell')
+    })
+
     test('has prompt parameter', () => {
       expect(commander.inputSchema?.prompt?.type).toBe('string')
     })
@@ -115,10 +122,39 @@ describe('commander agent', () => {
 
       const result = generator.next()
 
+      const isWindows = process.platform === 'win32'
+
       expect(result.value).toEqual({
         toolName: 'run_terminal_command',
         input: {
           command: 'ls -la',
+          ...(isWindows ? { shell: 'pwsh' } : {}),
+        },
+      })
+    })
+
+    test('yields run_terminal_command with explicit shell', () => {
+      const mockAgentState = createMockAgentState()
+      const mockLogger = {
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      }
+
+      const generator = commander.handleSteps!({
+        agentState: mockAgentState,
+        logger: mockLogger as any,
+        params: { command: 'dir', shell: 'pwsh' },
+      })
+
+      const result = generator.next()
+
+      expect(result.value).toEqual({
+        toolName: 'run_terminal_command',
+        input: {
+          command: 'dir',
+          shell: 'pwsh',
         },
       })
     })
@@ -140,11 +176,14 @@ describe('commander agent', () => {
 
       const result = generator.next()
 
+      const isWindows = process.platform === 'win32'
+
       expect(result.value).toEqual({
         toolName: 'run_terminal_command',
         input: {
           command: 'sleep 10',
           timeout_seconds: 60,
+          ...(isWindows ? { shell: 'pwsh' } : {}),
         },
       })
     })
@@ -254,7 +293,7 @@ describe('commander agent', () => {
       expect(toolCall.input.output).toBe('')
     })
 
-    test('handles non-json tool result', () => {
+    test('handles string json tool result', () => {
       const mockAgentState = createMockAgentState()
       const mockLogger = {
         debug: () => {},
@@ -272,7 +311,6 @@ describe('commander agent', () => {
       // First yield is the command
       generator.next()
 
-      // Second yield with non-json result
       const mockToolResult = {
         agentState: createMockAgentState(),
         toolResult: [{ type: 'json' as const, value: 'plain text output' }],
@@ -285,7 +323,64 @@ describe('commander agent', () => {
         input: { output: string }
       }
       expect(toolCall.toolName).toBe('set_output')
-      expect(toolCall.input.output).toBe('')
+      expect(toolCall.input.output).toBe('plain text output')
+    })
+
+    test('falls back to powershell when pwsh is not found (no explicit shell)', () => {
+      const mockAgentState = createMockAgentState()
+      const mockLogger = {
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      }
+
+      const generator = commander.handleSteps!({
+        agentState: mockAgentState,
+        logger: mockLogger as any,
+        params: { command: 'Get-ChildItem' },
+      })
+
+      const isWindows = process.platform === 'win32'
+
+      const first = generator.next()
+      expect(first.value).toEqual({
+        toolName: 'run_terminal_command',
+        input: {
+          command: 'Get-ChildItem',
+          ...(isWindows ? { shell: 'pwsh' } : {}),
+        },
+      })
+
+      // This fallback path is Windows-specific.
+      if (!isWindows) {
+        return
+      }
+
+      const mockPwshNotFound = {
+        agentState: createMockAgentState(),
+        toolResult: [
+          {
+            type: 'json' as const,
+            value: {
+              stdout: '',
+              stderr:
+                'PowerShell Core (pwsh) was requested but not found on this Windows system.',
+              exitCode: 1,
+            },
+          },
+        ],
+        stepsComplete: true,
+      }
+
+      const second = generator.next(mockPwshNotFound)
+      expect(second.value).toEqual({
+        toolName: 'run_terminal_command',
+        input: {
+          command: 'Get-ChildItem',
+          shell: 'powershell',
+        },
+      })
     })
 
     test('handleSteps can be serialized for sandbox execution', () => {
