@@ -1,18 +1,22 @@
-import { globalStopSequence } from './constants'
 import { getModelMaxTokens } from '@codebuff/common/config/codefluff-config'
-
-import type { AgentTemplate } from './templates/types'
-import type { TrackEventFn } from '@codebuff/common/types/contracts/analytics'
-import type { SendActionFn } from '@codebuff/common/types/contracts/client'
 import type { CacheDebugUsageData, PromptAiSdkStreamFn } from '@codebuff/common/types/contracts/llm'
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type { ParamsOf } from '@codebuff/common/types/function-params'
 import type { Message } from '@codebuff/common/types/messages/codebuff-message'
-import type { OpenRouterProviderOptions } from '@codebuff/internal/openrouter-ai-sdk'
+import type { TrackEventFn } from '@codebuff/common/types/contracts/analytics'
+import type { SendActionFn } from '@codebuff/common/types/contracts/client'
 import type { ToolSet } from 'ai'
+import type { OpenRouterProviderOptions } from '@codebuff/internal/openrouter-ai-sdk'
+
+import { globalStopSequence } from './constants'
+import type { AgentTemplate } from './templates/types'
 
 export const getAgentStreamFromTemplate = (params: {
+  /** Stable mapping key for Codefluff per-agent model overrides (usually the agent template id). */
+  agentMappingKey?: string
+  /** Legacy agent id (often runtime/run id). */
   agentId?: string
+
   apiKey: string
   clientSessionId: string
   costMode?: string
@@ -42,6 +46,7 @@ export const getAgentStreamFromTemplate = (params: {
 }): ReturnType<PromptAiSdkStreamFn> => {
   const {
     agentId,
+    agentMappingKey,
     apiKey,
     clientSessionId,
     costMode,
@@ -58,7 +63,6 @@ export const getAgentStreamFromTemplate = (params: {
     cacheDebugCorrelation,
     onCacheDebugProviderRequestBuilt,
     onCacheDebugUsageReceived,
-
     sendAction,
     onCostCalculated,
     promptAiSdkStream,
@@ -73,6 +77,7 @@ export const getAgentStreamFromTemplate = (params: {
 
   const aiSdkStreamParams: ParamsOf<PromptAiSdkStreamFn> = {
     agentId,
+    agentMappingKey,
     apiKey,
     clientSessionId,
     costMode,
@@ -94,7 +99,6 @@ export const getAgentStreamFromTemplate = (params: {
     cacheDebugCorrelation,
     onCacheDebugProviderRequestBuilt,
     onCacheDebugUsageReceived,
-
     onCostCalculated,
     sendAction,
     trackEvent,

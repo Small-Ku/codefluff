@@ -356,6 +356,7 @@ export const runAgentStep = async (
         : undefined,
       onCacheDebugProviderRequestBuilt,
       onCacheDebugUsageReceived,
+      agentMappingKey: agentTemplate.id,
     })
 
     if (result.aborted) {
@@ -405,6 +406,7 @@ export const runAgentStep = async (
   const stream = getAgentStreamFromTemplate({
     ...params,
     agentId: agentState.parentId ? agentState.agentId : undefined,
+    agentMappingKey: agentTemplate.id,
     costMode: params.costMode,
     cacheDebugCorrelation: cacheDebugCorrelation
       ? serializeCacheDebugCorrelation(cacheDebugCorrelation)

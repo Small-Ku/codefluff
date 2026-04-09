@@ -44,6 +44,9 @@ export type PromptAiSdkStreamFn = (
     chargeUser?: boolean
     thinkingBudget?: number
     userInputId: string
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "basher"). */
+    agentMappingKey?: string
+    /** Legacy agent id (often runtime/run id). */
     agentId?: string
     maxRetries?: number
     onCostCalculated?: (credits: number) => Promise<void>
@@ -80,6 +83,9 @@ export type PromptAiSdkFn = (
     model: Model
     userId: string | undefined
     chargeUser?: boolean
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "basher"). */
+    agentMappingKey?: string
+    /** Legacy agent id (often runtime/run id). */
     agentId?: string
     onCostCalculated?: (credits: number) => Promise<void>
     onCacheDebugProviderRequestBuilt?: (params: {
@@ -116,6 +122,9 @@ export type PromptAiSdkStructuredInput<T> = {
   temperature?: number
   timeout?: number
   chargeUser?: boolean
+  /** Stable mapping key for Codefluff per-agent model overrides (e.g. "basher"). */
+  agentMappingKey?: string
+  /** Legacy agent id (often runtime/run id). */
   agentId?: string
   onCostCalculated?: (credits: number) => Promise<void>
   onCacheDebugProviderRequestBuilt?: (params: {

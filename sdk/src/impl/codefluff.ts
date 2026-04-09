@@ -5,6 +5,8 @@
  * once per process, eliminating the previous double mock-server startup bug.
  */
 
+import { getSdkEnv } from '../env'
+
 let _setupComplete = false
 
 /**
@@ -22,5 +24,5 @@ export async function ensureCodefluffSetup(): Promise<void> {
 }
 
 export function isCodefluffMode(): boolean {
-  return process.env.CODEFLUFF_MODE === 'true'
+  return getSdkEnv().CODEFLUFF_MODE === 'true'
 }

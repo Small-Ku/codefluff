@@ -8,6 +8,7 @@
  */
 
 import path from 'path'
+import fs from 'fs'
 
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
@@ -44,6 +45,8 @@ import { isCodefluffMode } from './codefluff'
 import {
   getByokOpenrouterApiKeyFromEnv,
   getCodefluffByokKeysFromEnv,
+  getCodefluffModelResolutionDebugFilePathFromEnv,
+  isCodefluffModelResolutionDebugEnabledFromEnv,
 } from '../env'
 import {
   createChatGptBackendFetch,
@@ -214,7 +217,15 @@ export interface ModelRequestParams {
   skipChatGptOAuth?: boolean
   /** Cost mode (e.g. 'free') — affects fallback behavior for OAuth routes */
   costMode?: string
-  /** Agent ID for per-agent model resolution (Codefluff only) */
+  /**
+   * Explicit, stable mapping key used to look up per-agent model overrides in Codefluff.
+   * This should be the agent template id (e.g. "basher", "file-picker", "editor-multi-prompt").
+   */
+  agentMappingKey?: string
+  /**
+   * Legacy identifier, often a runtime/run id. Kept for backwards compatibility.
+   * Prefer agentMappingKey for mapping lookups.
+   */
   agentId?: string
 }
 
@@ -251,9 +262,54 @@ export async function getModelForRequest(
 ): Promise<ModelResult> {
   const { apiKey, model, skipClaudeOAuth, skipChatGptOAuth, costMode } = params
 
-  if (isCodefluffMode()) {
-    const resolvedModel =
-      resolveCodefluffModel(costMode ?? 'normal', params.agentId) ?? model
+  const costModeResolved = costMode ?? 'normal'
+  const debugEnabled = isCodefluffModelResolutionDebugEnabled()
+
+  if (!isCodefluffMode()) {
+    if (debugEnabled) {
+      logCodefluffModelResolution({
+        ts: new Date().toISOString(),
+        codefluffMode: false,
+        costMode: costModeResolved,
+        agentId: params.agentId ?? null,
+        agentMappingKey: params.agentMappingKey ?? null,
+        requestedModel: model,
+        resolvedModel: null,
+        mappingDecision: 'not-codefluff-mode',
+        requestedProvider: getProviderName(model),
+        resolvedProvider: null,
+        providerConfig: null,
+        note: 'CODEFLUFF_MODE is not "true". Codefluff mapping is skipped.',
+      })
+    }
+
+    // Non-codefluff routes (Claude OAuth, ChatGPT OAuth, Codebuff backend)...
+  } else {
+    const mappingKey = params.agentMappingKey ?? params.agentId
+    const resolutionDebug = resolveCodefluffModelDebug(costModeResolved, mappingKey)
+    const resolvedModel = resolutionDebug.resolvedModel ?? model
+
+    if (debugEnabled) {
+      const requestedProvider = getProviderName(model)
+      const resolvedProvider = getProviderName(resolvedModel)
+      const providerDebug = getCodefluffProviderConfigDebug(resolvedModel)
+
+      logCodefluffModelResolution({
+        ts: new Date().toISOString(),
+        codefluffMode: true,
+        costMode: costModeResolved,
+        agentId: params.agentId ?? null,
+        agentMappingKey: params.agentMappingKey ?? null,
+        requestedModel: model,
+        resolvedModel,
+        mappingDecision: resolutionDebug.decision,
+        requestedProvider,
+        resolvedProvider,
+        providerConfig: providerDebug,
+        note: null,
+      })
+    }
+
     return {
       model: createCodefluffDirectModel(resolvedModel),
       isClaudeOAuth: false,
@@ -799,23 +855,184 @@ export function resolveCodefluffModel(
   costMode: string,
   agentId?: string,
 ): string | null {
-  if (!isCodefluffMode()) return null
+  return resolveCodefluffModelDebug(costMode, agentId).resolvedModel
+}
+
+type CodefluffModelResolutionDecision =
+  | 'not-codefluff-mode'
+  | 'no-mode-mapping'
+  | 'agent-specific'
+  | 'base'
+  | 'no-base'
+
+export type CodefluffModelResolutionDebug = {
+  resolvedModel: string | null
+  decision: CodefluffModelResolutionDecision
+}
+
+export function resolveCodefluffModelDebug(
+  costMode: string,
+  agentId?: string,
+): CodefluffModelResolutionDebug {
+  if (!isCodefluffMode()) {
+    return { resolvedModel: null, decision: 'not-codefluff-mode' }
+  }
 
   const config = loadCodefluffConfig()
   const modeMapping = config.mapping?.[costMode]
-  if (!modeMapping) return null
+  if (!modeMapping) {
+    return { resolvedModel: null, decision: 'no-mode-mapping' }
+  }
 
-  // Check for agent-specific mapping first
-  // Strip version suffix (e.g., "file-picker@1.0.0" -> "file-picker")
   if (agentId) {
     const baseAgentId = agentId.split('@')[0]
-    if (modeMapping[baseAgentId]) {
-      return modeMapping[baseAgentId]
+    const mapped = modeMapping[baseAgentId]
+    if (mapped) {
+      return { resolvedModel: mapped, decision: 'agent-specific' }
     }
   }
 
-  // Fall back to 'base' as the default model
-  return modeMapping['base'] ?? null
+  const base = modeMapping['base']
+  if (base) {
+    return { resolvedModel: base, decision: 'base' }
+  }
+
+  return { resolvedModel: null, decision: 'no-base' }
+}
+
+type CodefluffModelResolutionLogLine = {
+  ts: string
+  codefluffMode: boolean
+  costMode: string
+  agentId: string | null
+  agentMappingKey: string | null
+  requestedModel: string
+  resolvedModel: string | null
+  mappingDecision: CodefluffModelResolutionDecision
+  requestedProvider: string
+  resolvedProvider: string | null
+  providerConfig: ProviderConfigDebug | null
+  note: string | null
+}
+
+let didLogNonCodefluffModeDebug = false
+
+function isCodefluffModelResolutionDebugEnabled(): boolean {
+  return isCodefluffModelResolutionDebugEnabledFromEnv()
+}
+
+function getCodefluffModelResolutionDebugFilePath(): string | null {
+  return getCodefluffModelResolutionDebugFilePathFromEnv()
+}
+
+function logCodefluffModelResolution(line: CodefluffModelResolutionLogLine): void {
+  // Avoid spamming the same “not in codefluff mode” note.
+  if (!line.codefluffMode) {
+    if (didLogNonCodefluffModeDebug) return
+    didLogNonCodefluffModeDebug = true
+  }
+
+  const prefix = '[CODEFLUFF_MODEL_RESOLUTION]'
+  const payload = JSON.stringify(line)
+
+  const debugFilePath = getCodefluffModelResolutionDebugFilePath()
+  if (debugFilePath) {
+    try {
+      fs.appendFileSync(debugFilePath, `${prefix} ${payload}\n`, 'utf8')
+      return
+    } catch {
+      // Fall back to stderr if file logging fails.
+    }
+  }
+
+  // Intentionally do NOT log API keys or headers.
+  // Use stderr so it shows up even if stdout is used for TUI rendering.
+  console.error(prefix, payload)
+}
+
+type ProviderConfigDebug = {
+  providerName: string
+  style: 'openai' | 'anthropic' | 'google'
+  baseURL?: string
+  source: 'env' | 'config' | 'missing'
+}
+
+function getCodefluffProviderConfigDebug(model: string): ProviderConfigDebug {
+  const providerName = getProviderName(model)
+
+  const envKeys = getCodefluffByokKeysFromEnv()
+  if (envKeys) {
+    // Built-in well-known providers
+    if (providerName === 'anthropic') {
+      return { providerName, style: 'anthropic', source: envKeys.anthropic ? 'env' : 'missing' }
+    }
+    if (providerName === 'openai') {
+      return { providerName, style: 'openai', baseURL: PROVIDER_BASE_URLS.openai, source: envKeys.openai ? 'env' : 'missing' }
+    }
+    if (providerName === 'google') {
+      return { providerName, style: 'google', source: envKeys.google ? 'env' : 'missing' }
+    }
+
+    const key = envKeys[providerName] ?? envKeys.openrouter
+    if (!key) {
+      return { providerName, style: 'openai', source: 'missing' }
+    }
+
+    return {
+      providerName,
+      style: 'openai',
+      baseURL: PROVIDER_BASE_URLS[providerName],
+      source: 'env',
+    }
+  }
+
+  const config = loadCodefluffConfig()
+  const keys = config.keys ?? {}
+  const providerValue = keys[providerName]
+
+  if (!providerValue) {
+    return { providerName, style: 'openai', source: 'missing' }
+  }
+
+  if (typeof providerValue === 'string') {
+    if (providerName === 'anthropic') {
+      return { providerName, style: 'anthropic', source: 'config' }
+    }
+    if (providerName === 'openai') {
+      return {
+        providerName,
+        style: 'openai',
+        baseURL: PROVIDER_BASE_URLS.openai,
+        source: 'config',
+      }
+    }
+    if (providerName === 'google') {
+      return { providerName, style: 'google', source: 'config' }
+    }
+
+    return {
+      providerName,
+      style: 'openai',
+      baseURL: PROVIDER_BASE_URLS[providerName],
+      source: 'config',
+    }
+  }
+
+  if (typeof providerValue === 'object' && providerValue !== null) {
+    const style = ((providerValue as { style?: string }).style ?? 'openai') as
+      | 'openai'
+      | 'anthropic'
+      | 'google'
+
+    return {
+      providerName,
+      style,
+      baseURL: (providerValue as { baseURL?: string }).baseURL,
+      source: 'config',
+    }
+  }
+
+  return { providerName, style: 'openai', source: 'missing' }
 }
 
 export function getCodefluffDefaultMode(): string {

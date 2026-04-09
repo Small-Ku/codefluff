@@ -44,6 +44,8 @@ export async function promptFlashWithFallbacks(
     useFinetunedModel?: FinetunedVertexModel | undefined
     promptAiSdk: PromptAiSdkFn
     logger: Logger
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "file-picker"). */
+    agentMappingKey?: string
   } & ParamsExcluding<PromptAiSdkFn, 'messages'>,
 ): Promise<string> {
   const {
@@ -53,6 +55,7 @@ export async function promptFlashWithFallbacks(
     useFinetunedModel,
     promptAiSdk,
     logger,
+    agentMappingKey,
   } = params
 
   // Try finetuned model first if enabled
@@ -63,6 +66,7 @@ export async function promptFlashWithFallbacks(
           ...params,
           messages,
           model: useFinetunedModel,
+          agentMappingKey,
         }),
       )
     } catch (error) {
@@ -79,7 +83,7 @@ export async function promptFlashWithFallbacks(
 
   try {
     // First try Gemini
-    return unwrapPromptResult(await promptAiSdk({ ...params, messages }))
+    return unwrapPromptResult(await promptAiSdk({ ...params, messages, agentMappingKey }))
   } catch (error) {
     // Don't fall back on user-initiated aborts - propagate immediately
     if (isAbortError(error)) {
@@ -96,6 +100,7 @@ export async function promptFlashWithFallbacks(
         model: useGPT4oInsteadOfClaude
           ? openaiModels.gpt4o
           : openrouterModels.openrouter_claude_3_5_haiku,
+        agentMappingKey,
       }),
     )
   }

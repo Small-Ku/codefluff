@@ -40,6 +40,8 @@ export async function requestRelevantFiles(
     userId: string | undefined
     repoId: string | undefined
     logger: Logger
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "file-picker"). */
+    agentMappingKey?: string
   } & ParamsExcluding<
     typeof getRelevantFiles,
     'messages' | 'userPrompt' | 'requestType' | 'modelId'
@@ -110,6 +112,8 @@ export async function requestRelevantFilesForTraining(
     fileContext: ProjectFileContext
     assistantPrompt: string | null
     logger: Logger
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "file-picker"). */
+    agentMappingKey?: string
   } & ParamsExcluding<
     typeof getRelevantFilesForTraining,
     'messages' | 'userPrompt' | 'requestType'
@@ -223,6 +227,7 @@ async function getRelevantFiles(
     messages: codebuffMessages,
     model: models.openrouter_gemini2_5_flash,
     useFinetunedModel: finetunedModel,
+    agentMappingKey: params.agentMappingKey,
   })
   const end = performance.now()
   const duration = end - start
@@ -251,6 +256,8 @@ async function getRelevantFilesForTraining(
     repoId: string | undefined
     promptAiSdk: PromptAiSdkFn
     logger: Logger
+    /** Stable mapping key for Codefluff per-agent model overrides (e.g. "file-picker"). */
+    agentMappingKey?: string
   } & ParamsExcluding<PromptAiSdkFn, 'messages' | 'model' | 'chargeUser'>,
 ) {
   const {
@@ -266,6 +273,7 @@ async function getRelevantFilesForTraining(
     repoId: _repoId,
     promptAiSdk,
     logger,
+    agentMappingKey,
   } = params
   const bufferTokens = 100_000
   const messagesWithPrompt = getMessagesSubset({
@@ -280,6 +288,7 @@ async function getRelevantFilesForTraining(
       messages: messagesWithSystem({ messages: messagesWithPrompt, system }),
       model: models.openrouter_claude_sonnet_4,
       chargeUser: false,
+      agentMappingKey,
     }),
   )
   const end = performance.now()

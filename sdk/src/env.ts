@@ -9,6 +9,7 @@ import { BYOK_OPENROUTER_ENV_VAR } from '@codebuff/common/constants/byok'
 import { CHATGPT_OAUTH_TOKEN_ENV_VAR } from '@codebuff/common/constants/chatgpt-oauth'
 import { CLAUDE_OAUTH_TOKEN_ENV_VAR } from '@codebuff/common/constants/claude-oauth'
 import { API_KEY_ENV_VAR } from '@codebuff/common/constants/paths'
+import { IS_DEV } from '@codebuff/common/env'
 import { getBaseEnv } from '@codebuff/common/env-process'
 
 import type { SdkEnv } from './types/env'
@@ -33,6 +34,20 @@ export const getSdkEnv = (): SdkEnv => ({
   // Codefluff mode
   CODEFLUFF_MODE: process.env.CODEFLUFF_MODE,
 })
+
+export const isCodefluffModelResolutionDebugEnabledFromEnv = (): boolean => {
+  if (!IS_DEV) return false
+  const raw = process.env.CODEFLUFF_MODEL_RESOLUTION_DEBUG
+  if (!raw) return false
+  return raw === '1' || raw.toLowerCase() === 'true'
+}
+
+export const getCodefluffModelResolutionDebugFilePathFromEnv = (): string | null => {
+  const raw = process.env.CODEFLUFF_MODEL_RESOLUTION_DEBUG_FILE
+  if (!raw) return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
 
 export const getCodebuffApiKeyFromEnv = (): string | undefined => {
   return process.env[API_KEY_ENV_VAR]

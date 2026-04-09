@@ -11,6 +11,7 @@ import {
   startAgentRun,
 } from './database'
 import { promptAiSdk, promptAiSdkStream, promptAiSdkStructured } from './llm'
+import { isCodefluffMode } from './codefluff'
 
 import type {
   AgentRuntimeDeps,
@@ -51,7 +52,7 @@ export async function getAgentRuntimeImpl(
     sendSubagentChunk,
   } = params
 
-  if (process.env.CODEFLUFF_MODE === 'true') {
+  if (isCodefluffMode()) {
     const { ensureCodefluffSetup } = await import('./codefluff')
     await ensureCodefluffSetup()
   }

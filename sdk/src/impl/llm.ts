@@ -332,6 +332,7 @@ export async function* promptAiSdkStream(
     skipClaudeOAuth: params.skipClaudeOAuth,
     skipChatGptOAuth: params.skipChatGptOAuth,
     costMode: params.costMode,
+    agentMappingKey: (params as { agentMappingKey?: string }).agentMappingKey,
     agentId: params.agentId,
   }
   const { model: aiSDKModel, isClaudeOAuth, isChatGptOAuth } =
@@ -851,6 +852,7 @@ export async function promptAiSdk(
     model: params.model,
     skipClaudeOAuth: true, // Always use Codebuff backend for non-streaming
     skipChatGptOAuth: true, // Always use Codebuff backend for non-streaming
+    agentMappingKey: (params as { agentMappingKey?: string }).agentMappingKey,
     agentId: params.agentId,
   }
   const { model: aiSDKModel } = await getModelForRequest(modelParams)
@@ -920,6 +922,7 @@ export async function promptAiSdkStructured<T>(
     model: params.model,
     skipClaudeOAuth: true, // Always use Codebuff backend for non-streaming
     skipChatGptOAuth: true, // Always use Codebuff backend for non-streaming
+    agentMappingKey: (params as { agentMappingKey?: string }).agentMappingKey,
     agentId: params.agentId,
   }
   const { model: aiSDKModel } = await getModelForRequest(modelParams)

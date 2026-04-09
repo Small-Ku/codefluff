@@ -3,6 +3,8 @@ import os from 'os'
 import path from 'path'
 
 import { env } from '@codebuff/common/env'
+
+import { getCliEnv } from '../env'
 import { getCiEnv } from '@codebuff/common/env-ci'
 import { z } from 'zod'
 
@@ -44,7 +46,7 @@ const credentialsSchema = z
 
 // Get the config directory path
 export const getConfigDir = (): string => {
-  const isCodefluff = process.env.CODEFLUFF_MODE === 'true'
+  const isCodefluff = getCliEnv().CODEFLUFF_MODE === 'true'
   const configDirName = isCodefluff ? 'codefluff' : 'manicode'
   return path.join(
     os.homedir(),
