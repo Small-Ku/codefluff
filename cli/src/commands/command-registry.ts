@@ -26,6 +26,7 @@ import { AGENT_MODES, IS_FREEBUFF, IS_CODEFLUFF } from '../utils/constants'
 import { getSystemMessage, getUserMessage } from '../utils/message-history'
 import { capturePendingAttachments } from '../utils/pending-attachments'
 import { getSkillByName } from '../utils/skill-registry'
+import { loadLocalAgents } from '../utils/local-agent-registry'
 
 import type { MultilineInputHandle } from '../components/multiline-input'
 import type { InputValue, PendingAttachment } from '../types/store'
@@ -672,6 +673,25 @@ const ALL_COMMANDS: CommandDefinition[] = [
       clearInput(params)
     },
   }),
+  ...(IS_CODEFLUFF
+    ? [
+        defineCommand({
+          name: 'fluff:list-agents',
+          handler: (params) => {
+            const agents = loadLocalAgents(params.agentMode)
+            const list = agents.map((a) => `• ${a.id}`).join('\n')
+            const mode = params.agentMode
+            params.setMessages((prev) => [
+              ...prev,
+              getUserMessage(params.inputValue.trim()),
+              getSystemMessage(`Available agents in ${mode} mode:\n${list}`),
+            ])
+            params.saveToHistory(params.inputValue.trim())
+            clearInput(params)
+          },
+        }),
+      ]
+    : []),
 ]
 
 export const COMMAND_REGISTRY: CommandDefinition[] = IS_FREEBUFF

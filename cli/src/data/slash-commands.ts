@@ -24,14 +24,13 @@ export interface SlashCommand {
 }
 
 // Generate mode commands from the AGENT_MODES constant (excluded in Freebuff)
-const MODE_COMMANDS: SlashCommand[] =
-  IS_FREEBUFF
-    ? []
-    : AGENT_MODES.map((mode) => ({
-        id: `mode:${mode.toLowerCase()}`,
-        label: `mode:${mode.toLowerCase()}`,
-        description: `Switch to ${mode} mode`,
-      }))
+const MODE_COMMANDS: SlashCommand[] = IS_FREEBUFF
+  ? []
+  : AGENT_MODES.map((mode) => ({
+      id: `mode:${mode.toLowerCase()}`,
+      label: `mode:${mode.toLowerCase()}`,
+      description: `Switch to ${mode} mode`,
+    }))
 
 const FREEBUFF_REMOVED_COMMAND_IDS = new Set([
   'connect:claude',
@@ -212,6 +211,15 @@ const ALL_SLASH_COMMANDS: SlashCommand[] = [
     label: 'theme:toggle',
     description: 'Toggle between light and dark mode',
   },
+  ...(IS_CODEFLUFF
+    ? [
+        {
+          id: 'fluff:list-agents',
+          label: 'fluff:list-agents',
+          description: 'List available agents under current mode',
+        },
+      ]
+    : []),
   {
     id: 'logout',
     label: 'logout',
