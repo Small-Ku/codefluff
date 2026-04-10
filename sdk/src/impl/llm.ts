@@ -3,7 +3,11 @@ import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import { models, PROFIT_MARGIN } from '@codebuff/common/old-constants'
 import { buildArray } from '@codebuff/common/util/array'
 import { normalizeProviderRequestBodyForCacheDebug } from '@codebuff/common/util/cache-debug'
-import { getErrorObject, promptAborted, promptSuccess } from '@codebuff/common/util/error'
+import {
+  getErrorObject,
+  promptAborted,
+  promptSuccess,
+} from '@codebuff/common/util/error'
 import { convertCbToModelMessages } from '@codebuff/common/util/messages'
 import { isExplicitlyDefinedModel } from '@codebuff/common/util/model-utils'
 import { StopSequenceHandler } from '@codebuff/common/util/stop-sequence'
@@ -23,11 +27,18 @@ import {
   getModelForRequest,
   markChatGptOAuthRateLimited,
   markClaudeOAuthRateLimited,
-  getModelExtraBody,
-  getModelMaxTokens,
-  isCodefluffMode,
+ getModelExtraBody,
+ getModelMaxTokens,
+ getModelTemperature,
+ getModelTopP,
+ getModelTopK,
+ isCodefluffMode,
 } from './model-provider'
-import { getValidClaudeOAuthCredentials, refreshClaudeOAuthToken, refreshChatGptOAuthToken } from '../credentials'
+import {
+  getValidClaudeOAuthCredentials,
+  refreshClaudeOAuthToken,
+  refreshChatGptOAuthToken,
+} from '../credentials'
 import { getErrorStatusCode } from '../error-utils'
 
 import type { ModelRequestParams } from './model-provider'
@@ -108,6 +119,11 @@ function getProviderOptions(params: {
   // This ensures providers with low defaults (e.g., Nvidia NIM) get a reasonable limit
   const maxTokens = isCodefluffMode() ? getModelMaxTokens(model) : undefined
 
+ // Get temperature, top_p, and top_k from model config for codefluff mode
+ const temperature = isCodefluffMode() ? getModelTemperature(model) : undefined
+ const topP = isCodefluffMode() ? getModelTopP(model) : undefined
+ const topK = isCodefluffMode() ? getModelTopK(model) : undefined
+
   const result: Record<string, JSONObject> = {
     ...providerOptions,
     // Could either be "codebuff" or "openaiCompatible"
@@ -121,22 +137,30 @@ function getProviderOptions(params: {
         ...(costMode && { cost_mode: costMode }),
         ...(cacheDebugCorrelation && {
           cache_debug_correlation: cacheDebugCorrelation,
-        }),
-      },
-      provider: providerConfig,
-    },
-  }
+        }), },
+ provider: providerConfig,
+ },
+ }
 
-  // Add extra body for OpenAI-compatible providers in codefluff mode
-  // Also add max_tokens if configured to ensure it's always set in the request
-  if (extraBody || maxTokens) {
-    result.openai = {
-      extraBody: {
-        ...extraBody,
-        ...(maxTokens && { max_tokens: maxTokens }),
-      },
-    } as JSONObject
-  }
+ // Add extra body for OpenAI-compatible providers in codefluff mode
+ // Also add max_tokens, temperature, top_p, and top_k if configured
+ if (
+ extraBody ||
+ maxTokens ||
+ temperature !== undefined ||
+ topP !== undefined ||
+ topK !== undefined
+ ) {
+ result.openai = {
+ extraBody: {
+ ...extraBody,
+ ...(maxTokens && { max_tokens: maxTokens }),
+ ...(temperature !== undefined && { temperature }),
+ ...(topP !== undefined && { top_p: topP }),
+ ...(topK !== undefined && { top_k: topK }),
+ },
+ } as JSONObject
+ }
 
   return result
 }
@@ -306,12 +330,15 @@ export async function* promptAiSdkStream(
     onClaudeOAuthStatusChange?: (isActive: boolean) => void
   },
 ): ReturnType<PromptAiSdkStreamFn> {
-  const {
-    providerOptions: originalProviderOptions,
-    ...streamParams
-  } = params
+  const { providerOptions: originalProviderOptions, ...streamParams } = params
 
-  const { logger, trackEvent, userId, userInputId, model: requestedModel } = params
+  const {
+    logger,
+    trackEvent,
+    userId,
+    userInputId,
+    model: requestedModel,
+  } = params
   const agentChunkMetadata =
     params.agentId != null ? { agentId: params.agentId } : undefined
 
@@ -335,8 +362,11 @@ export async function* promptAiSdkStream(
     agentMappingKey: (params as { agentMappingKey?: string }).agentMappingKey,
     agentId: params.agentId,
   }
-  const { model: aiSDKModel, isClaudeOAuth, isChatGptOAuth } =
-    await getModelForRequest(modelParams)
+  const {
+    model: aiSDKModel,
+    isClaudeOAuth,
+    isChatGptOAuth,
+  } = await getModelForRequest(modelParams)
 
   // Track and notify about Claude OAuth usage
   if (isClaudeOAuth) {
@@ -378,12 +408,12 @@ export async function* promptAiSdkStream(
     ...(isChatGptOAuth
       ? {}
       : {
-        providerOptions: getProviderOptions({
-          ...params,
-          providerOptions: originalProviderOptions,
-          agentProviderOptions: params.agentProviderOptions,
+          providerOptions: getProviderOptions({
+            ...params,
+            providerOptions: originalProviderOptions,
+            agentProviderOptions: params.agentProviderOptions,
+          }),
         }),
-      }),
     // Handle tool call errors gracefully by passing them through to our validation layer
     // instead of throwing (which would halt the agent). The only special case is when
     // the tool name matches a spawnable agent - transform those to spawn_agents calls.
@@ -599,7 +629,10 @@ export async function* promptAiSdkStream(
       })
 
       if (chatGptErrorPolicy === 'fallback-rate-limit') {
-        const rateLimitErrorDetails = chunkValue.error instanceof Error ? chunkValue.error.message : String(chunkValue.error)
+        const rateLimitErrorDetails =
+          chunkValue.error instanceof Error
+            ? chunkValue.error.message
+            : String(chunkValue.error)
         logger.warn(
           { error: getErrorObject(chunkValue.error) },
           'ChatGPT OAuth rate limited during stream',
@@ -656,7 +689,10 @@ export async function* promptAiSdkStream(
         if (!params.claudeOAuthRetried) {
           const refreshed = await refreshClaudeOAuthToken()
           if (refreshed) {
-            logger.info({ model: requestedModel }, 'Claude OAuth token refreshed, retrying request')
+            logger.info(
+              { model: requestedModel },
+              'Claude OAuth token refreshed, retrying request',
+            )
             const retryResult = yield* promptAiSdkStream({
               ...params,
               claudeOAuthRetried: true,
@@ -666,7 +702,10 @@ export async function* promptAiSdkStream(
         }
 
         // Refresh failed or already retried — fall back to Codebuff backend
-        logger.info({ model: requestedModel }, 'Claude OAuth token refresh unsuccessful, falling back to Codebuff backend')
+        logger.info(
+          { model: requestedModel },
+          'Claude OAuth token refresh unsuccessful, falling back to Codebuff backend',
+        )
         if (params.onClaudeOAuthStatusChange) {
           params.onClaudeOAuthStatusChange(false)
         }
@@ -697,14 +736,20 @@ export async function* promptAiSdkStream(
         if (!params.chatGptOAuthRetried) {
           const refreshed = await refreshChatGptOAuthToken()
           if (refreshed) {
-            logger.info({ model: requestedModel }, 'ChatGPT OAuth token refreshed, retrying request')
+            logger.info(
+              { model: requestedModel },
+              'ChatGPT OAuth token refreshed, retrying request',
+            )
             const retryResult = yield* promptAiSdkStream({
               ...params,
               chatGptOAuthRetried: true,
             })
             return retryResult
           }
-          logger.warn({ model: requestedModel }, 'ChatGPT OAuth token refresh failed, unable to recover')
+          logger.warn(
+            { model: requestedModel },
+            'ChatGPT OAuth token refresh failed, unable to recover',
+          )
         }
 
         // Refresh failed or already retried
@@ -738,11 +783,8 @@ export async function* promptAiSdkStream(
     if (chunkValue.type === 'reasoning-delta') {
       const reasoningExcluded = (['openrouter', 'codebuff'] as const).some(
         (p) =>
-          (
-            params.providerOptions?.[p] as
-            | OpenRouterProviderOptions
-            | undefined
-          )?.reasoning?.exclude,
+          (params.providerOptions?.[p] as OpenRouterProviderOptions | undefined)
+            ?.reasoning?.exclude,
       )
       if (!reasoningExcluded) {
         yield {

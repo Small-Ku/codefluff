@@ -313,7 +313,7 @@ For OpenAI-compatible providers, you can specify additional options:
 | `style` | API style: `"openai"`, `"anthropic"`, or `"google"` |
 | `headers` | Custom HTTP headers |
 
-#### Per-Model Configuration
+#### Per-Model Configuration (OpenAI-compatible API only)
 
 Configure specific parameters for individual models using the `models` section:
 
@@ -321,22 +321,34 @@ Configure specific parameters for individual models using the `models` section:
 {
   "models": {
     "nvidia-nim/moonshotai/kimi-k2.5": {
+      "max_tokens": 16384,
+      "top_p": 0.95,
       "extraBody": {
-        "chat_template_kwargs": {
-          "thinking": true
-        }
+        "chat_template_kwargs": {"thinking": true}
       }
     },
-    "deepseek/deepseek-reasoner": {
+    "nvidia-nim/z-ai/glm5": {
+      "max_tokens": 8192,
+      "top_p": 0.95,
       "extraBody": {
-        "enable_thinking": true
+        "chat_template_kwargs": {"enable_thinking":true,"clear_thinking":false}
       }
     }
   }
 }
 ```
 
-Each model can have its own `extraBody` configuration for provider-specific parameters.
+Supported parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `temperature` | Number (0-2) | Controls randomness. Lower is more deterministic. |
+| `top_p` | Number (0-1) | Nucleus sampling: considers tokens with cumulative probability $\le$ P. |
+| `top_k` | Integer ($\ge -1$) | Top-K sampling: considers only the K most likely tokens. `-1` disables filtering (Anthropic default). |
+| `max_tokens` | Integer | Maximum number of tokens to generate. |
+| `extraBody` | Object | Provider-specific parameters passed directly in the request body. |
+
+Each model can have its own configuration to fine-tune its behavior.
 
 **Note on Environment Variable Interpolation:**
 - String values in `models` (including nested values in `extraBody`) support `${ENV_VAR}` interpolation

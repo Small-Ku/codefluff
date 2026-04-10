@@ -13,7 +13,10 @@ import fs from 'fs'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
-import { loadCodefluffConfig, getModelConfig } from '@codebuff/common/config/codefluff-config'
+import {
+  loadCodefluffConfig,
+  getModelConfig,
+} from '@codebuff/common/config/codefluff-config'
 import { BYOK_OPENROUTER_HEADER } from '@codebuff/common/constants/byok'
 import { isFreeMode } from '@codebuff/common/constants/free-agents'
 import {
@@ -286,7 +289,10 @@ export async function getModelForRequest(
     // Non-codefluff routes (Claude OAuth, ChatGPT OAuth, Codebuff backend)...
   } else {
     const mappingKey = params.agentMappingKey ?? params.agentId
-    const resolutionDebug = resolveCodefluffModelDebug(costModeResolved, mappingKey)
+    const resolutionDebug = resolveCodefluffModelDebug(
+      costModeResolved,
+      mappingKey,
+    )
     const resolvedModel = resolutionDebug.resolvedModel ?? model
 
     if (debugEnabled) {
@@ -701,35 +707,43 @@ function createCodefluffDirectModel(model: string): LanguageModel {
     )
   }
 
-  const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
-  const providerName = getProviderName(model)
+ const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
+ const providerName = getProviderName(model)
 
-  // Get model-specific extraBody and max_tokens
-  const modelConfig = getModelConfig(model)
-  const extraBody = modelConfig?.extraBody
-  const maxTokens = modelConfig?.max_tokens
+ // Get model-specific configuration (extraBody, max_tokens)
+ // Note: temperature, top_p, top_k are handled in llm.ts via providerOptions for all providers
+ const modelConfig = getModelConfig(model)
+ const extraBody = modelConfig?.extraBody
+ const maxTokens = modelConfig?.max_tokens
 
-  // Merge max_tokens into extraBody if configured
-  // This ensures providers like Nvidia NIM get the correct max_tokens in the request
-  const mergedExtraBody = maxTokens
-    ? { ...extraBody, max_tokens: maxTokens }
-    : extraBody
+ // Merge max_tokens into extraBody if configured
+ // This ensures providers like Nvidia NIM get the correct max_tokens in the request
+ const mergedExtraBody = maxTokens
+ ? { ...extraBody, max_tokens: maxTokens }
+ : extraBody
 
-  if (style === 'anthropic') {
-    const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
-    const anthropic = createAnthropic({
-      apiKey,
-      ...(baseURL ? { baseURL } : {}),
-    })
-    // Note: Anthropic SDK doesn't support extraBody in the same way
-    return anthropic(anthropicModelId) as unknown as LanguageModel
-  }
+ if (style === 'anthropic') {
+ const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
+ const anthropic = createAnthropic({
+ apiKey,
+ ...(baseURL ? { baseURL } : {}),
+ })
+ // Note: Anthropic SDK doesn't support passing temperature/topP/topK at model creation time.
+ // These settings are passed at request time via the model's second argument in streamText/generateText.
+ // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
+ return anthropic(anthropicModelId) as unknown as LanguageModel
+ }
 
-  if (style === 'google') {
-    const google = createGoogleGenerativeAI({ apiKey, ...(baseURL ? { baseURL } : {}) })
-    // Note: Google SDK doesn't support extraBody in the same way
-    return google(modelId) as unknown as LanguageModel
-  }
+ if (style === 'google') {
+ const google = createGoogleGenerativeAI({
+ apiKey,
+ ...(baseURL ? { baseURL } : {}),
+ })
+ // Note: Google SDK doesn't support passing temperature/topP/topK at model creation time.
+ // These settings are passed at request time via the model's second argument in streamText/generateText.
+ // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
+ return google(modelId) as unknown as LanguageModel
+ }
 
   // OpenAI-compatible style (works for OpenAI-compatible providers, OpenRouter, StepFun, DeepSeek, etc.)
   if (providerName === 'openai') {
@@ -745,10 +759,15 @@ function createCodefluffDirectModel(model: string): LanguageModel {
   // Handle new providers: deepseek, xai, nvidia-nim, new-api, etc.
   // They all use OpenAI-compatible APIs
   if (['deepseek', 'xai', 'nvidia-nim', 'new-api'].includes(providerName)) {
-    const resolvedBaseURL = baseURL || PROVIDER_BASE_URLS[providerName] || 'https://api.openai.com/v1'
-    
+    const resolvedBaseURL =
+      baseURL || PROVIDER_BASE_URLS[providerName] || 'https://api.openai.com/v1'
+
     // Use custom OpenAICompatible provider for better control
-    if (providerName === 'nvidia-nim' || providerName === 'new-api' || baseURL) {
+    if (
+      providerName === 'nvidia-nim' ||
+      providerName === 'new-api' ||
+      baseURL
+    ) {
       const customProvider = createOpenAICompatible({
         baseURL: resolvedBaseURL,
         name: providerName,
@@ -837,7 +856,6 @@ function createCodefluffDirectModel(model: string): LanguageModel {
 export { isCodefluffMode } from './codefluff'
 export { resetCodefluffConfigCache } from '@codebuff/common/config/codefluff-config'
 
-
 /**
  * SDK model resolver - returns null on missing configuration.
  *
@@ -925,7 +943,9 @@ function getCodefluffModelResolutionDebugFilePath(): string | null {
   return getCodefluffModelResolutionDebugFilePathFromEnv()
 }
 
-function logCodefluffModelResolution(line: CodefluffModelResolutionLogLine): void {
+function logCodefluffModelResolution(
+  line: CodefluffModelResolutionLogLine,
+): void {
   // Avoid spamming the same “not in codefluff mode” note.
   if (!line.codefluffMode) {
     if (didLogNonCodefluffModeDebug) return
@@ -964,13 +984,26 @@ function getCodefluffProviderConfigDebug(model: string): ProviderConfigDebug {
   if (envKeys) {
     // Built-in well-known providers
     if (providerName === 'anthropic') {
-      return { providerName, style: 'anthropic', source: envKeys.anthropic ? 'env' : 'missing' }
+      return {
+        providerName,
+        style: 'anthropic',
+        source: envKeys.anthropic ? 'env' : 'missing',
+      }
     }
     if (providerName === 'openai') {
-      return { providerName, style: 'openai', baseURL: PROVIDER_BASE_URLS.openai, source: envKeys.openai ? 'env' : 'missing' }
+      return {
+        providerName,
+        style: 'openai',
+        baseURL: PROVIDER_BASE_URLS.openai,
+        source: envKeys.openai ? 'env' : 'missing',
+      }
     }
     if (providerName === 'google') {
-      return { providerName, style: 'google', source: envKeys.google ? 'env' : 'missing' }
+      return {
+        providerName,
+        style: 'google',
+        source: envKeys.google ? 'env' : 'missing',
+      }
     }
 
     const key = envKeys[providerName] ?? envKeys.openrouter
@@ -1043,7 +1076,9 @@ export function getCodefluffDefaultMode(): string {
 /**
  * Get extra body parameters for a specific model
  */
-export function getModelExtraBody(model: string): Record<string, unknown> | undefined {
+export function getModelExtraBody(
+  model: string,
+): Record<string, unknown> | undefined {
   const modelConfig = getModelConfig(model)
   return modelConfig?.extraBody
 }
@@ -1052,3 +1087,18 @@ export function getModelExtraBody(model: string): Record<string, unknown> | unde
  * Get max_tokens for a specific model
  */
 export { getModelMaxTokens } from '@codebuff/common/config/codefluff-config'
+
+/**
+ * Get temperature for a specific model
+ */
+export { getModelTemperature } from '@codebuff/common/config/codefluff-config'
+
+/**
+ * Get top_p for a specific model
+ */
+export { getModelTopP } from '@codebuff/common/config/codefluff-config'
+
+/**
+ * Get top_k for a specific model
+ */
+export { getModelTopK } from '@codebuff/common/config/codefluff-config'

@@ -14,7 +14,13 @@ import z from 'zod/v4'
 // Schema
 // ============================================================================
 
-export const costModes = ['free', 'normal', 'max', 'experimental', 'ask'] as const
+export const costModes = [
+  'free',
+  'normal',
+  'max',
+  'experimental',
+  'ask',
+] as const
 export type CostMode = (typeof costModes)[number]
 
 const providerKeySchema = z.union([
@@ -30,10 +36,17 @@ const providerKeySchema = z.union([
 
 // Per-model configuration
 const modelConfigSchema = z.object({
-  // Extra body parameters for this specific model (e.g., Nvidia NIM chat_template_kwargs)
-  extraBody: z.record(z.string(), z.unknown()).optional(),
-  // Maximum number of tokens to generate for this model
-  max_tokens: z.number().int().positive().optional(),
+ // Extra body parameters for this specific model (e.g., Nvidia NIM chat_template_kwargs)
+ extraBody: z.record(z.string(), z.unknown()).optional(),
+ // Maximum number of tokens to generate for this model
+ max_tokens: z.number().int().positive().optional(),
+ // Temperature (0-2 range, AI SDK default is 1)
+ temperature: z.number().min(0).max(2).optional(),
+ // Top P (0-1 range, AI SDK default is 1)
+ top_p: z.number().min(0).max(1).optional(),
+ // Top K (-1 to disable, or positive integer for active filtering)
+ // -1 disables top_k ( Anthropic default), 0+ uses top_k tokens
+ top_k: z.number().int().min(-1).optional(),
 })
 
 const modeMappingSchema = z
@@ -120,8 +133,7 @@ function interpolateConfigKeys(
 // ============================================================================
 
 function getConfigPath(): string {
-  const homeDir =
-    (process.env.HOME || process.env.USERPROFILE) ?? ''
+  const homeDir = (process.env.HOME || process.env.USERPROFILE) ?? ''
   if (!homeDir) {
     throw new Error('Cannot determine home directory for codefluff config')
   }
@@ -157,15 +169,21 @@ export function loadCodefluffConfig(): CodefluffConfig {
         : {}),
       ...(parsed.models
         ? {
-            models: interpolateEnvVarsInValue(parsed.models) as Record<string, unknown>,
+            models: interpolateEnvVarsInValue(parsed.models) as Record<
+              string,
+              unknown
+            >,
           }
         : {}),
       ...(parsed.searchProviders
         ? {
             searchProviders: Object.fromEntries(
-              Object.entries(parsed.searchProviders as Record<string, string>).map(
-                ([k, v]) => [k, typeof v === 'string' ? interpolateEnvVars(v) : v],
-              ),
+              Object.entries(
+                parsed.searchProviders as Record<string, string>,
+              ).map(([k, v]) => [
+                k,
+                typeof v === 'string' ? interpolateEnvVars(v) : v,
+              ]),
             ),
           }
         : {}),
@@ -226,4 +244,22 @@ export function getModelConfig(model: string): ModelConfig | undefined {
 export function getModelMaxTokens(model: string): number | undefined {
   const config = getModelConfig(model)
   return config?.max_tokens
+}
+
+/** Returns temperature for a specific model */
+export function getModelTemperature(model: string): number | undefined {
+  const config = getModelConfig(model)
+  return config?.temperature
+}
+
+/** Returns top_p for a specific model */
+export function getModelTopP(model: string): number | undefined {
+ const config = getModelConfig(model)
+ return config?.top_p
+}
+
+/** Returns top_k for a specific model */
+export function getModelTopK(model: string): number | undefined {
+ const config = getModelConfig(model)
+ return config?.top_k
 }
