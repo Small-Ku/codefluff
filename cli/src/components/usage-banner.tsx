@@ -113,9 +113,7 @@ export const UsageBanner = ({ showTime }: { showTime: number }) => {
 
   const colorLevel = getBannerColorLevel(activeData.remainingBalance)
   const adCredits = activeData.balanceBreakdown?.ad
-  const renewalDate = activeData.next_quota_reset
-    ? formatRenewalDate(activeData.next_quota_reset)
-    : null
+  const renewalDate = activeData.next_quota_reset ? formatRenewalDate(activeData.next_quota_reset) : null
 
   const activeSubscription = subscriptionData?.hasSubscription
     ? subscriptionData
