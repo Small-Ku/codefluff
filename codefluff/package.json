@@ -1,21 +1,21 @@
 {
-  "name": "@codebuff/codefluff",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "bun run prebuild:agents && NEXT_PUBLIC_CB_ENVIRONMENT=dev NEXT_PUBLIC_CODEBUFF_APP_URL=http://localhost:3000 NEXT_PUBLIC_SUPPORT_EMAIL=support@codebuff.com NEXT_PUBLIC_POSTHOG_API_KEY=phc_dummy NEXT_PUBLIC_POSTHOG_HOST_URL=https://us.i.posthog.com NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL=https://billing.stripe.com/p/login/test_dummy NEXT_PUBLIC_WEB_PORT=3000 CODEFLUFF_MODE=true bun run ../cli/src/index.tsx --cwd ..",
-    "prebuild:agents": "bun run ../cli/scripts/prebuild-agents.ts",
-    "build:binary": "bun cli/build.ts 0.0.0-dev",
-    "release": "bun cli/release.ts",
-    "smoke": "bun test codefluff/cli/smoke-test.test.ts",
-    "e2e": "bun run build:binary && bun test codefluff/e2e/tests/",
-    "e2e:version": "bun test codefluff/e2e/tests/version.e2e.test.ts",
-    "e2e:startup": "bun test codefluff/e2e/tests/startup.e2e.test.ts",
-    "e2e:help": "bun test codefluff/e2e/tests/help-command.e2e.test.ts",
-    "e2e:slash-commands": "bun test codefluff/e2e/tests/slash-commands.e2e.test.ts",
-    "e2e:agent": "bun test codefluff/e2e/tests/agent-startup.e2e.test.ts",
-    "e2e:code-edit": "bun test codefluff/e2e/tests/code-edit.e2e.test.ts",
-    "e2e:terminal-command": "bun test codefluff/e2e/tests/terminal-command.e2e.test.ts",
-    "e2e:knowledge-file": "bun test codefluff/e2e/tests/knowledge-file.e2e.test.ts"
-  }
+	"name": "@codebuff/codefluff",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "bun run prebuild:agents && NEXT_PUBLIC_CB_ENVIRONMENT=dev NEXT_PUBLIC_CODEBUFF_APP_URL=http://localhost:3000 NEXT_PUBLIC_SUPPORT_EMAIL=support@codebuff.com NEXT_PUBLIC_POSTHOG_API_KEY=phc_dummy NEXT_PUBLIC_POSTHOG_HOST_URL=https://us.i.posthog.com NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL=https://billing.stripe.com/p/login/test_dummy NEXT_PUBLIC_WEB_PORT=3000 CODEFLUFF_MODE=true bun run ../cli/src/index.tsx --cwd ..",
+		"prebuild:agents": "bun run ../cli/scripts/prebuild-agents.ts",
+		"build:binary": "bun cli/build.ts 0.0.0-dev",
+		"release": "bun cli/release.ts",
+		"smoke": "bun test codefluff/cli/smoke-test.test.ts",
+		"e2e": "bun run build:binary && bun test codefluff/e2e/tests/",
+		"e2e:version": "bun test codefluff/e2e/tests/version.e2e.test.ts",
+		"e2e:startup": "bun test codefluff/e2e/tests/startup.e2e.test.ts",
+		"e2e:help": "bun test codefluff/e2e/tests/help-command.e2e.test.ts",
+		"e2e:slash-commands": "bun test codefluff/e2e/tests/slash-commands.e2e.test.ts",
+		"e2e:agent": "bun test codefluff/e2e/tests/agent-startup.e2e.test.ts",
+		"e2e:code-edit": "bun test codefluff/e2e/tests/code-edit.e2e.test.ts",
+		"e2e:terminal-command": "bun test codefluff/e2e/tests/terminal-command.e2e.test.ts",
+		"e2e:knowledge-file": "bun test codefluff/e2e/tests/knowledge-file.e2e.test.ts"
+	}
 }

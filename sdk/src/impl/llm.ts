@@ -34,6 +34,7 @@ import {
  getModelTopK,
  isCodefluffMode,
 } from './model-provider'
+import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger'
 import {
   getValidClaudeOAuthCredentials,
   refreshClaudeOAuthToken,
@@ -118,6 +119,15 @@ function getProviderOptions(params: {
   // Get max_tokens from model config for codefluff mode
   // This ensures providers with low defaults (e.g., Nvidia NIM) get a reasonable limit
   const maxTokens = isCodefluffMode() ? getModelMaxTokens(model) : undefined
+
+  // Debug logging: verify max_tokens config is being loaded
+  if (isDebugEnabled()) {
+    logDebug('DEBUG', `getProviderOptions for ${model}`, {
+      isCodefluffMode: isCodefluffMode(),
+      maxTokens: maxTokens ?? 'NOT CONFIGURED',
+      extraBody: extraBody ? 'SET' : 'NOT SET',
+    })
+  }
 
  // Get temperature, top_p, and top_k from model config for codefluff mode
  const temperature = isCodefluffMode() ? getModelTemperature(model) : undefined

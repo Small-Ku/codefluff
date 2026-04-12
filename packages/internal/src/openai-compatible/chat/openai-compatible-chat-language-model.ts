@@ -41,6 +41,7 @@ import type {
   FetchFunction,
   ParseResult,
   ResponseHandler} from '@ai-sdk/provider-utils';
+import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger';
 
 export type OpenAICompatibleChatConfig = {
   provider: string;
@@ -231,6 +232,14 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
     const body = JSON.stringify(args);
 
+    // Debug logging: verify max_tokens is being sent (helps diagnose Nvidia NIM truncation)
+    if (isDebugEnabled()) {
+      logDebug('DEBUG', `OpenAICompatible request (doGenerate) for ${this.modelId}`, {
+        max_tokens: args.max_tokens ?? 'NOT SET (using provider default)',
+        model: args.model,
+      })
+    }
+
     const {
       responseHeaders,
       value: responseBody,
@@ -340,6 +349,29 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         : undefined,
     };
 
+    // Debug logging: verify max_tokens is being sent (helps diagnose Nvidia NIM truncation)
+    if (isDebugEnabled()) {
+      logDebug('DEBUG', `OpenAICompatible request for ${this.modelId}`, {
+        max_tokens: body.max_tokens ?? 'NOT SET (using provider default)',
+        model: body.model,
+        messageCount: body.messages?.length ?? 0,
+        toolsCount: body.tools?.length ?? 0,
+      })
+
+      // Log full messages for debugging truncation issues
+      if (body.messages && body.messages.length > 0) {
+        logDebug('DEBUG', 'Request messages', {
+          messages: body.messages.map((m: any, i: number) => ({
+            index: i,
+            role: m.role,
+            contentPreview: typeof m.content === 'string'
+              ? m.content.slice(0, 200)
+              : JSON.stringify(m.content).slice(0, 200),
+          })),
+        })
+      }
+    }
+
     const metadataExtractor =
       this.config.metadataExtractor?.createStreamExtractor();
 
@@ -396,6 +428,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     };
     let isFirstChunk = true;
     const providerOptionsName = this.providerOptionsName;
+    const modelId = this.modelId;
     let isActiveReasoning = false;
     let isActiveText = false;
 
@@ -479,9 +512,17 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
             const choice = value.choices[0];
 
             if (choice?.finish_reason != null) {
-              finishReason = mapOpenAICompatibleFinishReason(
+              const newFinishReason = mapOpenAICompatibleFinishReason(
                 choice.finish_reason,
               );
+              // Log when truncation is detected
+              if (newFinishReason === 'length' && finishReason !== 'length' && isDebugEnabled()) {
+                logDebug('WARN', `Stream finish_reason changed to 'length' for model ${modelId}`, {
+                  choice: choice,
+                  usage: usage,
+                })
+              }
+              finishReason = newFinishReason;
             }
 
             if (choice?.delta == null) {
@@ -489,6 +530,18 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
             }
 
             const delta = choice.delta;
+
+            // Debug: Log every delta received
+            if (isDebugEnabled()) {
+              logDebug('DEBUG', `Delta received for model ${modelId}`, {
+                hasContent: !!delta.content,
+                contentPreview: delta.content?.slice(0, 100) ?? null,
+                hasReasoning: !!(delta.reasoning_content ?? delta.reasoning),
+                reasoningPreview: (delta.reasoning_content ?? delta.reasoning)?.slice(0, 100) ?? null,
+                hasToolCalls: !!delta.tool_calls,
+                toolCallCount: delta.tool_calls?.length ?? 0,
+              })
+            }
 
             // enqueue reasoning before text deltas:
             const reasoningContent = delta.reasoning_content ?? delta.reasoning;
@@ -509,6 +562,14 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
             }
 
             if (delta.content) {
+              // Log if we receive both content and tool_calls in the same delta (truncation indicator)
+              if (delta.tool_calls != null && isActiveText && isDebugEnabled()) {
+                logDebug('WARN', `Received both content and tool_calls in same delta for model ${modelId}`, {
+                  contentPreview: delta.content.slice(0, 50),
+                  hasToolCalls: true,
+                })
+              }
+
               if (!isActiveText) {
                 controller.enqueue({ type: 'text-start', id: 'txt-0' });
                 isActiveText = true;
@@ -522,15 +583,31 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
             }
 
             if (delta.tool_calls != null) {
+              // Log transition from text to tool calls for debugging truncation issues
+              if (isActiveText && delta.tool_calls.length > 0 && isDebugEnabled()) {
+                logDebug('DEBUG', `Transition from text to tool_calls detected for model ${modelId}`, {
+                  activeText: isActiveText,
+                  toolCallCount: delta.tool_calls.length,
+                  firstToolCall: delta.tool_calls[0],
+                })
+              }
+
               for (const toolCallDelta of delta.tool_calls) {
                 const index = toolCallDelta.index;
 
                 if (toolCalls[index] == null) {
                   if (toolCallDelta.function?.name == null) {
-                    throw new InvalidResponseDataError({
-                      data: toolCallDelta,
-                      message: `Expected 'function.name' to be a string.`,
-                    });
+                    // Detect Nvidia NIM truncation: if function.name is null, this might be
+                    // a truncated stream between text and tool calls. Log and skip instead of throwing.
+                    if (isDebugEnabled()) {
+                      logDebug('WARN', 'Received tool_call delta with null function.name - possible stream truncation', {
+                        index,
+                        toolCallDelta,
+                        modelId,
+                        wasActiveText: isActiveText,
+                      })
+                    }
+                    continue;
                   }
 
                   // UPDATED (James): Generate an ID if the provider doesn't include one (e.g., GLM models)
@@ -640,9 +717,39 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
             }
 
             // go through all tool calls and send the ones that are not finished
-            for (const toolCall of toolCalls.filter(
+            const incompleteToolCalls = toolCalls.filter(
               toolCall => !toolCall.hasFinished,
-            )) {
+            );
+
+            // Detect truncation: if finish_reason is 'length' and there are incomplete tool calls,
+            // warn the user about potential max_tokens issues (common with Nvidia NIM)
+            if (finishReason === 'length' && incompleteToolCalls.length > 0 && isDebugEnabled()) {
+              logDebug('WARN', `Response truncated due to max_tokens limit for model ${modelId}`, {
+                incompleteToolCalls: incompleteToolCalls.length,
+                finishReason,
+                usage: {
+                  promptTokens: usage.promptTokens,
+                  completionTokens: usage.completionTokens,
+                  totalTokens: usage.totalTokens,
+                },
+                suggestion: 'Consider increasing max_tokens in your config for this model',
+              })
+            }
+
+            // Also log when we have active text but finish_reason is 'length' (text was truncated)
+            if (finishReason === 'length' && isActiveText && isDebugEnabled()) {
+              logDebug('WARN', `Text response was truncated for model ${modelId}`, {
+                finishReason,
+                usage: {
+                  promptTokens: usage.promptTokens,
+                  completionTokens: usage.completionTokens,
+                  totalTokens: usage.totalTokens,
+                },
+                suggestion: 'Text may be incomplete - consider increasing max_tokens',
+              })
+            }
+
+            for (const toolCall of incompleteToolCalls) {
               controller.enqueue({
                 type: 'tool-input-end',
                 id: toolCall.id,

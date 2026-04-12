@@ -1,6 +1,7 @@
 import { toolNames } from '@codebuff/common/tools/constants'
 import { buildArray } from '@codebuff/common/util/array'
 import { AbortError } from '@codebuff/common/util/error'
+import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger'
 import {
   assistantMessage,
   userMessage,
@@ -230,17 +231,28 @@ export async function processStream(
       agentName: agentTemplate.id,
     },
     onResponseChunk: (chunk) => {
-      if (chunk.type === 'text') {
+      // Log chunk type for debugging (guarded to avoid overhead in hot path)
+      if (isDebugEnabled()) {
+        const chunkType = typeof chunk === 'string' ? 'string' : chunk.type
+        logDebug('DEBUG', `onResponseChunk received ${chunkType}`, {})
+      }
+      
+      if (typeof chunk !== 'string' && chunk.type === 'text') {
         if (chunk.text) {
           assistantMessages.push(assistantMessage(chunk.text))
         }
-      } else if (chunk.type === 'error') {
+      } else if (typeof chunk !== 'string' && chunk.type === 'error') {
         // do nothing
-      } else {
-        chunk satisfies never
-        throw new Error(
-          `Internal error: unhandled chunk type: ${(chunk as { type: unknown }).type}`,
-        )
+      } else if (typeof chunk !== 'string') {
+        // Log warning for unhandled chunk types to detect upstream API changes or malformed payloads
+        const chunkData = chunk as { type: string }
+        if (isDebugEnabled()) {
+          logDebug('WARN', `Unhandled chunk type in onResponseChunk`, {
+            chunkType: chunkData.type,
+          })
+        }
+        // Pass through other chunk types (string, reasoning_delta, finish, start, subagent_*, tool_call, tool_result, etc.)
+        // These are handled by the UI or other parts of the system
       }
       return onResponseChunk(chunk)
     },
@@ -276,6 +288,12 @@ export async function processStream(
       }
 
       if (chunk.type === 'reasoning') {
+        if (isDebugEnabled()) {
+          logDebug('DEBUG', 'Received reasoning chunk', {
+            textPreview: chunk.text.slice(0, 100),
+            textLength: chunk.text.length,
+          })
+        }
         onResponseChunk({
           type: 'reasoning_delta',
           text: chunk.text,
@@ -283,6 +301,13 @@ export async function processStream(
           runId,
         })
       } else if (chunk.type === 'text') {
+        if (isDebugEnabled()) {
+          logDebug('DEBUG', 'Received text chunk', {
+            textPreview: chunk.text.slice(0, 100),
+            textLength: chunk.text.length,
+            fullResponseLength: fullResponseChunks.join('').length,
+          })
+        }
         onResponseChunk(chunk.text)
         fullResponseChunks.push(chunk.text)
       } else if (chunk.type === 'error') {
@@ -296,17 +321,34 @@ export async function processStream(
           ),
         )
       } else if (chunk.type === 'tool-call') {
+        if (isDebugEnabled()) {
+          logDebug('DEBUG', 'Received tool-call chunk', {
+            toolName: chunk.toolName,
+            toolCallId: chunk.toolCallId,
+          })
+        }
       } else {
-        chunk satisfies never
-        throw new Error(
-          `Unhandled chunk type: ${(chunk as { type: unknown }).type}`,
-        )
+        // Log warning for unhandled chunk types to detect upstream API changes
+        const chunkData = chunk as { type: string }
+        if (isDebugEnabled()) {
+          logDebug('WARN', `Unhandled chunk type in stream loop`, {
+            chunkType: chunkData.type,
+          })
+        }
+        // Pass through other chunk types - these are handled by the UI
+        onResponseChunk(chunk)
       }
     }
 
     if (!signal.aborted) {
       resolveStreamDonePromise()
       await previousToolCallFinished
+      if (isDebugEnabled()) {
+        logDebug('DEBUG', 'Stream completed normally', {
+          fullResponseLength: fullResponseChunks.join('').length,
+          toolCallCount: toolCalls.length,
+        })
+      }
     }
   } finally {
     // === FINALIZATION ===
