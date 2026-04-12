@@ -80,7 +80,9 @@ describe('/api/v1/docs-search POST endpoint', () => {
         headers: { 'Content-Type': 'text/plain' },
       })
     }
-    mockFetch = Object.assign(fetchImpl, { preconnect: () => {} }) as typeof fetch
+    mockFetch = Object.assign(fetchImpl, {
+      preconnect: () => {},
+    }) as typeof fetch
   })
 
   afterEach(() => {
@@ -156,22 +158,31 @@ describe('/api/v1/docs-search POST endpoint', () => {
   })
 
   test('200 for subscriber with 0 a-la-carte credits but active block grant', async () => {
-    mockGetUserUsageData = mock(async ({ includeSubscriptionCredits }: { includeSubscriptionCredits?: boolean }) => ({
-      usageThisCycle: 0,
-      balance: {
-        totalRemaining: includeSubscriptionCredits ? 350 : 0,
-        totalDebt: 0,
-        netBalance: includeSubscriptionCredits ? 350 : 0,
-        breakdown: {},
-      },
-      nextQuotaReset: 'soon',
-    }))
+    mockGetUserUsageData = mock(
+      async ({
+        includeSubscriptionCredits,
+      }: {
+        includeSubscriptionCredits?: boolean
+      }) => ({
+        usageThisCycle: 0,
+        balance: {
+          totalRemaining: includeSubscriptionCredits ? 350 : 0,
+          totalDebt: 0,
+          netBalance: includeSubscriptionCredits ? 350 : 0,
+          breakdown: {},
+        },
+        nextQuotaReset: 'soon',
+      }),
+    )
     const mockEnsureSubscriberBlockGrant = mock(async () => ({
       grantId: 'grant-1',
       credits: 350,
       expiresAt: new Date(Date.now() + 5 * 60 * 60 * 1000),
       isNew: true,
-    })) as unknown as (params: { userId: string; logger: Logger }) => Promise<BlockGrantResult | null>
+    })) as unknown as (params: {
+      userId: string
+      logger: Logger
+    }) => Promise<BlockGrantResult | null>
 
     const req = new NextRequest('http://localhost:3000/api/v1/docs-search', {
       method: 'POST',
@@ -203,7 +214,12 @@ describe('/api/v1/docs-search POST endpoint', () => {
       },
       nextQuotaReset: 'soon',
     }))
-    const mockEnsureSubscriberBlockGrant = mock(async () => null) as unknown as (params: { userId: string; logger: Logger }) => Promise<BlockGrantResult | null>
+    const mockEnsureSubscriberBlockGrant = mock(
+      async () => null,
+    ) as unknown as (params: {
+      userId: string
+      logger: Logger
+    }) => Promise<BlockGrantResult | null>
 
     const req = new NextRequest('http://localhost:3000/api/v1/docs-search', {
       method: 'POST',

@@ -148,4 +148,3 @@ export const loadModePreference = (): AgentMode => {
 export const saveModePreference = (mode: AgentMode): void => {
   saveSettings({ mode })
 }
-

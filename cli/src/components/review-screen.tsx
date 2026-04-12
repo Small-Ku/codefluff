@@ -1,7 +1,10 @@
 import { useKeyboard } from '@opentui/react'
 import React, { useCallback, useState } from 'react'
 
-import { buildReviewPrompt, REVIEW_BASE_PROMPT } from '../commands/prompt-builders'
+import {
+  buildReviewPrompt,
+  REVIEW_BASE_PROMPT,
+} from '../commands/prompt-builders'
 import { useTheme } from '../hooks/use-theme'
 import { BORDER_CHARS } from '../utils/ui-constants'
 
@@ -58,7 +61,9 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({
           return
         }
         if (key.name === 'down') {
-          setSelectedIndex((prev) => Math.min(REVIEW_OPTIONS.length - 1, prev + 1))
+          setSelectedIndex((prev) =>
+            Math.min(REVIEW_OPTIONS.length - 1, prev + 1),
+          )
           return
         }
         if (key.name === 'return' || key.name === 'enter') {

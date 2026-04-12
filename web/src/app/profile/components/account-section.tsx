@@ -11,9 +11,7 @@ export function AccountSection() {
   const email = session?.user?.email
 
   return (
-    <ProfileSection
-      description="Your account information and settings."
-    >
+    <ProfileSection description="Your account information and settings.">
       <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-muted-foreground">Email</p>

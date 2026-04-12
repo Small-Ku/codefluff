@@ -151,7 +151,8 @@ export async function consumeCreditsForMessage(params: {
   // Also validates publisher to prevent spoofing attacks
   const isFreeAgentSmallRequest = isFreeAgent(agentId) && initialCredits < 5
 
-  const credits = isFreeModeAndAllowed || isFreeAgentSmallRequest ? 0 : initialCredits
+  const credits =
+    isFreeModeAndAllowed || isFreeAgentSmallRequest ? 0 : initialCredits
 
   await consumeCreditsAndAddAgentStep({
     messageId,

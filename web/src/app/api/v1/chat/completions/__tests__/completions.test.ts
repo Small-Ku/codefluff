@@ -18,10 +18,7 @@ import type { BlockGrantResult } from '@codebuff/billing/subscription'
 import type { GetUserPreferencesFn } from '../_post'
 
 describe('/api/v1/chat/completions POST endpoint', () => {
-  const mockUserData: Record<
-    string,
-    { id: string; banned: boolean }
-  > = {
+  const mockUserData: Record<string, { id: string; banned: boolean }> = {
     'test-api-key-123': {
       id: 'user-123',
       banned: false,
@@ -43,7 +40,9 @@ describe('/api/v1/chat/completions POST endpoint', () => {
     if (!userData) {
       return null
     }
-    return { id: userData.id, banned: userData.banned } as Awaited<ReturnType<GetUserInfoFromApiKeyFn>>
+    return { id: userData.id, banned: userData.banned } as Awaited<
+      ReturnType<GetUserInfoFromApiKeyFn>
+    >
   }
 
   let mockLogger: Logger
@@ -383,7 +382,9 @@ describe('/api/v1/chat/completions POST endpoint', () => {
       expect(response.status).toBe(403)
       const body = await response.json()
       expect(body.error).toBe('account_suspended')
-      expect(body.message).toContain('Your account has been suspended due to billing issues')
+      expect(body.message).toContain(
+        'Your account has been suspended due to billing issues',
+      )
       expect(body.message).toContain('to resolve this')
     })
   })
@@ -635,7 +636,9 @@ describe('/api/v1/chat/completions POST endpoint', () => {
         blockLimit: 350,
         resetsAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
       }
-      const mockEnsureSubscriberBlockGrant = mock(async () => blockExhaustedError)
+      const mockEnsureSubscriberBlockGrant = mock(
+        async () => blockExhaustedError,
+      )
       const mockGetUserPreferences: GetUserPreferencesFn = mock(async () => ({
         fallbackToALaCarte: false,
       }))
@@ -811,16 +814,22 @@ describe('/api/v1/chat/completions POST endpoint', () => {
       const mockEnsureSubscriberBlockGrant = mock(async () => blockGrant)
 
       // Override mock: when subscription credits are included, simulate the block grant's credits
-      mockGetUserUsageData = mock(async ({ includeSubscriptionCredits }: { includeSubscriptionCredits?: boolean }) => ({
-        usageThisCycle: 0,
-        balance: {
-          totalRemaining: includeSubscriptionCredits ? 350 : 0,
-          totalDebt: 0,
-          netBalance: includeSubscriptionCredits ? 350 : 0,
-          breakdown: {},
-        },
-        nextQuotaReset,
-      }))
+      mockGetUserUsageData = mock(
+        async ({
+          includeSubscriptionCredits,
+        }: {
+          includeSubscriptionCredits?: boolean
+        }) => ({
+          usageThisCycle: 0,
+          balance: {
+            totalRemaining: includeSubscriptionCredits ? 350 : 0,
+            totalDebt: 0,
+            netBalance: includeSubscriptionCredits ? 350 : 0,
+            breakdown: {},
+          },
+          nextQuotaReset,
+        }),
+      )
 
       // Use the no-credits user (totalRemaining = 0 without subscription)
       const req = new NextRequest(

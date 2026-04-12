@@ -84,13 +84,8 @@ export async function postAdImpression(params: {
   trackEvent: TrackEventFn
   fetch: typeof globalThis.fetch
 }) {
-  const {
-    req,
-    getUserInfoFromApiKey,
-    loggerWithContext,
-    trackEvent,
-    fetch,
-  } = params
+  const { req, getUserInfoFromApiKey, loggerWithContext, trackEvent, fetch } =
+    params
   const baseLogger = params.logger
 
   // Parse and validate request body
@@ -210,10 +205,7 @@ export async function postAdImpression(params: {
       })
       .where(eq(schema.adImpression.id, adRecord.id))
 
-    logger.info(
-      { userId, impUrl },
-      '[ads] Updated ad impression record',
-    )
+    logger.info({ userId, impUrl }, '[ads] Updated ad impression record')
   } catch (error) {
     logger.error(
       {

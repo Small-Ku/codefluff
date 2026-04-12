@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { defineToolComponent } from './types'
 import { useTerminalDimensions } from '../../hooks/use-terminal-dimensions'
 import { useTheme } from '../../hooks/use-theme'
-import { getLatestFollowupToolCallId, useChatStore } from '../../state/chat-store'
+import {
+  getLatestFollowupToolCallId,
+  useChatStore,
+} from '../../state/chat-store'
 import { Button } from '../button'
 
 import type { ToolRenderConfig } from './types'
@@ -121,7 +124,8 @@ const FollowupLine = ({
           <box style={{ flexGrow: 1 }}>
             <text style={{ wrapMode: 'none' }}>
               <span fg={theme.muted} attributes={TextAttributes.ITALIC}>
-                {paddingSpaces}{truncatedPrompt}
+                {paddingSpaces}
+                {truncatedPrompt}
               </span>
             </text>
           </box>

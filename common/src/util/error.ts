@@ -204,10 +204,16 @@ export function parseApiErrorResponseBody(responseBody: unknown): {
     const parsed: unknown = JSON.parse(responseBody)
     if (!parsed || typeof parsed !== 'object') return {}
     const result: { errorCode?: string; message?: string } = {}
-    if ('error' in parsed && typeof (parsed as { error: unknown }).error === 'string') {
+    if (
+      'error' in parsed &&
+      typeof (parsed as { error: unknown }).error === 'string'
+    ) {
       result.errorCode = (parsed as { error: string }).error
     }
-    if ('message' in parsed && typeof (parsed as { message: unknown }).message === 'string') {
+    if (
+      'message' in parsed &&
+      typeof (parsed as { message: unknown }).message === 'string'
+    ) {
       result.message = (parsed as { message: string }).message
     }
     return result
@@ -292,9 +298,7 @@ export function getErrorObject(
           ? extError.statusCode
           : undefined,
       code: typeof extError.code === 'string' ? extError.code : undefined,
-      rawError: options.includeRawError
-        ? safeStringify(error)
-        : undefined,
+      rawError: options.includeRawError ? safeStringify(error) : undefined,
       // API error fields
       responseBody,
       url: typeof extError.url === 'string' ? extError.url : undefined,

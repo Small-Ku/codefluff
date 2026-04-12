@@ -2,12 +2,7 @@
 
 import { AnalyticsEvent } from '@codebuff/common/constants/analytics-events'
 import { AnimatePresence, motion } from 'framer-motion'
-import {
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Rocket,
-} from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Rocket } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import posthog from 'posthog-js'
@@ -134,7 +129,7 @@ export default function GetStartedClient({
               </h1>
               <p className="text-muted-foreground">
                 {referrerName
-                  ? 'Get set up in under a minute — it\'s completely free.'
+                  ? "Get set up in under a minute — it's completely free."
                   : 'The free coding agent. Get set up in under a minute.'}
               </p>
             </motion.div>
@@ -184,8 +179,7 @@ export default function GetStartedClient({
                                   Open your IDE or Terminal
                                 </p>
                                 <p className="text-sm text-muted-foreground mb-3">
-                                  Choose your preferred development
-                                  environment:
+                                  Choose your preferred development environment:
                                 </p>
                                 <div className="grid grid-cols-2 gap-2">
                                   {editors.map((editor) => (
@@ -204,7 +198,7 @@ export default function GetStartedClient({
                                         className={cn(
                                           'w-5 h-5 relative flex-shrink-0',
                                           editor.needsWhiteBg &&
-                                          'bg-white rounded-sm p-[1px]',
+                                            'bg-white rounded-sm p-[1px]',
                                         )}
                                       >
                                         <Image
@@ -280,8 +274,9 @@ export default function GetStartedClient({
                       Navigate to your project
                     </h3>
                     <p className="text-muted-foreground text-sm">
-                      Open any terminal and <code className="font-mono">cd</code>{' '}
-                      into the project you want to work on.
+                      Open any terminal and{' '}
+                      <code className="font-mono">cd</code> into the project you
+                      want to work on.
                     </p>
                     <CommandBlock
                       command={

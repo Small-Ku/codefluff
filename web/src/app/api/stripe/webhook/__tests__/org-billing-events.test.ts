@@ -84,17 +84,18 @@ describe('isOrgBillingEvent', () => {
   const createMockEvent = (
     type: string,
     data: Record<string, unknown>,
-  ): Stripe.Event => ({
-    id: 'evt_test',
-    type,
-    data: { object: data },
-    api_version: '2023-10-16',
-    created: Date.now(),
-    livemode: false,
-    object: 'event',
-    pending_webhooks: 0,
-    request: null,
-  }) as unknown as Stripe.Event
+  ): Stripe.Event =>
+    ({
+      id: 'evt_test',
+      type,
+      data: { object: data },
+      api_version: '2023-10-16',
+      created: Date.now(),
+      livemode: false,
+      object: 'event',
+      pending_webhooks: 0,
+      request: null,
+    }) as unknown as Stripe.Event
 
   describe('metadata-based detection', () => {
     test('returns true when metadata contains organization_id', async () => {
@@ -119,7 +120,10 @@ describe('isOrgBillingEvent', () => {
 
     test('returns true when metadata.grantType is organization_purchase', async () => {
       const event = createMockEvent('checkout.session.completed', {
-        metadata: { grantType: 'organization_purchase', organizationId: 'org-123' },
+        metadata: {
+          grantType: 'organization_purchase',
+          organizationId: 'org-123',
+        },
       })
 
       const result = await isOrgBillingEvent(event)

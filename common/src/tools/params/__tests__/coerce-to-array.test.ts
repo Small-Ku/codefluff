@@ -6,7 +6,9 @@ import { coerceToArray } from '../utils'
 describe('coerceToArray', () => {
   it('passes through arrays unchanged', () => {
     expect(coerceToArray(['a', 'b'])).toEqual(['a', 'b'])
-    expect(coerceToArray([{ old: 'x', new: 'y' }])).toEqual([{ old: 'x', new: 'y' }])
+    expect(coerceToArray([{ old: 'x', new: 'y' }])).toEqual([
+      { old: 'x', new: 'y' },
+    ])
     expect(coerceToArray([])).toEqual([])
   })
 
@@ -15,7 +17,9 @@ describe('coerceToArray', () => {
   })
 
   it('wraps a single object in an array', () => {
-    expect(coerceToArray({ old: 'x', new: 'y' })).toEqual([{ old: 'x', new: 'y' }])
+    expect(coerceToArray({ old: 'x', new: 'y' })).toEqual([
+      { old: 'x', new: 'y' },
+    ])
   })
 
   it('wraps a single number in an array', () => {
@@ -23,7 +27,10 @@ describe('coerceToArray', () => {
   })
 
   it('parses a stringified JSON array', () => {
-    expect(coerceToArray('["file1.ts", "file2.ts"]')).toEqual(['file1.ts', 'file2.ts'])
+    expect(coerceToArray('["file1.ts", "file2.ts"]')).toEqual([
+      'file1.ts',
+      'file2.ts',
+    ])
   })
 
   it('wraps a non-JSON string (does not parse as array)', () => {

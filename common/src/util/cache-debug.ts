@@ -37,10 +37,9 @@ function normalizeForJson(value: unknown): SerializableValue {
 
   if (typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
-        key,
-        normalizeForJson(entryValue),
-      ]),
+      Object.entries(value as Record<string, unknown>).map(
+        ([key, entryValue]) => [key, normalizeForJson(entryValue)],
+      ),
     )
   }
 
@@ -71,7 +70,11 @@ function summarizeLargeValue(value: SerializableValue): SerializableValue {
     return value
   }
 
-  if ('url' in value && typeof value.url === 'string' && value.url.startsWith('data:')) {
+  if (
+    'url' in value &&
+    typeof value.url === 'string' &&
+    value.url.startsWith('data:')
+  ) {
     return {
       ...value,
       url: summarizeDataUrl(value.url),
@@ -80,7 +83,11 @@ function summarizeLargeValue(value: SerializableValue): SerializableValue {
 
   return Object.fromEntries(
     Object.entries(value).map(([key, entryValue]) => {
-      if (key === 'file_data' && typeof entryValue === 'string' && entryValue.startsWith('data:')) {
+      if (
+        key === 'file_data' &&
+        typeof entryValue === 'string' &&
+        entryValue.startsWith('data:')
+      ) {
         return [key, summarizeDataUrl(entryValue)]
       }
       if (key === 'arguments' && typeof entryValue === 'string') {
@@ -150,14 +157,29 @@ export function normalizeProviderRequestBodyForCacheDebug(params: {
   const record = body as SerializableRecord
   const normalized: SerializableRecord = {}
 
-  for (const key of ['model', 'messages', 'tools', 'tool_choice', 'response_format', 'reasoning', 'reasoning_effort', 'verbosity', 'provider']) {
+  for (const key of [
+    'model',
+    'messages',
+    'tools',
+    'tool_choice',
+    'response_format',
+    'reasoning',
+    'reasoning_effort',
+    'verbosity',
+    'provider',
+  ]) {
     if (key in record) {
       normalized[key] = summarizeLargeValue(record[key])
     }
   }
 
   if (params.provider === 'openrouter') {
-    for (const key of ['models', 'plugins', 'web_search_options', 'include_reasoning']) {
+    for (const key of [
+      'models',
+      'plugins',
+      'web_search_options',
+      'include_reasoning',
+    ]) {
       if (key in record) {
         normalized[key] = summarizeLargeValue(record[key])
       }

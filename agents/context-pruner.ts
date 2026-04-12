@@ -81,7 +81,6 @@ const definition: AgentDefinition = {
     const SUMMARY_HEADER =
       'This is a summary of the conversation so far. The original messages have been condensed to save context space.'
 
-
     // =============================================================================
     // Helper Functions (must be inside handleSteps since it's serialized to a string)
     // =============================================================================
@@ -192,10 +191,10 @@ const definition: AgentDefinition = {
         case 'spawn_agent_inline': {
           const agents = input.agents as
             | Array<{
-              agent_type: string
-              prompt?: string
-              params?: Record<string, unknown>
-            }>
+                agent_type: string
+                prompt?: string
+                params?: Record<string, unknown>
+              }>
             | undefined
           const agentType = input.agent_type as string | undefined
           const prompt = input.prompt as string | undefined
@@ -355,7 +354,11 @@ const definition: AgentDefinition = {
     // - Prune when context exceeds max, OR
     // - Prune when prompt cache will miss (>5 min gap) to take advantage of fresh context
     // If not, return messages with just the subagent-specific tags removed
-    if (agentState.contextTokenCount + TOKEN_COUNT_FUDGE_FACTOR <= maxContextLength && !cacheWillMiss) {
+    if (
+      agentState.contextTokenCount + TOKEN_COUNT_FUDGE_FACTOR <=
+        maxContextLength &&
+      !cacheWillMiss
+    ) {
       yield {
         toolName: 'set_messages',
         input: { messages: currentMessages },
@@ -382,7 +385,8 @@ const definition: AgentDefinition = {
     // 2. Walk backwards through summarized parts to apply token budgets
     // 3. Older summarized parts beyond the budgets are dropped
 
-    const assistantToolBudget: number = params?.assistantToolBudget ?? ASSISTANT_TOOL_BUDGET
+    const assistantToolBudget: number =
+      params?.assistantToolBudget ?? ASSISTANT_TOOL_BUDGET
     const userBudget: number = params?.userBudget ?? USER_BUDGET
 
     function shouldExcludeMessage(message: Message): boolean {
@@ -445,7 +449,8 @@ const definition: AgentDefinition = {
 
     // Filter out excluded and conversation summary messages for summarization
     const messagesToSummarize = currentMessages.filter(
-      (message) => !shouldExcludeMessage(message) && !isConversationSummary(message),
+      (message) =>
+        !shouldExcludeMessage(message) && !isConversationSummary(message),
     )
 
     // Find the last user message with images to preserve in the final output
@@ -465,7 +470,10 @@ const definition: AgentDefinition = {
     }
 
     // Phase 1: Summarize ALL messages into tagged entries
-    const summarizedEntries: Array<{ role: 'user' | 'assistant_tool'; parts: string[] }> = []
+    const summarizedEntries: Array<{
+      role: 'user' | 'assistant_tool'
+      parts: string[]
+    }> = []
 
     for (const message of messagesToSummarize) {
       if (message.role === 'user') {
@@ -509,7 +517,10 @@ const definition: AgentDefinition = {
         const parts: string[] = []
         if (textParts.length > 0) {
           let combinedText = textParts.join('\n')
-          combinedText = truncateLongText(combinedText, ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN)
+          combinedText = truncateLongText(
+            combinedText,
+            ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN,
+          )
           parts.push(combinedText)
         }
         if (toolSummaries.length > 0) {
@@ -557,10 +568,10 @@ const definition: AgentDefinition = {
                 } else if ('answers' in value) {
                   const answers = value.answers as
                     | Array<{
-                      selectedOption?: string
-                      selectedOptions?: string[]
-                      otherText?: string
-                    }>
+                        selectedOption?: string
+                        selectedOptions?: string[]
+                        otherText?: string
+                      }>
                     | undefined
                   if (answers && answers.length > 0) {
                     const answerTexts = answers
@@ -631,9 +642,15 @@ const definition: AgentDefinition = {
                     outputStr = outputStr
                       .replace(/<think>[\s\S]*?<\/think>/g, '')
                       .trim()
-                    if (outputStr.length > ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN) {
+                    if (
+                      outputStr.length >
+                      ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN
+                    ) {
                       outputStr =
-                        outputStr.slice(0, ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN) + '...'
+                        outputStr.slice(
+                          0,
+                          ASSISTANT_MESSAGE_LIMIT * CHARS_PER_TOKEN,
+                        ) + '...'
                     }
                   }
                   return `- ${r.agentType}: ${outputStr || '(no output)'}`

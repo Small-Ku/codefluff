@@ -67,10 +67,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    await db
-      .update(schema.user)
-      .set(updates)
-      .where(eq(schema.user.id, userId))
+    await db.update(schema.user).set(updates).where(eq(schema.user.id, userId))
 
     logger.info({ userId, updates }, 'User preferences updated')
 

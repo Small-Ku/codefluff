@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server'
 
 import type { AnalyticsEvent } from '@codebuff/common/constants/analytics-events'
@@ -41,7 +40,8 @@ export const parseJsonBody = async <T>(params: {
   validationErrorEvent: AnalyticsEvent
   userId?: string
 }): Promise<HandlerResult<T>> => {
-  const { req, schema, logger, trackEvent, validationErrorEvent, userId } = params
+  const { req, schema, logger, trackEvent, validationErrorEvent, userId } =
+    params
   const trackingUserId = userId ?? 'unknown'
 
   let json: unknown
@@ -152,7 +152,10 @@ export const checkCreditsAndCharge = async (params: {
   insufficientCreditsEvent: AnalyticsEvent
   getUserUsageData: GetUserUsageDataFn
   consumeCreditsWithFallback: ConsumeCreditsWithFallbackFn
-  ensureSubscriberBlockGrant?: (params: { userId: string; logger: Logger }) => Promise<unknown>
+  ensureSubscriberBlockGrant?: (params: {
+    userId: string
+    logger: Logger
+  }) => Promise<unknown>
 }): Promise<HandlerResult<{ creditsUsed: number }>> => {
   const {
     userId,

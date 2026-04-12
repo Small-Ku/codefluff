@@ -19,9 +19,7 @@ import type {
   LoggerWithContextFn,
 } from '@codebuff/common/types/contracts/logger'
 
-import type {
-  BlockGrantResult,
-} from '@codebuff/billing/subscription'
+import type { BlockGrantResult } from '@codebuff/billing/subscription'
 import {
   isWeeklyLimitError,
   isBlockExhaustedError,
@@ -69,9 +67,22 @@ import { withDefaultProperties } from '@codebuff/common/analytics'
 import { checkFreeModeRateLimit } from './free-mode-rate-limiter'
 
 const FREE_MODE_ALLOWED_COUNTRIES = new Set([
-  'US', 'CA',
-  'GB', 'AU', 'NZ',
-  'NO', 'SE', 'NL', 'DK', 'DE', 'FI', 'BE', 'LU', 'CH', 'IE', 'IS',
+  'US',
+  'CA',
+  'GB',
+  'AU',
+  'NZ',
+  'NO',
+  'SE',
+  'NL',
+  'DK',
+  'DE',
+  'FI',
+  'BE',
+  'LU',
+  'CH',
+  'IE',
+  'IS',
 ])
 
 function extractClientIp(req: NextRequest): string | undefined {
@@ -142,7 +153,10 @@ export async function postChatCompletions(params: {
   getAgentRunFromId: GetAgentRunFromIdFn
   fetch: typeof globalThis.fetch
   insertMessageBigquery: InsertMessageBigqueryFn
-  ensureSubscriberBlockGrant?: (params: { userId: string; logger: Logger }) => Promise<BlockGrantResult | null>
+  ensureSubscriberBlockGrant?: (params: {
+    userId: string
+    logger: Logger
+  }) => Promise<BlockGrantResult | null>
   getUserPreferences?: GetUserPreferencesFn
 }) {
   const {
@@ -187,7 +201,9 @@ export async function postChatCompletions(params: {
     const costMode = typedBody.codebuff_metadata?.cost_mode
     const isFreeModeRequest = isFreeMode(costMode)
 
-    trackEvent = withDefaultProperties(trackEvent, { freebuff: isFreeModeRequest })
+    trackEvent = withDefaultProperties(trackEvent, {
+      freebuff: isFreeModeRequest,
+    })
 
     // Extract and validate API key
     const apiKey = extractApiKeyFromHeader(req)
@@ -262,9 +278,16 @@ export async function postChatCompletions(params: {
       const clientIp = extractClientIp(req)
 
       const cfHeader = req.headers.get('cf-ipcountry')
-      const geoipResult = clientIp ? geoip.lookup(clientIp)?.country ?? null : null
+      const geoipResult = clientIp
+        ? (geoip.lookup(clientIp)?.country ?? null)
+        : null
       logger.info(
-        { cfHeader, geoipResult, resolvedCountry: countryCode, clientIp: clientIp ? '[redacted]' : undefined },
+        {
+          cfHeader,
+          geoipResult,
+          resolvedCountry: countryCode,
+          clientIp: clientIp ? '[redacted]' : undefined,
+        },
         'Free mode country detection',
       )
 
@@ -290,7 +313,6 @@ export async function postChatCompletions(params: {
           { status: 403 },
         )
       }
-
     }
 
     // Extract and validate agent run ID
@@ -356,7 +378,9 @@ export async function postChatCompletions(params: {
       const rateLimitResult = checkFreeModeRateLimit(userId)
       if (rateLimitResult.limited) {
         const retryAfterSeconds = Math.ceil(rateLimitResult.retryAfterMs / 1000)
-        const resetTime = new Date(Date.now() + rateLimitResult.retryAfterMs).toISOString()
+        const resetTime = new Date(
+          Date.now() + rateLimitResult.retryAfterMs,
+        ).toISOString()
         const resetCountdown = formatQuotaResetCountdown(resetTime)
 
         trackEvent({
@@ -390,20 +414,31 @@ export async function postChatCompletions(params: {
     const includeSubscriptionCredits = !!ensureSubscriberBlockGrant
     if (ensureSubscriberBlockGrant) {
       try {
-        const blockGrantResult = await ensureSubscriberBlockGrant({ userId, logger })
-        
+        const blockGrantResult = await ensureSubscriberBlockGrant({
+          userId,
+          logger,
+        })
+
         // Check if user hit subscription limit and should be rate-limited
-        if (blockGrantResult && (isWeeklyLimitError(blockGrantResult) || isBlockExhaustedError(blockGrantResult))) {
+        if (
+          blockGrantResult &&
+          (isWeeklyLimitError(blockGrantResult) ||
+            isBlockExhaustedError(blockGrantResult))
+        ) {
           // Fetch user's preference for falling back to a-la-carte credits
           const preferences = getUserPreferences
             ? await getUserPreferences({ userId, logger })
             : { fallbackToALaCarte: true } // Default to allowing a-la-carte if no preference function
-          
+
           if (!preferences.fallbackToALaCarte && !isFreeModeRequest) {
             const resetTime = blockGrantResult.resetsAt
-            const resetCountdown = formatQuotaResetCountdown(resetTime.toISOString())
-            const limitType = isWeeklyLimitError(blockGrantResult) ? 'weekly' : '5-hour session'
-            
+            const resetCountdown = formatQuotaResetCountdown(
+              resetTime.toISOString(),
+            )
+            const limitType = isWeeklyLimitError(blockGrantResult)
+              ? 'weekly'
+              : '5-hour session'
+
             trackEvent({
               event: AnalyticsEvent.CHAT_COMPLETIONS_INSUFFICIENT_CREDITS,
               userId,
@@ -414,7 +449,7 @@ export async function postChatCompletions(params: {
               },
               logger,
             })
-            
+
             return NextResponse.json(
               {
                 error: 'rate_limit_exceeded',
@@ -425,7 +460,12 @@ export async function postChatCompletions(params: {
           }
           // If fallbackToALaCarte is true, continue to use a-la-carte credits
           logger.info(
-            { userId, limitType: isWeeklyLimitError(blockGrantResult) ? 'weekly' : 'session' },
+            {
+              userId,
+              limitType: isWeeklyLimitError(blockGrantResult)
+                ? 'weekly'
+                : 'session',
+            },
             'Subscriber hit limit, falling back to a-la-carte credits',
           )
         }
@@ -473,7 +513,8 @@ export async function postChatCompletions(params: {
         const useSiliconFlow = false // isSiliconFlowModel(typedBody.model)
         const useCanopyWave = false // isCanopyWaveModel(typedBody.model)
         const useFireworks = isFireworksModel(typedBody.model)
-        const useOpenAIDirect = !useFireworks && isOpenAIDirectModel(typedBody.model)
+        const useOpenAIDirect =
+          !useFireworks && isOpenAIDirectModel(typedBody.model)
         const stream = useSiliconFlow
           ? await handleSiliconFlowStream({
               body: typedBody,
@@ -485,45 +526,45 @@ export async function postChatCompletions(params: {
               insertMessageBigquery,
             })
           : useCanopyWave
-          ? await handleCanopyWaveStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
-          : useFireworks
-          ? await handleFireworksStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
-          : useOpenAIDirect
-          ? await handleOpenAIStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
-          : await handleOpenRouterStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              openrouterApiKey,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
+            ? await handleCanopyWaveStream({
+                body: typedBody,
+                userId,
+                stripeCustomerId,
+                agentId,
+                fetch,
+                logger,
+                insertMessageBigquery,
+              })
+            : useFireworks
+              ? await handleFireworksStream({
+                  body: typedBody,
+                  userId,
+                  stripeCustomerId,
+                  agentId,
+                  fetch,
+                  logger,
+                  insertMessageBigquery,
+                })
+              : useOpenAIDirect
+                ? await handleOpenAIStream({
+                    body: typedBody,
+                    userId,
+                    stripeCustomerId,
+                    agentId,
+                    fetch,
+                    logger,
+                    insertMessageBigquery,
+                  })
+                : await handleOpenRouterStream({
+                    body: typedBody,
+                    userId,
+                    stripeCustomerId,
+                    agentId,
+                    openrouterApiKey,
+                    fetch,
+                    logger,
+                    insertMessageBigquery,
+                  })
 
         trackEvent({
           event: AnalyticsEvent.CHAT_COMPLETIONS_STREAM_STARTED,
@@ -550,7 +591,8 @@ export async function postChatCompletions(params: {
         const useSiliconFlow = false // isSiliconFlowModel(model)
         const useCanopyWave = false // isCanopyWaveModel(model)
         const useFireworks = isFireworksModel(model)
-        const shouldUseOpenAIEndpoint = !useFireworks && isOpenAIDirectModel(model)
+        const shouldUseOpenAIEndpoint =
+          !useFireworks && isOpenAIDirectModel(model)
 
         const nonStreamRequest = useSiliconFlow
           ? handleSiliconFlowNonStream({
@@ -563,27 +605,7 @@ export async function postChatCompletions(params: {
               insertMessageBigquery,
             })
           : useCanopyWave
-          ? handleCanopyWaveNonStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
-          : useFireworks
-          ? handleFireworksNonStream({
-              body: typedBody,
-              userId,
-              stripeCustomerId,
-              agentId,
-              fetch,
-              logger,
-              insertMessageBigquery,
-            })
-          : shouldUseOpenAIEndpoint
-            ? handleOpenAINonStream({
+            ? handleCanopyWaveNonStream({
                 body: typedBody,
                 userId,
                 stripeCustomerId,
@@ -592,16 +614,36 @@ export async function postChatCompletions(params: {
                 logger,
                 insertMessageBigquery,
               })
-            : handleOpenRouterNonStream({
-                body: typedBody,
-                userId,
-                stripeCustomerId,
-                agentId,
-                openrouterApiKey,
-                fetch,
-                logger,
-                insertMessageBigquery,
-              })
+            : useFireworks
+              ? handleFireworksNonStream({
+                  body: typedBody,
+                  userId,
+                  stripeCustomerId,
+                  agentId,
+                  fetch,
+                  logger,
+                  insertMessageBigquery,
+                })
+              : shouldUseOpenAIEndpoint
+                ? handleOpenAINonStream({
+                    body: typedBody,
+                    userId,
+                    stripeCustomerId,
+                    agentId,
+                    fetch,
+                    logger,
+                    insertMessageBigquery,
+                  })
+                : handleOpenRouterNonStream({
+                    body: typedBody,
+                    userId,
+                    stripeCustomerId,
+                    agentId,
+                    openrouterApiKey,
+                    fetch,
+                    logger,
+                    insertMessageBigquery,
+                  })
         const result = await nonStreamRequest
 
         trackEvent({
@@ -641,7 +683,15 @@ export async function postChatCompletions(params: {
 
       // Log detailed error information for debugging
       const errorDetails = openrouterError?.toJSON()
-      const providerLabel = siliconflowError ? 'SiliconFlow' : canopywaveError ? 'CanopyWave' : fireworksError ? 'Fireworks' : openaiError ? 'OpenAI' : 'OpenRouter'
+      const providerLabel = siliconflowError
+        ? 'SiliconFlow'
+        : canopywaveError
+          ? 'CanopyWave'
+          : fireworksError
+            ? 'Fireworks'
+            : openaiError
+              ? 'OpenAI'
+              : 'OpenRouter'
       logger.error(
         {
           error: getErrorObject(error),
@@ -655,8 +705,20 @@ export async function postChatCompletions(params: {
             ? typedBody.messages.length
             : 0,
           messages: typedBody.messages,
-          providerStatusCode: (openrouterError ?? fireworksError ?? canopywaveError ?? siliconflowError ?? openaiError)?.statusCode,
-          providerStatusText: (openrouterError ?? fireworksError ?? canopywaveError ?? siliconflowError ?? openaiError)?.statusText,
+          providerStatusCode: (
+            openrouterError ??
+            fireworksError ??
+            canopywaveError ??
+            siliconflowError ??
+            openaiError
+          )?.statusCode,
+          providerStatusText: (
+            openrouterError ??
+            fireworksError ??
+            canopywaveError ??
+            siliconflowError ??
+            openaiError
+          )?.statusText,
           openrouterErrorCode: errorDetails?.error?.code,
           openrouterErrorType: errorDetails?.error?.type,
           openrouterErrorMessage: errorDetails?.error?.message,

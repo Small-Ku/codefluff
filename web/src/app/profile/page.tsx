@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useState, useEffect, Suspense } from 'react'
 
-
 // Import components
 import { AccountSection } from './components/account-section'
 import { ApiKeysSection } from './components/api-keys-section'
@@ -107,8 +106,7 @@ function ProfilePageContent() {
     if (searchParams.get('subscription_success') === 'true') {
       toast({
         title: 'Welcome to Codebuff Strong! 🎉',
-        description:
-          'Thanks for subscribing! Your subscription is now active.',
+        description: 'Thanks for subscribing! Your subscription is now active.',
       })
       // Clean up the URL while preserving the tab
       router.replace('/profile?tab=usage', { scroll: false })

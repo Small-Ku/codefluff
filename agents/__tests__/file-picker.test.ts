@@ -1,4 +1,3 @@
-
 import { describe, test, expect } from 'bun:test'
 
 import filePicker, { createFilePicker } from '../file-explorer/file-picker'
@@ -117,16 +116,27 @@ describe('file-picker agent', () => {
 
     test('has optional directories parameter', () => {
       const dirSchema = filePicker.inputSchema?.params?.properties?.directories
-      const dirSchemaObj = dirSchema && typeof dirSchema === 'object' && !Array.isArray(dirSchema) ? dirSchema : undefined
+      const dirSchemaObj =
+        dirSchema && typeof dirSchema === 'object' && !Array.isArray(dirSchema)
+          ? dirSchema
+          : undefined
       expect(dirSchemaObj?.type).toBe('array')
       expect(filePicker.inputSchema?.params?.required).toHaveLength(0)
     })
 
     test('directories is array of strings', () => {
       const dirSchema = filePicker.inputSchema?.params?.properties?.directories
-      const dirSchemaObj = dirSchema && typeof dirSchema === 'object' && !Array.isArray(dirSchema) ? dirSchema : undefined
+      const dirSchemaObj =
+        dirSchema && typeof dirSchema === 'object' && !Array.isArray(dirSchema)
+          ? dirSchema
+          : undefined
       const itemsSchema = dirSchemaObj?.items
-      const itemsSchemaObj = itemsSchema && typeof itemsSchema === 'object' && !Array.isArray(itemsSchema) ? itemsSchema as { type?: string } : undefined
+      const itemsSchemaObj =
+        itemsSchema &&
+        typeof itemsSchema === 'object' &&
+        !Array.isArray(itemsSchema)
+          ? (itemsSchema as { type?: string })
+          : undefined
       expect(itemsSchemaObj?.type).toBe('string')
     })
   })
@@ -301,7 +311,10 @@ describe('file-picker agent', () => {
                     {
                       role: 'assistant',
                       content: [
-                        { type: 'text', text: 'src/file.ts\nsrc/file.ts\nsrc/other.ts' },
+                        {
+                          type: 'text',
+                          text: 'src/file.ts\nsrc/file.ts\nsrc/other.ts',
+                        },
                       ],
                     },
                   ],
@@ -483,7 +496,10 @@ describe('file-picker agent', () => {
                     {
                       role: 'assistant',
                       content: [
-                        { type: 'text', text: 'src/auth.ts\nsrc/login.ts\nsrc/user.ts' },
+                        {
+                          type: 'text',
+                          text: 'src/auth.ts\nsrc/login.ts\nsrc/user.ts',
+                        },
                       ],
                     },
                   ],

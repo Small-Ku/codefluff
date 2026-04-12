@@ -43,8 +43,6 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
   }, [session])
 
   return (
-    <PostHogProviderWrapper client={posthog}>
-      {children}
-    </PostHogProviderWrapper>
+    <PostHogProviderWrapper client={posthog}>{children}</PostHogProviderWrapper>
   )
 }

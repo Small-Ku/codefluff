@@ -96,9 +96,6 @@ describe.skipIf(!binaryExists)('Codefluff Binary Smoke Tests', () => {
 // Show skip messages so test output is informative
 if (!binaryExists) {
   describe('Codefluff Binary Required', () => {
-    test.skip(
-      'Build the binary first: bun codefluff/cli/build.ts <version>',
-      () => {},
-    )
+    test.skip('Build the binary first: bun codefluff/cli/build.ts <version>', () => {})
   })
 }

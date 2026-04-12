@@ -52,12 +52,7 @@ export const CodeSearchComponent = defineToolComponent({
 
     // Return as content using SimpleToolCallItem
     return {
-      content: (
-        <SimpleToolCallItem
-          name="Search"
-          description={summary}
-        />
-      ),
+      content: <SimpleToolCallItem name="Search" description={summary} />,
     }
   },
 })

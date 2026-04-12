@@ -18,7 +18,7 @@ export const FREE_COST_MODE = 'free' as const
  */
 export const FREE_MODE_AGENT_MODELS: Record<string, Set<string>> = {
   // Root orchestrator
-  'base2-free': new Set(['minimax/minimax-m2.5']),
+  'base2-free': new Set(['minimax/minimax-m2.5', 'z-ai/glm-5.1']),
 
   // File exploration agents
   'file-picker': new Set(['google/gemini-2.5-flash-lite']),
@@ -30,13 +30,13 @@ export const FREE_MODE_AGENT_MODELS: Record<string, Set<string>> = {
   'researcher-docs': new Set(['google/gemini-3.1-flash-lite-preview']),
 
   // Command execution
-  'basher': new Set(['google/gemini-3.1-flash-lite-preview']),
+  basher: new Set(['google/gemini-3.1-flash-lite-preview']),
 
   // Editor for free mode
-  'editor-lite': new Set(['minimax/minimax-m2.5']),
+  'editor-lite': new Set(['minimax/minimax-m2.5', 'z-ai/glm-5.1']),
 
   // Code reviewer for free mode
-  'code-reviewer-lite': new Set(['minimax/minimax-m2.5']),
+  'code-reviewer-lite': new Set(['minimax/minimax-m2.5', 'z-ai/glm-5.1']),
 
   // Thinker for free mode
   'thinker-with-files-gemini': new Set(['google/gemini-3.1-pro-preview']),

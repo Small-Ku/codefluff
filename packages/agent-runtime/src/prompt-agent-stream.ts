@@ -1,5 +1,8 @@
 import { getModelMaxTokens } from '@codebuff/common/config/codefluff-config'
-import type { CacheDebugUsageData, PromptAiSdkStreamFn } from '@codebuff/common/types/contracts/llm'
+import type {
+  CacheDebugUsageData,
+  PromptAiSdkStreamFn,
+} from '@codebuff/common/types/contracts/llm'
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type { ParamsOf } from '@codebuff/common/types/function-params'
 import type { Message } from '@codebuff/common/types/messages/codebuff-message'

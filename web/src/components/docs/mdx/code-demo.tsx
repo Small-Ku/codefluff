@@ -7,7 +7,6 @@ import type { JSX } from 'react'
 
 import { MermaidDiagram } from './mermaid-diagram'
 
-
 type CodeDemoChildren = string | JSX.Element | JSX.Element[]
 
 interface CodeDemoProps {
@@ -178,9 +177,7 @@ export function CodeDemo({ children, language, rawContent }: CodeDemoProps) {
     return (
       <div className="bg-zinc-800/60 rounded-md w-full my-3 overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2">
-          <div className="text-xs text-white/40 font-mono">
-            mermaid diagram
-          </div>
+          <div className="text-xs text-white/40 font-mono">mermaid diagram</div>
           <button
             onClick={() => copyToClipboard(childrenContent)}
             className="p-2 rounded-md text-white/60 hover:text-white hover:bg-white/5 transition-colors duration-200"

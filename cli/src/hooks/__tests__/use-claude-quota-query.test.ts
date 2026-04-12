@@ -1,11 +1,4 @@
-import {
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-  mock,
-} from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 
 import {
   resetActivityQueryCache,
@@ -78,11 +71,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-access-token', mockLogger)
@@ -107,11 +101,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -134,11 +129,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -158,11 +154,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -183,11 +180,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -205,11 +203,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -234,11 +233,12 @@ describe('fetchClaudeQuota', () => {
       seven_day_opus: null,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response(JSON.stringify(mockResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     const result = await fetchClaudeQuota('test-token', mockLogger)
@@ -250,33 +250,33 @@ describe('fetchClaudeQuota', () => {
   })
 
   test('should throw error on 401 unauthorized', async () => {
-    globalThis.fetch = mock(async () => 
-      new Response('Unauthorized', { status: 401 }),
+    globalThis.fetch = mock(
+      async () => new Response('Unauthorized', { status: 401 }),
     ) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('invalid-token', mockLogger),
-    ).rejects.toThrow('Failed to fetch Claude quota: 401')
+    await expect(fetchClaudeQuota('invalid-token', mockLogger)).rejects.toThrow(
+      'Failed to fetch Claude quota: 401',
+    )
   })
 
   test('should throw error on 403 forbidden', async () => {
-    globalThis.fetch = mock(async () => 
-      new Response('Forbidden', { status: 403 }),
+    globalThis.fetch = mock(
+      async () => new Response('Forbidden', { status: 403 }),
     ) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('test-token', mockLogger),
-    ).rejects.toThrow('Failed to fetch Claude quota: 403')
+    await expect(fetchClaudeQuota('test-token', mockLogger)).rejects.toThrow(
+      'Failed to fetch Claude quota: 403',
+    )
   })
 
   test('should throw error on 500 server error', async () => {
-    globalThis.fetch = mock(async () => 
-      new Response('Server Error', { status: 500 }),
+    globalThis.fetch = mock(
+      async () => new Response('Server Error', { status: 500 }),
     ) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('test-token', mockLogger),
-    ).rejects.toThrow('Failed to fetch Claude quota: 500')
+    await expect(fetchClaudeQuota('test-token', mockLogger)).rejects.toThrow(
+      'Failed to fetch Claude quota: 500',
+    )
   })
 
   test('should log debug message on failed request', async () => {
@@ -286,13 +286,11 @@ describe('fetchClaudeQuota', () => {
       debug: debugSpy,
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response('Error', { status: 429 }),
+    globalThis.fetch = mock(
+      async () => new Response('Error', { status: 429 }),
     ) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('test-token', testLogger),
-    ).rejects.toThrow()
+    await expect(fetchClaudeQuota('test-token', testLogger)).rejects.toThrow()
 
     expect(debugSpy).toHaveBeenCalledWith(
       { status: 429 },
@@ -322,7 +320,9 @@ describe('fetchClaudeQuota', () => {
     expect(headers['Authorization']).toBe('Bearer test-access-token')
     expect(headers['Content-Type']).toBe('application/json')
     expect(headers['anthropic-version']).toBe('2023-06-01')
-    expect(headers['anthropic-beta']).toBe('oauth-2025-04-20,claude-code-20250219')
+    expect(headers['anthropic-beta']).toBe(
+      'oauth-2025-04-20,claude-code-20250219',
+    )
   })
 
   test('should call correct API endpoint', async () => {
@@ -371,7 +371,9 @@ describe('Claude quota cache behavior', () => {
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), mockQuota)
 
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     expect(cached?.fiveHourRemaining).toBe(75)
     expect(cached?.sevenDayRemaining).toBe(85)
   })
@@ -386,7 +388,8 @@ describe('Claude quota cache behavior', () => {
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), initialQuota)
     expect(
-      getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())?.fiveHourRemaining,
+      getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+        ?.fiveHourRemaining,
     ).toBe(100)
 
     // Simulate usage depleting quota
@@ -399,7 +402,8 @@ describe('Claude quota cache behavior', () => {
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), updatedQuota)
     expect(
-      getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())?.fiveHourRemaining,
+      getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+        ?.fiveHourRemaining,
     ).toBe(50)
   })
 
@@ -415,7 +419,9 @@ describe('Claude quota cache behavior', () => {
     invalidateActivityQuery(claudeQuotaQueryKeys.current())
 
     // Data should still be accessible for display while refetch happens
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     expect(cached?.fiveHourRemaining).toBe(60)
     expect(cached?.sevenDayRemaining).toBe(70)
   })
@@ -430,7 +436,9 @@ describe('Claude quota cache behavior', () => {
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), exhaustedQuota)
 
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     expect(cached?.fiveHourRemaining).toBe(0)
     expect(cached?.sevenDayRemaining).toBe(5)
   })
@@ -470,7 +478,9 @@ describe('Bottom status line display scenarios', () => {
     }
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), quota)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
 
     // The BottomStatusLine component uses Math.min(fiveHour, sevenDay)
     const displayRemaining = Math.min(
@@ -489,7 +499,9 @@ describe('Bottom status line display scenarios', () => {
     }
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), quota)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
 
     const displayRemaining = Math.min(
       cached!.fiveHourRemaining,
@@ -507,7 +519,9 @@ describe('Bottom status line display scenarios', () => {
     }
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), quota)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
 
     const displayRemaining = Math.min(
       cached!.fiveHourRemaining,
@@ -528,7 +542,9 @@ describe('Bottom status line display scenarios', () => {
     }
     setActivityQueryData(claudeQuotaQueryKeys.current(), initialQuota)
 
-    let cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    let cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     let displayRemaining = Math.min(
       cached!.fiveHourRemaining,
       cached!.sevenDayRemaining,
@@ -544,7 +560,9 @@ describe('Bottom status line display scenarios', () => {
     }
     setActivityQueryData(claudeQuotaQueryKeys.current(), depletedQuota)
 
-    cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     displayRemaining = Math.min(
       cached!.fiveHourRemaining,
       cached!.sevenDayRemaining,
@@ -562,12 +580,15 @@ describe('Bottom status line display scenarios', () => {
     }
 
     setActivityQueryData(claudeQuotaQueryKeys.current(), quota)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
 
     // BottomStatusLine logic for selecting reset time
-    const resetTime = cached!.fiveHourRemaining <= cached!.sevenDayRemaining
-      ? cached!.fiveHourResetsAt
-      : cached!.sevenDayResetsAt
+    const resetTime =
+      cached!.fiveHourRemaining <= cached!.sevenDayRemaining
+        ? cached!.fiveHourResetsAt
+        : cached!.sevenDayResetsAt
 
     expect(resetTime).toEqual(new Date('2024-02-01T14:00:00Z'))
   })
@@ -606,7 +627,9 @@ describe('Polling and cache freshness', () => {
     setActivityQueryData(claudeQuotaQueryKeys.current(), quota)
 
     // At this point, dataUpdatedAt = mockNow (1000000)
-    expect(getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())).toBeDefined()
+    expect(
+      getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current()),
+    ).toBeDefined()
     expect(isEntryStale(serializedKey, staleTime)).toBe(false)
 
     // Advance time by 35 seconds (past staleTime)
@@ -614,9 +637,11 @@ describe('Polling and cache freshness', () => {
 
     // Data is stale but still accessible
     expect(isEntryStale(serializedKey, staleTime)).toBe(true)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     expect(cached?.fiveHourRemaining).toBe(50)
-    
+
     // In the actual hook, this would trigger a refetch on the next interval tick
   })
 
@@ -625,7 +650,9 @@ describe('Polling and cache freshness', () => {
     const serializedKey = JSON.stringify(claudeQuotaQueryKeys.current())
 
     // Set initial data
-    setActivityQueryData(claudeQuotaQueryKeys.current(), { fiveHourRemaining: 100 })
+    setActivityQueryData(claudeQuotaQueryKeys.current(), {
+      fiveHourRemaining: 100,
+    })
     expect(isEntryStale(serializedKey, staleTime)).toBe(false)
 
     // Advance past staleTime
@@ -633,12 +660,16 @@ describe('Polling and cache freshness', () => {
     expect(isEntryStale(serializedKey, staleTime)).toBe(true)
 
     // "Refetch" by setting new data
-    setActivityQueryData(claudeQuotaQueryKeys.current(), { fiveHourRemaining: 80 })
+    setActivityQueryData(claudeQuotaQueryKeys.current(), {
+      fiveHourRemaining: 80,
+    })
     expect(isEntryStale(serializedKey, staleTime)).toBe(false) // Fresh again
 
     // Data is now fresh
     expect(
-      getActivityQueryData<{ fiveHourRemaining: number }>(claudeQuotaQueryKeys.current())?.fiveHourRemaining,
+      getActivityQueryData<{ fiveHourRemaining: number }>(
+        claudeQuotaQueryKeys.current(),
+      )?.fiveHourRemaining,
     ).toBe(80)
 
     // Advance a little (less than staleTime)
@@ -651,7 +682,9 @@ describe('Polling and cache freshness', () => {
     const serializedKey = JSON.stringify(claudeQuotaQueryKeys.current())
 
     // Set data
-    setActivityQueryData(claudeQuotaQueryKeys.current(), { fiveHourRemaining: 70 })
+    setActivityQueryData(claudeQuotaQueryKeys.current(), {
+      fiveHourRemaining: 70,
+    })
     expect(isEntryStale(serializedKey, staleTime)).toBe(false)
 
     // Invalidate (sets dataUpdatedAt to 0)
@@ -661,7 +694,9 @@ describe('Polling and cache freshness', () => {
     // Data exists but is immediately stale (dataUpdatedAt === 0)
     // Next poll interval will trigger refetch regardless of time elapsed
     expect(
-      getActivityQueryData<{ fiveHourRemaining: number }>(claudeQuotaQueryKeys.current())?.fiveHourRemaining,
+      getActivityQueryData<{ fiveHourRemaining: number }>(
+        claudeQuotaQueryKeys.current(),
+      )?.fiveHourRemaining,
     ).toBe(70)
   })
 
@@ -669,19 +704,21 @@ describe('Polling and cache freshness', () => {
     // This test verifies the actual configuration used in useClaudeQuotaQuery:
     // staleTime: 30 * 1000 (30 seconds)
     // refetchInterval: 60 * 1000 (60 seconds, from chat.tsx)
-    
+
     const staleTime = 30 * 1000 // useClaudeQuotaQuery config
     const refetchInterval = 60 * 1000 // chat.tsx config
     const serializedKey = JSON.stringify(claudeQuotaQueryKeys.current())
 
     // Initial fetch
-    setActivityQueryData(claudeQuotaQueryKeys.current(), { fiveHourRemaining: 100 })
+    setActivityQueryData(claudeQuotaQueryKeys.current(), {
+      fiveHourRemaining: 100,
+    })
     expect(isEntryStale(serializedKey, staleTime)).toBe(false)
 
     // After 60 seconds (when refetch interval fires), data should be stale
     mockNow += refetchInterval
     expect(isEntryStale(serializedKey, staleTime)).toBe(true)
-    
+
     // This confirms that the refetch interval tick WILL trigger a new fetch
     // because the data is stale at that point (60s > 30s staleTime)
   })
@@ -714,7 +751,9 @@ describe('Error recovery and edge cases', () => {
 
     // If fetch fails, the cached data should still be available
     // (useActivityQuery preserves data on error)
-    const cached = getActivityQueryData<ClaudeQuotaData>(claudeQuotaQueryKeys.current())
+    const cached = getActivityQueryData<ClaudeQuotaData>(
+      claudeQuotaQueryKeys.current(),
+    )
     expect(cached?.fiveHourRemaining).toBe(50)
   })
 
@@ -732,9 +771,9 @@ describe('Error recovery and edge cases', () => {
       throw error
     }) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('test-token', mockLogger),
-    ).rejects.toThrow('Request timeout')
+    await expect(fetchClaudeQuota('test-token', mockLogger)).rejects.toThrow(
+      'Request timeout',
+    )
   })
 
   test('should handle malformed JSON response', async () => {
@@ -745,16 +784,15 @@ describe('Error recovery and edge cases', () => {
       debug: mock(() => {}),
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response('not json', {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response('not json', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
-    await expect(
-      fetchClaudeQuota('test-token', mockLogger),
-    ).rejects.toThrow()
+    await expect(fetchClaudeQuota('test-token', mockLogger)).rejects.toThrow()
   })
 
   test('should handle empty response body', async () => {
@@ -765,11 +803,12 @@ describe('Error recovery and edge cases', () => {
       debug: mock(() => {}),
     }
 
-    globalThis.fetch = mock(async () => 
-      new Response('{}', {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    globalThis.fetch = mock(
+      async () =>
+        new Response('{}', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     ) as unknown as typeof fetch
 
     // Empty response should parse with defaults

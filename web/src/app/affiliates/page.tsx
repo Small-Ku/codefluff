@@ -4,7 +4,6 @@ import AffiliatesClient from './affiliates-client'
 
 import type { Metadata } from 'next'
 
-
 export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = `${env.NEXT_PUBLIC_CODEBUFF_APP_URL}/affiliates`
 

@@ -130,15 +130,11 @@ export function createFreebuffTmuxTools(binaryPath: string): {
     exampleInputs: [{}],
     execute: async (): Promise<ToolOutput> => {
       if (!session) {
-        return [
-          { type: 'json', value: { stopped: true, wasRunning: false } },
-        ]
+        return [{ type: 'json', value: { stopped: true, wasRunning: false } }]
       }
       await session.stop()
       session = null
-      return [
-        { type: 'json', value: { stopped: true, wasRunning: true } },
-      ]
+      return [{ type: 'json', value: { stopped: true, wasRunning: true } }]
     },
   }
 

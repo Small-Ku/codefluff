@@ -1,6 +1,4 @@
-import {
-  InvalidResponseDataError
-} from '@ai-sdk/provider';
+import { InvalidResponseDataError } from '@ai-sdk/provider'
 import {
   combineHeaders,
   createEventSourceResponseHandler,
@@ -9,26 +7,20 @@ import {
   generateId,
   isParsableJson,
   parseProviderOptions,
-  postJsonToApi
-} from '@ai-sdk/provider-utils';
-import { z } from 'zod/v4';
+  postJsonToApi,
+} from '@ai-sdk/provider-utils'
+import { z } from 'zod/v4'
 
-import { convertToOpenAICompatibleChatMessages } from './convert-to-openai-compatible-chat-messages';
-import { getResponseMetadata } from './get-response-metadata';
-import { mapOpenAICompatibleFinishReason } from './map-openai-compatible-finish-reason';
-import {
-  openaiCompatibleProviderOptions,
-} from './openai-compatible-chat-options';
-import {
-  defaultOpenAICompatibleErrorStructure
-} from '../openai-compatible-error';
-import { prepareTools } from './openai-compatible-prepare-tools';
+import { convertToOpenAICompatibleChatMessages } from './convert-to-openai-compatible-chat-messages'
+import { getResponseMetadata } from './get-response-metadata'
+import { mapOpenAICompatibleFinishReason } from './map-openai-compatible-finish-reason'
+import { openaiCompatibleProviderOptions } from './openai-compatible-chat-options'
+import { defaultOpenAICompatibleErrorStructure } from '../openai-compatible-error'
+import { prepareTools } from './openai-compatible-prepare-tools'
 
-import type {
-  OpenAICompatibleChatModelId} from './openai-compatible-chat-options';
-import type {
-  ProviderErrorStructure} from '../openai-compatible-error';
-import type { MetadataExtractor } from './openai-compatible-metadata-extractor';
+import type { OpenAICompatibleChatModelId } from './openai-compatible-chat-options'
+import type { ProviderErrorStructure } from '../openai-compatible-error'
+import type { MetadataExtractor } from './openai-compatible-metadata-extractor'
 import type {
   APICallError,
   LanguageModelV2,
@@ -36,77 +28,79 @@ import type {
   LanguageModelV2Content,
   LanguageModelV2FinishReason,
   LanguageModelV2StreamPart,
-  SharedV2ProviderMetadata} from '@ai-sdk/provider';
+  SharedV2ProviderMetadata,
+} from '@ai-sdk/provider'
 import type {
   FetchFunction,
   ParseResult,
-  ResponseHandler} from '@ai-sdk/provider-utils';
-import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger';
+  ResponseHandler,
+} from '@ai-sdk/provider-utils'
+import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger'
 
 export type OpenAICompatibleChatConfig = {
-  provider: string;
-  headers: () => Record<string, string | undefined>;
-  url: (options: { modelId: string; path: string }) => string;
-  fetch?: FetchFunction;
-  includeUsage?: boolean;
-  errorStructure?: ProviderErrorStructure<any>;
-  metadataExtractor?: MetadataExtractor;
+  provider: string
+  headers: () => Record<string, string | undefined>
+  url: (options: { modelId: string; path: string }) => string
+  fetch?: FetchFunction
+  includeUsage?: boolean
+  errorStructure?: ProviderErrorStructure<any>
+  metadataExtractor?: MetadataExtractor
 
   /**
    * Whether the model supports structured outputs.
    */
-  supportsStructuredOutputs?: boolean;
+  supportsStructuredOutputs?: boolean
 
   /**
    * The supported URLs for the model.
    */
-  supportedUrls?: () => LanguageModelV2['supportedUrls'];
+  supportedUrls?: () => LanguageModelV2['supportedUrls']
 
   /**
    * Optional extra body parameters to include in API requests.
    * These will be merged with the request body.
    */
-  extraBody?: Record<string, unknown>;
-};
+  extraBody?: Record<string, unknown>
+}
 
 export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
-  readonly specificationVersion = 'v2';
+  readonly specificationVersion = 'v2'
 
-  readonly supportsStructuredOutputs: boolean;
+  readonly supportsStructuredOutputs: boolean
 
-  readonly modelId: OpenAICompatibleChatModelId;
-  private readonly config: OpenAICompatibleChatConfig;
-  private readonly failedResponseHandler: ResponseHandler<APICallError>;
-  private readonly chunkSchema; // type inferred via constructor
+  readonly modelId: OpenAICompatibleChatModelId
+  private readonly config: OpenAICompatibleChatConfig
+  private readonly failedResponseHandler: ResponseHandler<APICallError>
+  private readonly chunkSchema // type inferred via constructor
 
   constructor(
     modelId: OpenAICompatibleChatModelId,
     config: OpenAICompatibleChatConfig,
   ) {
-    this.modelId = modelId;
-    this.config = config;
+    this.modelId = modelId
+    this.config = config
 
     // initialize error handling:
     const errorStructure =
-      config.errorStructure ?? defaultOpenAICompatibleErrorStructure;
+      config.errorStructure ?? defaultOpenAICompatibleErrorStructure
     this.chunkSchema = createOpenAICompatibleChatChunkSchema(
       errorStructure.errorSchema,
-    );
-    this.failedResponseHandler = createJsonErrorResponseHandler(errorStructure);
+    )
+    this.failedResponseHandler = createJsonErrorResponseHandler(errorStructure)
 
-    this.supportsStructuredOutputs = config.supportsStructuredOutputs ?? false;
+    this.supportsStructuredOutputs = config.supportsStructuredOutputs ?? false
   }
 
   get provider(): string {
-    return this.config.provider;
+    return this.config.provider
   }
 
   private get providerOptionsName(): string {
-    return this.config.provider.split('.')[0].trim();
+    return this.config.provider.split('.')[0].trim()
   }
 
   get supportedUrls() {
-    return this.config.supportedUrls?.() ?? {};
+    return this.config.supportedUrls?.() ?? {}
   }
 
   private async getArgs({
@@ -124,26 +118,26 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     toolChoice,
     tools,
   }: Parameters<LanguageModelV2['doGenerate']>[0]) {
-    const warnings: LanguageModelV2CallWarning[] = [];
+    const warnings: LanguageModelV2CallWarning[] = []
 
     // Parse provider options
     const baseOptionsResult = await parseProviderOptions({
       provider: 'openai-compatible',
       providerOptions,
       schema: openaiCompatibleProviderOptions,
-    });
+    })
     const providerOptionsResult = await parseProviderOptions({
       provider: this.providerOptionsName,
       providerOptions,
       schema: openaiCompatibleProviderOptions,
-    });
+    })
     const compatibleOptions = Object.assign(
       baseOptionsResult ?? {},
       providerOptionsResult ?? {},
-    );
+    )
 
     if (topK != null) {
-      warnings.push({ type: 'unsupported-setting', setting: 'topK' });
+      warnings.push({ type: 'unsupported-setting', setting: 'topK' })
     }
 
     if (
@@ -156,7 +150,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         setting: 'responseFormat',
         details:
           'JSON response format schema is only supported with structuredOutputs',
-      });
+      })
     }
 
     const {
@@ -166,7 +160,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     } = prepareTools({
       tools,
       toolChoice,
-    });
+    })
 
     return {
       args: {
@@ -222,22 +216,26 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         ...this.config.extraBody,
       },
       warnings: [...warnings, ...toolWarnings],
-    };
+    }
   }
 
   async doGenerate(
     options: Parameters<LanguageModelV2['doGenerate']>[0],
   ): Promise<Awaited<ReturnType<LanguageModelV2['doGenerate']>>> {
-    const { args, warnings } = await this.getArgs({ ...options });
+    const { args, warnings } = await this.getArgs({ ...options })
 
-    const body = JSON.stringify(args);
+    const body = JSON.stringify(args)
 
     // Debug logging: verify max_tokens is being sent (helps diagnose Nvidia NIM truncation)
     if (isDebugEnabled()) {
-      logDebug('DEBUG', `OpenAICompatible request (doGenerate) for ${this.modelId}`, {
-        max_tokens: args.max_tokens ?? 'NOT SET (using provider default)',
-        model: args.model,
-      })
+      logDebug(
+        'DEBUG',
+        `OpenAICompatible request (doGenerate) for ${this.modelId}`,
+        {
+          max_tokens: args.max_tokens ?? 'NOT SET (using provider default)',
+          model: args.model,
+        },
+      )
     }
 
     const {
@@ -257,25 +255,25 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
-    });
+    })
 
-    const choice = responseBody.choices[0];
-    const content: Array<LanguageModelV2Content> = [];
+    const choice = responseBody.choices[0]
+    const content: Array<LanguageModelV2Content> = []
 
     // text content:
-    const text = choice.message.content;
+    const text = choice.message.content
     if (text != null && text.length > 0) {
-      content.push({ type: 'text', text });
+      content.push({ type: 'text', text })
     }
 
     // reasoning content:
     const reasoning =
-      choice.message.reasoning_content ?? choice.message.reasoning;
+      choice.message.reasoning_content ?? choice.message.reasoning
     if (reasoning != null && reasoning.length > 0) {
       content.push({
         type: 'reasoning',
         text: reasoning,
-      });
+      })
     }
 
     // tool calls:
@@ -286,7 +284,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
           toolCallId: toolCall.id ?? generateId(),
           toolName: toolCall.function.name,
           input: toolCall.function.arguments!,
-        });
+        })
       }
     }
 
@@ -294,20 +292,19 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     const extractedMetadata =
       await this.config.metadataExtractor?.extractMetadata?.({
         parsedBody: rawResponse,
-      });
+      })
     const providerMetadata: SharedV2ProviderMetadata = {
       [this.providerOptionsName]: {},
       ...extractedMetadata,
-    };
-    const completionTokenDetails =
-      responseBody.usage?.completion_tokens_details;
+    }
+    const completionTokenDetails = responseBody.usage?.completion_tokens_details
     if (completionTokenDetails?.accepted_prediction_tokens != null) {
       providerMetadata[this.providerOptionsName].acceptedPredictionTokens =
-        completionTokenDetails?.accepted_prediction_tokens;
+        completionTokenDetails?.accepted_prediction_tokens
     }
     if (completionTokenDetails?.rejected_prediction_tokens != null) {
       providerMetadata[this.providerOptionsName].rejectedPredictionTokens =
-        completionTokenDetails?.rejected_prediction_tokens;
+        completionTokenDetails?.rejected_prediction_tokens
     }
 
     return {
@@ -331,13 +328,13 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         body: rawResponse,
       },
       warnings,
-    };
+    }
   }
 
   async doStream(
     options: Parameters<LanguageModelV2['doStream']>[0],
   ): Promise<Awaited<ReturnType<LanguageModelV2['doStream']>>> {
-    const { args, warnings } = await this.getArgs({ ...options });
+    const { args, warnings } = await this.getArgs({ ...options })
 
     const body = {
       ...args,
@@ -347,7 +344,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       stream_options: this.config.includeUsage
         ? { include_usage: true }
         : undefined,
-    };
+    }
 
     // Debug logging: verify max_tokens is being sent (helps diagnose Nvidia NIM truncation)
     if (isDebugEnabled()) {
@@ -364,16 +361,17 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
           messages: body.messages.map((m: any, i: number) => ({
             index: i,
             role: m.role,
-            contentPreview: typeof m.content === 'string'
-              ? m.content.slice(0, 200)
-              : JSON.stringify(m.content).slice(0, 200),
+            contentPreview:
+              typeof m.content === 'string'
+                ? m.content.slice(0, 200)
+                : JSON.stringify(m.content).slice(0, 200),
           })),
         })
       }
     }
 
     const metadataExtractor =
-      this.config.metadataExtractor?.createStreamExtractor();
+      this.config.metadataExtractor?.createStreamExtractor()
 
     const { responseHeaders, value: response } = await postJsonToApi({
       url: this.config.url({
@@ -388,31 +386,31 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
-    });
+    })
 
     const toolCalls: Array<{
-      id: string;
-      type: 'function';
+      id: string
+      type: 'function'
       function: {
-        name: string;
-        arguments: string;
-      };
-      hasFinished: boolean;
-    }> = [];
+        name: string
+        arguments: string
+      }
+      hasFinished: boolean
+    }> = []
 
-    let finishReason: LanguageModelV2FinishReason = 'unknown';
+    let finishReason: LanguageModelV2FinishReason = 'unknown'
     const usage: {
-      completionTokens: number | undefined;
+      completionTokens: number | undefined
       completionTokensDetails: {
-        reasoningTokens: number | undefined;
-        acceptedPredictionTokens: number | undefined;
-        rejectedPredictionTokens: number | undefined;
-      };
-      promptTokens: number | undefined;
+        reasoningTokens: number | undefined
+        acceptedPredictionTokens: number | undefined
+        rejectedPredictionTokens: number | undefined
+      }
+      promptTokens: number | undefined
       promptTokensDetails: {
-        cachedTokens: number | undefined;
-      };
-      totalTokens: number | undefined;
+        cachedTokens: number | undefined
+      }
+      totalTokens: number | undefined
     } = {
       completionTokens: undefined,
       completionTokensDetails: {
@@ -425,12 +423,12 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
         cachedTokens: undefined,
       },
       totalTokens: undefined,
-    };
-    let isFirstChunk = true;
-    const providerOptionsName = this.providerOptionsName;
-    const modelId = this.modelId;
-    let isActiveReasoning = false;
-    let isActiveText = false;
+    }
+    let isFirstChunk = true
+    const providerOptionsName = this.providerOptionsName
+    const modelId = this.modelId
+    let isActiveReasoning = false
+    let isActiveText = false
 
     return {
       stream: response.pipeThrough(
@@ -439,40 +437,40 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
           LanguageModelV2StreamPart
         >({
           start(controller) {
-            controller.enqueue({ type: 'stream-start', warnings });
+            controller.enqueue({ type: 'stream-start', warnings })
           },
 
           // TODO we lost type safety on Chunk, most likely due to the error schema. MUST FIX
           transform(chunk, controller) {
             // Emit raw chunk if requested (before anything else)
             if (options.includeRawChunks) {
-              controller.enqueue({ type: 'raw', rawValue: chunk.rawValue });
+              controller.enqueue({ type: 'raw', rawValue: chunk.rawValue })
             }
 
             // handle failed chunk parsing / validation:
             if (!chunk.success) {
-              finishReason = 'error';
-              controller.enqueue({ type: 'error', error: chunk.error });
-              return;
+              finishReason = 'error'
+              controller.enqueue({ type: 'error', error: chunk.error })
+              return
             }
-            const value = chunk.value;
+            const value = chunk.value
 
-            metadataExtractor?.processChunk(chunk.rawValue);
+            metadataExtractor?.processChunk(chunk.rawValue)
 
             // handle error chunks:
             if ('error' in value) {
-              finishReason = 'error';
-              controller.enqueue({ type: 'error', error: value.error.message });
-              return;
+              finishReason = 'error'
+              controller.enqueue({ type: 'error', error: value.error.message })
+              return
             }
 
             if (isFirstChunk) {
-              isFirstChunk = false;
+              isFirstChunk = false
 
               controller.enqueue({
                 type: 'response-metadata',
                 ...getResponseMetadata(value),
-              });
+              })
             }
 
             if (value.usage != null) {
@@ -482,54 +480,62 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                 total_tokens,
                 prompt_tokens_details,
                 completion_tokens_details,
-              } = value.usage;
+              } = value.usage
 
-              usage.promptTokens = prompt_tokens ?? undefined;
-              usage.completionTokens = completion_tokens ?? undefined;
-              usage.totalTokens = total_tokens ?? undefined;
+              usage.promptTokens = prompt_tokens ?? undefined
+              usage.completionTokens = completion_tokens ?? undefined
+              usage.totalTokens = total_tokens ?? undefined
               if (completion_tokens_details?.reasoning_tokens != null) {
                 usage.completionTokensDetails.reasoningTokens =
-                  completion_tokens_details?.reasoning_tokens;
+                  completion_tokens_details?.reasoning_tokens
               }
               if (
                 completion_tokens_details?.accepted_prediction_tokens != null
               ) {
                 usage.completionTokensDetails.acceptedPredictionTokens =
-                  completion_tokens_details?.accepted_prediction_tokens;
+                  completion_tokens_details?.accepted_prediction_tokens
               }
               if (
                 completion_tokens_details?.rejected_prediction_tokens != null
               ) {
                 usage.completionTokensDetails.rejectedPredictionTokens =
-                  completion_tokens_details?.rejected_prediction_tokens;
+                  completion_tokens_details?.rejected_prediction_tokens
               }
               if (prompt_tokens_details?.cached_tokens != null) {
                 usage.promptTokensDetails.cachedTokens =
-                  prompt_tokens_details?.cached_tokens;
+                  prompt_tokens_details?.cached_tokens
               }
             }
 
-            const choice = value.choices[0];
+            const choice = value.choices[0]
 
             if (choice?.finish_reason != null) {
               const newFinishReason = mapOpenAICompatibleFinishReason(
                 choice.finish_reason,
-              );
+              )
               // Log when truncation is detected
-              if (newFinishReason === 'length' && finishReason !== 'length' && isDebugEnabled()) {
-                logDebug('WARN', `Stream finish_reason changed to 'length' for model ${modelId}`, {
-                  choice: choice,
-                  usage: usage,
-                })
+              if (
+                newFinishReason === 'length' &&
+                finishReason !== 'length' &&
+                isDebugEnabled()
+              ) {
+                logDebug(
+                  'WARN',
+                  `Stream finish_reason changed to 'length' for model ${modelId}`,
+                  {
+                    choice: choice,
+                    usage: usage,
+                  },
+                )
               }
-              finishReason = newFinishReason;
+              finishReason = newFinishReason
             }
 
             if (choice?.delta == null) {
-              return;
+              return
             }
 
-            const delta = choice.delta;
+            const delta = choice.delta
 
             // Debug: Log every delta received
             if (isDebugEnabled()) {
@@ -537,87 +543,109 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                 hasContent: !!delta.content,
                 contentPreview: delta.content?.slice(0, 100) ?? null,
                 hasReasoning: !!(delta.reasoning_content ?? delta.reasoning),
-                reasoningPreview: (delta.reasoning_content ?? delta.reasoning)?.slice(0, 100) ?? null,
+                reasoningPreview:
+                  (delta.reasoning_content ?? delta.reasoning)?.slice(0, 100) ??
+                  null,
                 hasToolCalls: !!delta.tool_calls,
                 toolCallCount: delta.tool_calls?.length ?? 0,
               })
             }
 
             // enqueue reasoning before text deltas:
-            const reasoningContent = delta.reasoning_content ?? delta.reasoning;
+            const reasoningContent = delta.reasoning_content ?? delta.reasoning
             if (reasoningContent) {
               if (!isActiveReasoning) {
                 controller.enqueue({
                   type: 'reasoning-start',
                   id: 'reasoning-0',
-                });
-                isActiveReasoning = true;
+                })
+                isActiveReasoning = true
               }
 
               controller.enqueue({
                 type: 'reasoning-delta',
                 id: 'reasoning-0',
                 delta: reasoningContent,
-              });
+              })
             }
 
             if (delta.content) {
               // Log if we receive both content and tool_calls in the same delta (truncation indicator)
-              if (delta.tool_calls != null && isActiveText && isDebugEnabled()) {
-                logDebug('WARN', `Received both content and tool_calls in same delta for model ${modelId}`, {
-                  contentPreview: delta.content.slice(0, 50),
-                  hasToolCalls: true,
-                })
+              if (
+                delta.tool_calls != null &&
+                isActiveText &&
+                isDebugEnabled()
+              ) {
+                logDebug(
+                  'WARN',
+                  `Received both content and tool_calls in same delta for model ${modelId}`,
+                  {
+                    contentPreview: delta.content.slice(0, 50),
+                    hasToolCalls: true,
+                  },
+                )
               }
 
               if (!isActiveText) {
-                controller.enqueue({ type: 'text-start', id: 'txt-0' });
-                isActiveText = true;
+                controller.enqueue({ type: 'text-start', id: 'txt-0' })
+                isActiveText = true
               }
 
               controller.enqueue({
                 type: 'text-delta',
                 id: 'txt-0',
                 delta: delta.content,
-              });
+              })
             }
 
             if (delta.tool_calls != null) {
               // Log transition from text to tool calls for debugging truncation issues
-              if (isActiveText && delta.tool_calls.length > 0 && isDebugEnabled()) {
-                logDebug('DEBUG', `Transition from text to tool_calls detected for model ${modelId}`, {
-                  activeText: isActiveText,
-                  toolCallCount: delta.tool_calls.length,
-                  firstToolCall: delta.tool_calls[0],
-                })
+              if (
+                isActiveText &&
+                delta.tool_calls.length > 0 &&
+                isDebugEnabled()
+              ) {
+                logDebug(
+                  'DEBUG',
+                  `Transition from text to tool_calls detected for model ${modelId}`,
+                  {
+                    activeText: isActiveText,
+                    toolCallCount: delta.tool_calls.length,
+                    firstToolCall: delta.tool_calls[0],
+                  },
+                )
               }
 
               for (const toolCallDelta of delta.tool_calls) {
-                const index = toolCallDelta.index;
+                const index = toolCallDelta.index
 
                 if (toolCalls[index] == null) {
                   if (toolCallDelta.function?.name == null) {
                     // Detect Nvidia NIM truncation: if function.name is null, this might be
                     // a truncated stream between text and tool calls. Log and skip instead of throwing.
                     if (isDebugEnabled()) {
-                      logDebug('WARN', 'Received tool_call delta with null function.name - possible stream truncation', {
-                        index,
-                        toolCallDelta,
-                        modelId,
-                        wasActiveText: isActiveText,
-                      })
+                      logDebug(
+                        'WARN',
+                        'Received tool_call delta with null function.name - possible stream truncation',
+                        {
+                          index,
+                          toolCallDelta,
+                          modelId,
+                          wasActiveText: isActiveText,
+                        },
+                      )
                     }
-                    continue;
+                    continue
                   }
 
                   // UPDATED (James): Generate an ID if the provider doesn't include one (e.g., GLM models)
-                  const toolCallId = toolCallDelta.id ?? generateId();
+                  const toolCallId = toolCallDelta.id ?? generateId()
 
                   controller.enqueue({
                     type: 'tool-input-start',
                     id: toolCallId,
                     toolName: toolCallDelta.function.name,
-                  });
+                  })
 
                   toolCalls[index] = {
                     id: toolCallId,
@@ -627,9 +655,9 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                       arguments: toolCallDelta.function.arguments ?? '',
                     },
                     hasFinished: false,
-                  };
+                  }
 
-                  const toolCall = toolCalls[index];
+                  const toolCall = toolCalls[index]
 
                   if (
                     toolCall.function?.name != null &&
@@ -641,7 +669,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                         type: 'tool-input-delta',
                         id: toolCall.id,
                         delta: toolCall.function.arguments,
-                      });
+                      })
                     }
 
                     // check if tool call is complete
@@ -650,31 +678,31 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                       controller.enqueue({
                         type: 'tool-input-end',
                         id: toolCall.id,
-                      });
+                      })
 
                       controller.enqueue({
                         type: 'tool-call',
                         toolCallId: toolCall.id ?? generateId(),
                         toolName: toolCall.function.name,
                         input: toolCall.function.arguments,
-                      });
-                      toolCall.hasFinished = true;
+                      })
+                      toolCall.hasFinished = true
                     }
                   }
 
-                  continue;
+                  continue
                 }
 
                 // existing tool call, merge if not finished
-                const toolCall = toolCalls[index];
+                const toolCall = toolCalls[index]
 
                 if (toolCall.hasFinished) {
-                  continue;
+                  continue
                 }
 
                 if (toolCallDelta.function?.arguments != null) {
                   toolCall.function!.arguments +=
-                    toolCallDelta.function?.arguments ?? '';
+                    toolCallDelta.function?.arguments ?? ''
                 }
 
                 // send delta
@@ -682,7 +710,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                   type: 'tool-input-delta',
                   id: toolCall.id,
                   delta: toolCallDelta.function.arguments ?? '',
-                });
+                })
 
                 // check if tool call is complete
                 if (
@@ -693,15 +721,15 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                   controller.enqueue({
                     type: 'tool-input-end',
                     id: toolCall.id,
-                  });
+                  })
 
                   controller.enqueue({
                     type: 'tool-call',
                     toolCallId: toolCall.id ?? generateId(),
                     toolName: toolCall.function.name,
                     input: toolCall.function.arguments,
-                  });
-                  toolCall.hasFinished = true;
+                  })
+                  toolCall.hasFinished = true
                 }
               }
             }
@@ -709,75 +737,89 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
           flush(controller) {
             if (isActiveReasoning) {
-              controller.enqueue({ type: 'reasoning-end', id: 'reasoning-0' });
+              controller.enqueue({ type: 'reasoning-end', id: 'reasoning-0' })
             }
 
             if (isActiveText) {
-              controller.enqueue({ type: 'text-end', id: 'txt-0' });
+              controller.enqueue({ type: 'text-end', id: 'txt-0' })
             }
 
             // go through all tool calls and send the ones that are not finished
             const incompleteToolCalls = toolCalls.filter(
-              toolCall => !toolCall.hasFinished,
-            );
+              (toolCall) => !toolCall.hasFinished,
+            )
 
             // Detect truncation: if finish_reason is 'length' and there are incomplete tool calls,
             // warn the user about potential max_tokens issues (common with Nvidia NIM)
-            if (finishReason === 'length' && incompleteToolCalls.length > 0 && isDebugEnabled()) {
-              logDebug('WARN', `Response truncated due to max_tokens limit for model ${modelId}`, {
-                incompleteToolCalls: incompleteToolCalls.length,
-                finishReason,
-                usage: {
-                  promptTokens: usage.promptTokens,
-                  completionTokens: usage.completionTokens,
-                  totalTokens: usage.totalTokens,
+            if (
+              finishReason === 'length' &&
+              incompleteToolCalls.length > 0 &&
+              isDebugEnabled()
+            ) {
+              logDebug(
+                'WARN',
+                `Response truncated due to max_tokens limit for model ${modelId}`,
+                {
+                  incompleteToolCalls: incompleteToolCalls.length,
+                  finishReason,
+                  usage: {
+                    promptTokens: usage.promptTokens,
+                    completionTokens: usage.completionTokens,
+                    totalTokens: usage.totalTokens,
+                  },
+                  suggestion:
+                    'Consider increasing max_tokens in your config for this model',
                 },
-                suggestion: 'Consider increasing max_tokens in your config for this model',
-              })
+              )
             }
 
             // Also log when we have active text but finish_reason is 'length' (text was truncated)
             if (finishReason === 'length' && isActiveText && isDebugEnabled()) {
-              logDebug('WARN', `Text response was truncated for model ${modelId}`, {
-                finishReason,
-                usage: {
-                  promptTokens: usage.promptTokens,
-                  completionTokens: usage.completionTokens,
-                  totalTokens: usage.totalTokens,
+              logDebug(
+                'WARN',
+                `Text response was truncated for model ${modelId}`,
+                {
+                  finishReason,
+                  usage: {
+                    promptTokens: usage.promptTokens,
+                    completionTokens: usage.completionTokens,
+                    totalTokens: usage.totalTokens,
+                  },
+                  suggestion:
+                    'Text may be incomplete - consider increasing max_tokens',
                 },
-                suggestion: 'Text may be incomplete - consider increasing max_tokens',
-              })
+              )
             }
 
             for (const toolCall of incompleteToolCalls) {
               controller.enqueue({
                 type: 'tool-input-end',
                 id: toolCall.id,
-              });
+              })
 
               controller.enqueue({
                 type: 'tool-call',
                 toolCallId: toolCall.id ?? generateId(),
                 toolName: toolCall.function.name,
                 input: toolCall.function.arguments,
-              });
+              })
             }
 
             const providerMetadata: SharedV2ProviderMetadata = {
               [providerOptionsName]: {},
               ...metadataExtractor?.buildMetadata(),
-            };
+            }
             if (
               usage.completionTokensDetails.acceptedPredictionTokens != null
             ) {
               providerMetadata[providerOptionsName].acceptedPredictionTokens =
-                usage.completionTokensDetails.acceptedPredictionTokens;
+                usage.completionTokensDetails.acceptedPredictionTokens
             }
             if (
               usage.completionTokensDetails.rejectedPredictionTokens != null
             ) {
               providerMetadata[providerOptionsName].rejectedPredictionTokens =
-                usage.completionTokensDetails.rejectedPredictionTokens;
+                usage.completionTokensDetails.rejectedPredictionTokens
             }
 
             controller.enqueue({
@@ -793,13 +835,13 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
                   usage.promptTokensDetails.cachedTokens ?? undefined,
               },
               providerMetadata,
-            });
+            })
           },
         }),
       ),
       request: { body },
       response: { headers: responseHeaders },
-    };
+    }
   }
 }
 
@@ -821,7 +863,7 @@ const openaiCompatibleTokenUsageSchema = z
       })
       .nullish(),
   })
-  .nullish();
+  .nullish()
 
 // limited version of the schema, focussed on what is needed for the implementation
 // this approach limits breakages when the API changes and increases efficiency
@@ -852,7 +894,7 @@ const OpenAICompatibleChatResponseSchema = z.object({
     }),
   ),
   usage: openaiCompatibleTokenUsageSchema,
-});
+})
 
 // limited version of the schema, focussed on what is needed for the implementation
 // this approach limits breakages when the API changes and increases efficiency
@@ -896,4 +938,4 @@ const createOpenAICompatibleChatChunkSchema = <
       usage: openaiCompatibleTokenUsageSchema,
     }),
     errorSchema,
-  ]);
+  ])

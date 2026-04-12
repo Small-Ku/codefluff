@@ -20,12 +20,15 @@ This guide is for **team/advanced secrets management** using [Infisical](https:/
 ## Setup Steps
 
 ### 1. Enable the bun wrapper
+
 ```bash
 direnv allow
 ```
+
 This adds `.bin/` to your PATH so the Infisical sync wrapper runs automatically.
 
 ### 2. Install & Login
+
 ```bash
 npm install -g @infisical/cli
 infisical init
@@ -34,12 +37,14 @@ infisical login
 ```
 
 ### 3. Browser Login
+
 - Browser opens automatically to https://app.infisical.com
 - Login with your email
 - Select or create your organization and project
 - Copy the token from browser and paste in terminal
 
 ### 4. Load Initial Secrets
+
 ```bash
 # Load all variables from .env.example as a starting point
 infisical secrets set --file .env.example
@@ -49,6 +54,7 @@ infisical secrets set DATABASE_URL=postgresql://manicode_user_local:secretpasswo
 ```
 
 ### 5. Run Codebuff
+
 ```bash
 bun run dev  # Secrets auto-sync to .env.local
 ```
@@ -61,11 +67,11 @@ bun run dev  # Secrets auto-sync to .env.local
 
 ## Common Issues
 
-| Problem | Solution |
-|---------|----------|
-| Token won't paste | Right-click → paste |
-| Session expired | Run `infisical login` again |
-| Can't navigate menus | Use arrow keys ↓ ↑ |
+| Problem               | Solution                         |
+| --------------------- | -------------------------------- |
+| Token won't paste     | Right-click → paste              |
+| Session expired       | Run `infisical login` again      |
+| Can't navigate menus  | Use arrow keys ↓ ↑               |
 | Infisical not working | Fall back to manual `.env.local` |
 
 ## Updating Secrets

@@ -13,7 +13,11 @@ interface UseLogoOptions {
    * Optional function to apply styling to each character (e.g., for sheen animation)
    * If not provided, default coloring is applied (white blocks, accent shadows)
    */
-  applySheenToChar?: (char: string, charIndex: number, lineIndex: number) => React.ReactNode
+  applySheenToChar?: (
+    char: string,
+    charIndex: number,
+    lineIndex: number,
+  ) => React.ReactNode
   /**
    * Color to apply to the text variant
    */
@@ -110,14 +114,26 @@ export const useLogo = ({
       }
       // Block characters use blockColor (white in dark mode, black in light mode)
       if (char === '█') {
-        return <span key={charIndex} fg={blockColor}>{char}</span>
+        return (
+          <span key={charIndex} fg={blockColor}>
+            {char}
+          </span>
+        )
       }
       // Shadow/border characters get accent color
       if (SHADOW_CHARS.has(char)) {
-        return <span key={charIndex} fg={accentColor}>{char}</span>
+        return (
+          <span key={charIndex} fg={accentColor}>
+            {char}
+          </span>
+        )
       }
       // Other characters use accent color
-      return <span key={charIndex} fg={accentColor}>{char}</span>
+      return (
+        <span key={charIndex} fg={accentColor}>
+          {char}
+        </span>
+      )
     }
 
     return (
@@ -135,7 +151,14 @@ export const useLogo = ({
         ))}
       </>
     )
-  }, [rawLogoString, availableWidth, applySheenToChar, textColor, accentColor, blockColor])
+  }, [
+    rawLogoString,
+    availableWidth,
+    applySheenToChar,
+    textColor,
+    accentColor,
+    blockColor,
+  ])
 
   return { component, textBlock }
 }

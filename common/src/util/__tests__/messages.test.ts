@@ -27,7 +27,10 @@ describe('withCacheControl', () => {
     const result = withCacheControl(obj)
 
     expect(result.providerOptions).toBeDefined()
-    const resultOptions = result.providerOptions as Record<string, ProviderWithCacheControl>
+    const resultOptions = result.providerOptions as Record<
+      string,
+      ProviderWithCacheControl
+    >
     expect(resultOptions.anthropic?.cache_control).toEqual({
       type: 'ephemeral',
     })
@@ -47,13 +50,12 @@ describe('withCacheControl', () => {
     } as Parameters<typeof withCacheControl>[0]
     const result = withCacheControl(obj)
 
-    const resultAnthropicOptions = result.providerOptions?.anthropic as ProviderWithCacheControl
+    const resultAnthropicOptions = result.providerOptions
+      ?.anthropic as ProviderWithCacheControl
     expect(resultAnthropicOptions.cache_control).toEqual({
       type: 'ephemeral',
     })
-    expect(resultAnthropicOptions.someOtherOption).toBe(
-      'value',
-    )
+    expect(resultAnthropicOptions.someOtherOption).toBe('value')
   })
 
   it('should not mutate original object', () => {
@@ -68,10 +70,15 @@ describe('withCacheControl', () => {
     const obj = {} as Parameters<typeof withCacheControl>[0]
     const result = withCacheControl(obj)
 
-    const resultOptions = result.providerOptions as Record<string, ProviderWithCacheControl>
+    const resultOptions = result.providerOptions as Record<
+      string,
+      ProviderWithCacheControl
+    >
     expect(resultOptions.anthropic?.cache_control?.type).toBe('ephemeral')
     expect(resultOptions.openrouter?.cache_control?.type).toBe('ephemeral')
-    expect(resultOptions.openaiCompatible?.cache_control?.type).toBe('ephemeral')
+    expect(resultOptions.openaiCompatible?.cache_control?.type).toBe(
+      'ephemeral',
+    )
   })
 })
 
@@ -517,7 +524,9 @@ describe('convertCbToModelMessages', () => {
         typeof result[2].content !== 'string' &&
         result[2].content.length > 0
       ) {
-        const lastContentPart = result[2].content[result[2].content.length - 1] as { providerOptions?: Record<string, ProviderWithCacheControl> }
+        const lastContentPart = result[2].content[
+          result[2].content.length - 1
+        ] as { providerOptions?: Record<string, ProviderWithCacheControl> }
         expect(
           lastContentPart.providerOptions?.anthropic?.cache_control,
         ).toEqual({
@@ -878,12 +887,17 @@ describe('convertCbToModelMessages', () => {
         includeCacheControl: false,
       })
 
-      const resultMessage = result[0] as { tags?: string[]; timeToLive?: string; providerOptions?: Record<string, ProviderWithCacheControl> }
+      const resultMessage = result[0] as {
+        tags?: string[]
+        timeToLive?: string
+        providerOptions?: Record<string, ProviderWithCacheControl>
+      }
       expect(resultMessage.tags).toEqual(['custom_tag'])
       expect(resultMessage.timeToLive).toBe('agentStep')
-      expect((resultMessage.providerOptions?.anthropic as ProviderWithCacheControl)?.someOption).toBe(
-        'value',
-      )
+      expect(
+        (resultMessage.providerOptions?.anthropic as ProviderWithCacheControl)
+          ?.someOption,
+      ).toBe('value')
     })
 
     it('should not mutate original messages', () => {

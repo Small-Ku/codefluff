@@ -173,7 +173,8 @@ if (isBun) {
           const ariaLabel = await link.getAttribute('aria-label')
 
           // Link should have either text content or aria-label
-          const hasDiscernibleText = (text && text.trim().length > 0) || ariaLabel
+          const hasDiscernibleText =
+            (text && text.trim().length > 0) || ariaLabel
           expect(hasDiscernibleText).toBeTruthy()
         }
       })

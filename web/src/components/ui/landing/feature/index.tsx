@@ -108,7 +108,11 @@ export function FeatureSection({
         </span>
       </div>
 
-      <HighlightText text={highlightText} isLight={isLight} icon={highlightIcon} />
+      <HighlightText
+        text={highlightText}
+        isLight={isLight}
+        icon={highlightIcon}
+      />
 
       <p className="text-lg leading-relaxed opacity-70 font-paragraph">
         {description}

@@ -49,24 +49,38 @@ describe('resolveCodefluffModel (codefluff)', () => {
   })
 
   it('returns agent-specific mapping when present', () => {
-    expect(resolveCodefluffModel('normal', 'basher')).toBe('hachimi/gpt-5.1-codex-mini')
+    expect(resolveCodefluffModel('normal', 'basher')).toBe(
+      'hachimi/gpt-5.1-codex-mini',
+    )
     // version suffix should be stripped
-    expect(resolveCodefluffModel('normal', 'basher@1.0.0')).toBe('hachimi/gpt-5.1-codex-mini')
+    expect(resolveCodefluffModel('normal', 'basher@1.0.0')).toBe(
+      'hachimi/gpt-5.1-codex-mini',
+    )
   })
 
   it('falls back to base when agent-specific mapping is missing', () => {
-    expect(resolveCodefluffModel('normal', 'file-picker')).toBe('google/gemma-4-26b-a4b-it')
+    expect(resolveCodefluffModel('normal', 'file-picker')).toBe(
+      'google/gemma-4-26b-a4b-it',
+    )
     expect(resolveCodefluffModel('normal')).toBe('google/gemma-4-26b-a4b-it')
   })
 
   it('works for max mode agent overrides', () => {
-    expect(resolveCodefluffModel('max', 'editor-multi-prompt')).toBe('hachimi/gpt-5.3-codex')
-    expect(resolveCodefluffModel('max', 'some-other-agent')).toBe('hachimi/gpt-5.4')
+    expect(resolveCodefluffModel('max', 'editor-multi-prompt')).toBe(
+      'hachimi/gpt-5.3-codex',
+    )
+    expect(resolveCodefluffModel('max', 'some-other-agent')).toBe(
+      'hachimi/gpt-5.4',
+    )
   })
 
   it('debug env flag does not change resolution result', () => {
     process.env.CODEFLUFF_MODEL_RESOLUTION_DEBUG = '1'
-    expect(resolveCodefluffModel('normal', 'basher')).toBe('hachimi/gpt-5.1-codex-mini')
-    expect(resolveCodefluffModel('normal', 'file-picker')).toBe('google/gemma-4-26b-a4b-it')
+    expect(resolveCodefluffModel('normal', 'basher')).toBe(
+      'hachimi/gpt-5.1-codex-mini',
+    )
+    expect(resolveCodefluffModel('normal', 'file-picker')).toBe(
+      'google/gemma-4-26b-a4b-it',
+    )
   })
 })

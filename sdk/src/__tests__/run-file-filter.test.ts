@@ -1,4 +1,3 @@
-
 import * as mainPromptModule from '@codebuff/agent-runtime/main-prompt'
 import { FILE_READ_STATUS } from '@codebuff/common/old-constants'
 import * as projectFileTree from '@codebuff/common/project-file-tree'
@@ -91,9 +90,7 @@ describe('CodebuffClientOptions fileFilter', () => {
     let requestedFiles: Record<string, string | null> = {}
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, promptId, requestFiles } = params
         const sessionState = getInitialSessionState(getStubProjectFileContext())
 
@@ -177,9 +174,7 @@ describe('CodebuffClientOptions fileFilter', () => {
     let requestedFiles: Record<string, string | null> = {}
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, promptId, requestFiles } = params
         const sessionState = getInitialSessionState(getStubProjectFileContext())
 
@@ -259,9 +254,7 @@ describe('CodebuffClientOptions fileFilter', () => {
     let optionalFileResult: string | null = null
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, promptId, requestOptionalFile } = params
         const sessionState = getInitialSessionState(getStubProjectFileContext())
 
@@ -343,9 +336,7 @@ describe('CodebuffClientOptions fileFilter', () => {
     let requestedFiles: Record<string, string | null> = {}
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, promptId, requestFiles } = params
         const sessionState = getInitialSessionState(getStubProjectFileContext())
 
@@ -417,9 +408,7 @@ describe('CodebuffClientOptions fileFilter', () => {
     })
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, promptId, requestFiles } = params
         const sessionState = getInitialSessionState(getStubProjectFileContext())
 

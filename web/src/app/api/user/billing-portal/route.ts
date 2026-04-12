@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Determine return URL - use provided returnUrl or default to /pricing
-  const returnUrl = body?.returnUrl || `${env.NEXT_PUBLIC_CODEBUFF_APP_URL}/pricing`
+  const returnUrl =
+    body?.returnUrl || `${env.NEXT_PUBLIC_CODEBUFF_APP_URL}/pricing`
 
   return postBillingPortal({
     getSession: () => getServerSession(authOptions),

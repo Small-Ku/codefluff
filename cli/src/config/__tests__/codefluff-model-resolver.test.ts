@@ -13,7 +13,12 @@ describe('codefluff-model-resolver', () => {
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE
   const testConfigDir = join(tmpdir(), 'codefluff-resolver-test')
-  const testConfigPath = join(testConfigDir, '.config', 'codefluff', 'config.json')
+  const testConfigPath = join(
+    testConfigDir,
+    '.config',
+    'codefluff',
+    'config.json',
+  )
 
   function writeConfig(obj: unknown) {
     mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })
@@ -116,7 +121,9 @@ describe('codefluff-model-resolver', () => {
         },
       })
 
-      expect(() => resolveModelForMode('max')).toThrow('No model configured for mode "max"')
+      expect(() => resolveModelForMode('max')).toThrow(
+        'No model configured for mode "max"',
+      )
       restoreHome()
     })
 
@@ -180,7 +187,7 @@ describe('codefluff-model-resolver', () => {
       })
 
       expect(() => resolveModelForModeSafe('max', 'editor')).toThrow(
-        'Codefluff model resolution failed for mode "max", agent "editor"'
+        'Codefluff model resolution failed for mode "max", agent "editor"',
       )
       restoreHome()
     })
@@ -196,7 +203,7 @@ describe('codefluff-model-resolver', () => {
       })
 
       expect(() => resolveModelForModeSafe('max')).toThrow(
-        'Codefluff model resolution failed for mode "max":'
+        'Codefluff model resolution failed for mode "max":',
       )
       restoreHome()
     })

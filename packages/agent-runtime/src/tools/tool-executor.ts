@@ -6,13 +6,11 @@ import { cloneDeep } from 'lodash'
 import { getMCPToolData } from '../mcp'
 import { MCP_TOOL_SEPARATOR } from '../mcp-constants'
 import { getAgentShortName } from '../templates/prompts'
+import { formatValueForError } from '../util/format-value'
 import { codebuffToolHandlers } from './handlers/list'
-import {
-  getMatchingSpawn,
-} from './handlers/tool/spawn-agent-utils'
+import { getMatchingSpawn } from './handlers/tool/spawn-agent-utils'
 import { getAgentTemplate } from '../templates/agent-registry'
 import { ensureZodSchema } from './prompts'
-
 
 import type { AgentTemplate } from '../templates/types'
 import type { CodebuffToolHandlerFunction } from './handlers/handler-function-type'
@@ -32,7 +30,11 @@ import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type { ToolMessage } from '@codebuff/common/types/messages/codebuff-message'
 import type { ToolResultOutput } from '@codebuff/common/types/messages/content-part'
 import type { PrintModeEvent } from '@codebuff/common/types/print-mode'
-import type { AgentTemplateType, AgentState, Subgoal } from '@codebuff/common/types/session-state'
+import type {
+  AgentTemplateType,
+  AgentState,
+  Subgoal,
+} from '@codebuff/common/types/session-state'
 import type {
   CustomToolDefinitions,
   ProjectFileContext,
@@ -180,13 +182,10 @@ export async function executeToolCall<T extends ToolName>(
   }
 
   if ('error' in toolCall) {
-    const inputStr = JSON.stringify(input, null, 2)
-    const truncatedInput = inputStr.length > 500
-      ? inputStr.slice(0, 500) + '...(truncated)'
-      : inputStr
+    const formattedInput = formatValueForError(input)
     onResponseChunk({
       type: 'error',
-      message: `${toolCall.error}\n\nOriginal tool call input:\n${truncatedInput}`,
+      message: `${toolCall.error}\n\nOriginal tool call input:\n${formattedInput}`,
     })
     logger.debug(
       { toolCall, error: toolCall.error },
@@ -201,12 +200,7 @@ export async function executeToolCall<T extends ToolName>(
   if (toolName === 'spawn_agents') {
     const agents = (input as Record<string, unknown>).agents
     if (Array.isArray(agents)) {
-      const BASE_AGENTS = [
-        'base',
-        'base-free',
-        'base-max',
-        'base-experimental',
-      ]
+      const BASE_AGENTS = ['base', 'base-free', 'base-max', 'base-experimental']
       const isBaseAgent = BASE_AGENTS.includes(agentTemplate.id)
 
       const validationResults = await Promise.allSettled(
@@ -216,7 +210,10 @@ export async function executeToolCall<T extends ToolName>(
           }
           const agentTypeStr = (agent as Record<string, unknown>).agent_type
           if (typeof agentTypeStr !== 'string' || !agentTypeStr) {
-            return { valid: false as const, error: 'Agent entry missing agent_type' }
+            return {
+              valid: false as const,
+              error: 'Agent entry missing agent_type',
+            }
           }
 
           if (!isBaseAgent) {
@@ -226,9 +223,15 @@ export async function executeToolCall<T extends ToolName>(
             )
             if (!matchingSpawn) {
               if (toolNames.includes(agentTypeStr as ToolName)) {
-                return { valid: false as const, error: `"${agentTypeStr}" is a tool, not an agent. Call it directly as a tool instead of wrapping it in spawn_agents.` }
+                return {
+                  valid: false as const,
+                  error: `"${agentTypeStr}" is a tool, not an agent. Call it directly as a tool instead of wrapping it in spawn_agents.`,
+                }
               }
-              return { valid: false as const, error: `Agent "${agentTypeStr}" is not available to spawn` }
+              return {
+                valid: false as const,
+                error: `Agent "${agentTypeStr}" is not available to spawn`,
+              }
             }
           }
 
@@ -243,12 +246,21 @@ export async function executeToolCall<T extends ToolName>(
             })
             if (!template) {
               if (toolNames.includes(agentTypeStr as ToolName)) {
-                return { valid: false as const, error: `"${agentTypeStr}" is a tool, not an agent. Call it directly as a tool instead of wrapping it in spawn_agents.` }
+                return {
+                  valid: false as const,
+                  error: `"${agentTypeStr}" is a tool, not an agent. Call it directly as a tool instead of wrapping it in spawn_agents.`,
+                }
               }
-              return { valid: false as const, error: `Agent "${agentTypeStr}" does not exist` }
+              return {
+                valid: false as const,
+                error: `Agent "${agentTypeStr}" does not exist`,
+              }
             }
           } catch {
-            return { valid: false as const, error: `Agent "${agentTypeStr}" could not be loaded` }
+            return {
+              valid: false as const,
+              error: `Agent "${agentTypeStr}" could not be loaded`,
+            }
           }
 
           return { valid: true as const, agent }
@@ -311,7 +323,6 @@ export async function executeToolCall<T extends ToolName>(
   if (!excludeToolFromMessageHistory) {
     toolCallsToAddToMessageHistory.push(finalToolCall)
   }
-
 
   const toolResultPromise = handler({
     ...params,
@@ -491,13 +502,10 @@ export async function executeCustomToolCall(
   }
 
   if ('error' in toolCall) {
-    const inputStr = JSON.stringify(input, null, 2)
-    const truncatedInput = inputStr.length > 500
-      ? inputStr.slice(0, 500) + '...(truncated)'
-      : inputStr
+    const formattedInput = formatValueForError(input)
     onResponseChunk({
       type: 'error',
-      message: `${toolCall.error}\n\nOriginal tool call input:\n${truncatedInput}`,
+      message: `${toolCall.error}\n\nOriginal tool call input:\n${formattedInput}`,
     })
     logger.debug(
       { toolCall, error: toolCall.error },
@@ -530,14 +538,19 @@ export async function executeCustomToolCall(
       }
 
       const toolName = toolCall.toolName.includes(MCP_TOOL_SEPARATOR)
-        ? toolCall.toolName.split(MCP_TOOL_SEPARATOR).slice(1).join(MCP_TOOL_SEPARATOR)
+        ? toolCall.toolName
+            .split(MCP_TOOL_SEPARATOR)
+            .slice(1)
+            .join(MCP_TOOL_SEPARATOR)
         : toolCall.toolName
       const clientToolResult = await requestToolCall({
         userInputId,
         toolName,
         input: toolCall.input,
         mcpConfig: toolCall.toolName.includes(MCP_TOOL_SEPARATOR)
-          ? agentTemplate.mcpServers[toolCall.toolName.split(MCP_TOOL_SEPARATOR)[0]]
+          ? agentTemplate.mcpServers[
+              toolCall.toolName.split(MCP_TOOL_SEPARATOR)[0]
+            ]
           : undefined,
       })
       return clientToolResult.output satisfies ToolResultOutput[]

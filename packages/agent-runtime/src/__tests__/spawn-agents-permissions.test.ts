@@ -94,7 +94,10 @@ describe('Spawn Agents Permissions', () => {
           ...options.agentState,
           messageHistory: [assistantMessage('Mock agent response')],
         },
-        output: { type: 'lastMessage', value: [assistantMessage('Mock agent response')] },
+        output: {
+          type: 'lastMessage',
+          value: [assistantMessage('Mock agent response')],
+        },
       }
     })
   })

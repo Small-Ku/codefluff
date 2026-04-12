@@ -101,14 +101,21 @@ function getPostgresErrorCode(error: unknown): string | null {
   const seen = new Set<object>()
   let depth = 0
 
-  while (current && typeof current === 'object' && depth < MAX_ERROR_CAUSE_DEPTH) {
+  while (
+    current &&
+    typeof current === 'object' &&
+    depth < MAX_ERROR_CAUSE_DEPTH
+  ) {
     if (seen.has(current)) {
       return null // Circular reference detected
     }
     seen.add(current)
 
     const record = current as Record<string, unknown>
-    if (typeof record.code === 'string' && PG_ERROR_CODE_REGEX.test(record.code)) {
+    if (
+      typeof record.code === 'string' &&
+      PG_ERROR_CODE_REGEX.test(record.code)
+    ) {
       return record.code
     }
 
@@ -123,9 +130,7 @@ function getPostgresErrorCode(error: unknown): string | null {
  * Checks if an error is a retryable PostgreSQL error.
  * Returns the error description if retryable, null otherwise.
  */
-export function getRetryableErrorDescription(
-  error: unknown,
-): string | null {
+export function getRetryableErrorDescription(error: unknown): string | null {
   const errorCode = getPostgresErrorCode(error)
   if (typeof errorCode !== 'string') {
     return null
@@ -198,7 +203,8 @@ export async function withSerializableTransaction<T>({
         const errorDescription =
           getRetryableErrorDescription(error) ?? 'unknown'
         // Calculate cumulative retry delay: 1s + 2s + 4s + ... (geometric series)
-        const cumulativeDelayMs = INITIAL_RETRY_DELAY * (Math.pow(2, attempt) - 1)
+        const cumulativeDelayMs =
+          INITIAL_RETRY_DELAY * (Math.pow(2, attempt) - 1)
 
         // Only log at WARN level after significant cumulative delay to avoid excessive logging
         // First few quick retries are expected behavior; extended retries indicate real issues
@@ -348,7 +354,8 @@ export async function withAdvisoryLockTransaction<T>({
           getRetryableErrorDescription(error) ?? 'unknown'
         const _baseDelayMs = INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1)
         // Calculate cumulative retry delay: 1s + 2s + 4s + ... (geometric series)
-        const cumulativeDelayMs = INITIAL_RETRY_DELAY * (Math.pow(2, attempt) - 1)
+        const cumulativeDelayMs =
+          INITIAL_RETRY_DELAY * (Math.pow(2, attempt) - 1)
 
         // Only log at WARN level after significant cumulative delay to avoid excessive logging
         // First few quick retries are expected behavior; extended retries indicate real issues

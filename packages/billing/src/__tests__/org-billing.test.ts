@@ -51,7 +51,11 @@ const logger: Logger = {
 
 const createDbMock = (options?: {
   grants?: typeof mockGrants | any[]
-  insert?: () => { values: () => { onConflictDoNothing: () => { returning: () => Promise<unknown[]> } } }
+  insert?: () => {
+    values: () => {
+      onConflictDoNothing: () => { returning: () => Promise<unknown[]> }
+    }
+  }
   update?: () => { set: () => { where: () => Promise<unknown> } }
 }) => {
   const { grants = mockGrants, insert, update } = options ?? {}

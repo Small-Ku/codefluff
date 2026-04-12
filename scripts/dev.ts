@@ -17,7 +17,14 @@
  */
 
 import { spawn, spawnSync, type ChildProcess } from 'child_process'
-import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync, openSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  unlinkSync,
+  openSync,
+} from 'fs'
 import { join, resolve } from 'path'
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..')
@@ -26,7 +33,8 @@ const PID_FILE = join(LOG_DIR, 'services.json')
 const BUN_PATH = join(PROJECT_ROOT, '.bin', 'bun')
 
 // Get config from environment (Bun loads .env files automatically)
-const APP_URL = process.env.NEXT_PUBLIC_CODEBUFF_APP_URL || 'http://localhost:3000'
+const APP_URL =
+  process.env.NEXT_PUBLIC_CODEBUFF_APP_URL || 'http://localhost:3000'
 const PORT = process.env.NEXT_PUBLIC_WEB_PORT || '3000'
 
 const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
@@ -152,11 +160,15 @@ function startDb(): boolean {
   process.stdout.write(`  ${SPINNER[0]} db        starting...\r`)
 
   const logFile = openSync(join(LOG_DIR, 'db.log'), 'w')
-  const result = spawnSync(BUN_PATH, ['--cwd', 'packages/internal', 'db:start'], {
-    cwd: PROJECT_ROOT,
-    stdio: ['ignore', logFile, logFile],
-    env: process.env,
-  })
+  const result = spawnSync(
+    BUN_PATH,
+    ['--cwd', 'packages/internal', 'db:start'],
+    {
+      cwd: PROJECT_ROOT,
+      stdio: ['ignore', logFile, logFile],
+      env: process.env,
+    },
+  )
 
   if (result.status !== 0) {
     fail('db', 'failed to start')
@@ -188,7 +200,11 @@ function spawnBackgroundProcess(
 
 function startBackgroundServices(): void {
   // Start SDK build
-  const sdk = spawnBackgroundProcess(BUN_PATH, ['run', '--cwd', 'sdk', 'build'], 'sdk.log')
+  const sdk = spawnBackgroundProcess(
+    BUN_PATH,
+    ['run', '--cwd', 'sdk', 'build'],
+    'sdk.log',
+  )
   if (sdk.pid) servicePids.sdk = sdk.pid
   ok('sdk', '(building)')
 
@@ -205,7 +221,11 @@ function startBackgroundServices(): void {
   killProcessesOnPort(PORT)
 
   // Start web server
-  const web = spawnBackgroundProcess(BUN_PATH, ['--cwd', 'web', 'dev'], 'web.log')
+  const web = spawnBackgroundProcess(
+    BUN_PATH,
+    ['--cwd', 'web', 'dev'],
+    'web.log',
+  )
   if (web.pid) servicePids.web = web.pid
 }
 

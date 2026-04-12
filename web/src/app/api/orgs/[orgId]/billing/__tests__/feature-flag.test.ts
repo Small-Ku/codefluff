@@ -4,12 +4,12 @@ import { ORG_BILLING_ENABLED } from '@/lib/billing-config'
 
 /**
  * Tests for the org billing feature flag.
- * 
+ *
  * These tests verify the feature flag state and document expected behavior.
  * Direct route testing is difficult due to Next.js dependencies, so we verify:
  * 1. The feature flag is in the expected state
  * 2. The flag is properly exported and importable
- * 
+ *
  * The actual route behavior (503 responses) is tested via the integration tests
  * and verified by the isOrgBillingEvent tests in the webhook test file.
  */
@@ -46,15 +46,17 @@ describe('Org Billing Feature Flag', () => {
       const message = ORG_BILLING_ENABLED
         ? 'Billing is enabled'
         : 'Organization billing is temporarily disabled'
-      
+
       expect(message).toBe('Organization billing is temporarily disabled')
     })
 
     test('flag value is consistent across imports', async () => {
       // Verify the flag value is the same when imported multiple times
-      const { ORG_BILLING_ENABLED: flag1 } = await import('@/lib/billing-config')
-      const { ORG_BILLING_ENABLED: flag2 } = await import('@/lib/billing-config')
-      
+      const { ORG_BILLING_ENABLED: flag1 } =
+        await import('@/lib/billing-config')
+      const { ORG_BILLING_ENABLED: flag2 } =
+        await import('@/lib/billing-config')
+
       expect(flag1).toBe(flag2)
       expect(flag1).toBe(ORG_BILLING_ENABLED)
     })

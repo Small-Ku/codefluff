@@ -3,7 +3,7 @@ import { env } from '@codebuff/common/env'
 export const siteConfig = {
   title: 'Freebuff',
   description:
-    "The free coding agent. No subscription. No configuration. Start in seconds.",
+    'The free coding agent. No subscription. No configuration. Start in seconds.',
   keywords: () => [
     'Freebuff',
     'Free Coding Agent',

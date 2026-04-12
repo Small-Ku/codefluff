@@ -39,7 +39,12 @@ async function getMachineId(): Promise<string> {
 
 async function getSystemInfo(): Promise<{
   system: { manufacturer: string; model: string; serial: string; uuid: string }
-  cpu: { manufacturer: string; brand: string; cores: number; physicalCores: number }
+  cpu: {
+    manufacturer: string
+    brand: string
+    cores: number
+    physicalCores: number
+  }
   os: { platform: string; distro: string; arch: string; hostname: string }
 }> {
   try {
@@ -75,7 +80,12 @@ async function getSystemInfo(): Promise<{
     return {
       system: { manufacturer: '', model: '', serial: '', uuid: '' },
       cpu: { manufacturer: '', brand: '', cores: 0, physicalCores: 0 },
-      os: { platform: process.platform, distro: '', arch: process.arch, hostname: '' },
+      os: {
+        platform: process.platform,
+        distro: '',
+        arch: process.arch,
+        hostname: '',
+      },
     }
   }
 }
@@ -88,7 +98,7 @@ async function getSystemInfo(): Promise<{
 async function calculateEnhancedFingerprint(): Promise<string> {
   // getMachineId will throw if it can't get a valid machine ID
   const machineIdValue = await getMachineId()
-  
+
   const [sysInfo, shell, networkInfo] = await Promise.all([
     getSystemInfo(),
     Promise.resolve(detectShell()),
@@ -100,7 +110,10 @@ async function calculateEnhancedFingerprint(): Promise<string> {
     .flat()
     .filter(
       (iface) =>
-        iface && !iface.internal && iface.mac && iface.mac !== '00:00:00:00:00:00',
+        iface &&
+        !iface.internal &&
+        iface.mac &&
+        iface.mac !== '00:00:00:00:00:00',
     )
     .map((iface) => iface!.mac)
     .sort()
@@ -164,7 +177,9 @@ export async function calculateFingerprint(): Promise<string> {
     logger.info(
       {
         errorMessage:
-          enhancedError instanceof Error ? enhancedError.message : String(enhancedError),
+          enhancedError instanceof Error
+            ? enhancedError.message
+            : String(enhancedError),
         fingerprintType: 'enhanced_failed_fallback',
       },
       'Enhanced CLI fingerprinting failed, using legacy fallback',
@@ -190,7 +205,9 @@ export async function calculateFingerprint(): Promise<string> {
       logger.error(
         {
           errorMessage:
-            legacyError instanceof Error ? legacyError.message : String(legacyError),
+            legacyError instanceof Error
+              ? legacyError.message
+              : String(legacyError),
           fingerprintType: 'failed',
         },
         'Both enhanced and legacy fingerprint generation failed',
@@ -218,7 +235,10 @@ export function getFingerprintType(
   if (fingerprintId.startsWith('enhanced-')) {
     return 'enhanced_cli'
   }
-  if (fingerprintId.startsWith('codebuff-cli-') || fingerprintId.startsWith('legacy-')) {
+  if (
+    fingerprintId.startsWith('codebuff-cli-') ||
+    fingerprintId.startsWith('legacy-')
+  ) {
     return 'legacy'
   }
   return 'unknown'

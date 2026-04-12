@@ -8,9 +8,7 @@ export function createThinkerSelector(
 
   return {
     publisher,
-    model: isOpus
-      ? 'anthropic/claude-opus-4.6'
-      : 'anthropic/claude-sonnet-4.5',
+    model: isOpus ? 'anthropic/claude-opus-4.6' : 'anthropic/claude-sonnet-4.5',
     ...(isOpus && {
       providerOptions: {
         only: ['amazon-bedrock'],
@@ -19,7 +17,8 @@ export function createThinkerSelector(
     displayName: isOpus
       ? 'Opus Thinker Output Selector'
       : 'Thinker Output Selector',
-    spawnerPrompt: 'Analyzes multiple thinking outputs and selects the best one',
+    spawnerPrompt:
+      'Analyzes multiple thinking outputs and selects the best one',
 
     includeMessageHistory: true,
     inheritParentSystemPrompt: true,

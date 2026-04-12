@@ -10,11 +10,7 @@ import { authOptions } from '../auth/[...nextauth]/auth-options'
 
 import type { NextRequest } from 'next/server'
 
-import {
-  extractApiKeyFromHeader,
-  getUserIdFromSessionToken,
-} from '@/util/auth'
-
+import { extractApiKeyFromHeader, getUserIdFromSessionToken } from '@/util/auth'
 
 type Referral = Pick<typeof schema.user.$inferSelect, 'id' | 'name' | 'email'> &
   Pick<typeof schema.referral.$inferSelect, 'credits' | 'is_legacy'>

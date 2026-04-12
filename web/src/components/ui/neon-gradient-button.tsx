@@ -4,8 +4,7 @@ import type { ButtonHTMLAttributes } from 'react'
 
 import { cn } from '@/lib/utils'
 
-interface NeonGradientButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface NeonGradientButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   neonColors?: {
     firstColor: string
     secondColor: string

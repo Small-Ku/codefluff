@@ -131,7 +131,9 @@ export function UsageSection() {
         method: 'POST',
       })
       if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: 'Failed to open billing portal' }))
+        const error = await res
+          .json()
+          .catch(() => ({ error: 'Failed to open billing portal' }))
         throw new Error(error.error || 'Failed to open billing portal')
       }
       const data = await res.json()

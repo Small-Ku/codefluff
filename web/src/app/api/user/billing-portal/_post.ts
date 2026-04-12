@@ -27,7 +27,7 @@ export type CreateBillingPortalSessionParams = {
 }
 
 export type CreateBillingPortalSessionFn = (
-  params: CreateBillingPortalSessionParams
+  params: CreateBillingPortalSessionParams,
 ) => Promise<{ url: string }>
 
 export type PostBillingPortalParams = {
@@ -39,7 +39,13 @@ export type PostBillingPortalParams = {
 }
 
 export async function postBillingPortal(params: PostBillingPortalParams) {
-  const { getSession, createBillingPortalSession, logger, returnUrl, flowData } = params
+  const {
+    getSession,
+    createBillingPortalSession,
+    logger,
+    returnUrl,
+    flowData,
+  } = params
 
   const session = await getSession()
   if (!session?.user?.id) {
@@ -50,7 +56,7 @@ export async function postBillingPortal(params: PostBillingPortalParams) {
   if (!stripeCustomerId) {
     return NextResponse.json(
       { error: 'No Stripe customer ID found' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -70,11 +76,11 @@ export async function postBillingPortal(params: PostBillingPortalParams) {
   } catch (error) {
     logger.error(
       { userId: session.user.id, error },
-      'Failed to create billing portal session'
+      'Failed to create billing portal session',
     )
     return NextResponse.json(
       { error: 'Failed to create billing portal session' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -79,7 +79,9 @@ export const autoCollapseBlocks = (blocks: ContentBlock[]): ContentBlock[] => {
   return blocks.map((block) => {
     // Handle thinking blocks (grouped text blocks)
     if (block.type === 'text' && block.thinkingId) {
-      return block.userOpened ? block : { ...block, thinkingCollapseState: 'hidden' as const }
+      return block.userOpened
+        ? block
+        : { ...block, thinkingCollapseState: 'hidden' as const }
     }
 
     // Handle agent blocks
@@ -129,7 +131,9 @@ const extractTextFromMessageContent = (content: unknown): string => {
     return ''
   }
   return content
-    .filter((part: any) => part?.type === 'text' && typeof part?.text === 'string')
+    .filter(
+      (part: any) => part?.type === 'text' && typeof part?.text === 'string',
+    )
     .map((part: any) => part.text)
     .join('')
 }
@@ -172,7 +176,10 @@ export const extractSpawnAgentResultContent = (
 
   // Handle lastMessage and allMessages output modes: { type: "lastMessage"|"allMessages", value: [Message array] }
   // This is common for agents like researcher-web
-  if ((obj.type === 'lastMessage' || obj.type === 'allMessages') && Array.isArray(obj.value)) {
+  if (
+    (obj.type === 'lastMessage' || obj.type === 'allMessages') &&
+    Array.isArray(obj.value)
+  ) {
     const messages = obj.value as Array<{ role?: string; content?: unknown }>
     const textContent = messages
       .filter((msg) => msg?.role === 'assistant')
@@ -296,7 +303,15 @@ export interface CreateAgentBlockOptions {
 export const createAgentBlock = (
   options: CreateAgentBlockOptions,
 ): AgentContentBlock => {
-  const { agentId, agentType, prompt, params, spawnToolCallId, spawnIndex, parentAgentType } = options
+  const {
+    agentId,
+    agentType,
+    prompt,
+    params,
+    spawnToolCallId,
+    spawnIndex,
+    parentAgentType,
+  } = options
   const shouldCollapse =
     shouldCollapseByDefault(agentType || '') ||
     shouldCollapseForParent(agentType || '', parentAgentType)
@@ -490,7 +505,11 @@ export const moveSpawnAgentBlock = (
   // If there's a parentId, we need to move the block under the parent.
   // First check if the block is already under the correct parent.
   if (parentId) {
-    const isAlreadyUnderParent = checkBlockIsUnderParent(blocks, tempId, parentId)
+    const isAlreadyUnderParent = checkBlockIsUnderParent(
+      blocks,
+      tempId,
+      parentId,
+    )
     if (isAlreadyUnderParent) {
       // Block is already under the correct parent, just update it in place
       return updateBlocksRecursively(blocks, tempId, updateAgentBlock)

@@ -21,7 +21,6 @@ import type {
   UserModelMessage,
 } from 'ai'
 
-
 export function toContentString(msg: ModelMessage): string {
   const { content } = msg
   if (typeof content === 'string') return content
@@ -341,8 +340,8 @@ export function convertCbToModelMessages({
       }
       throw new Error(
         `convertCbToModelMessages: Message at index ${i} failed schema validation.\n` +
-        `Role: ${message.role}\n` +
-        `Message:\n${result.error.message}`,
+          `Role: ${message.role}\n` +
+          `Message:\n${result.error.message}`,
       )
     }
   }
@@ -371,8 +370,8 @@ export function systemMessage(
   params:
     | SystemContent
     | ({
-      content: SystemContent
-    } & Omit<SystemMessage, 'role' | 'content'>),
+        content: SystemContent
+      } & Omit<SystemMessage, 'role' | 'content'>),
 ): SystemMessage {
   if (typeof params === 'object' && 'content' in params) {
     return {
@@ -405,8 +404,8 @@ export function userMessage(
   params:
     | UserContent
     | ({
-      content: UserContent
-    } & Omit<UserMessage, 'role' | 'content'>),
+        content: UserContent
+      } & Omit<UserMessage, 'role' | 'content'>),
 ): UserMessage {
   if (typeof params === 'object' && 'content' in params) {
     return {
@@ -443,8 +442,8 @@ export function assistantMessage(
   params:
     | AssistantContent
     | ({
-      content: AssistantContent
-    } & Omit<AssistantMessage, 'role' | 'content'>),
+        content: AssistantContent
+      } & Omit<AssistantMessage, 'role' | 'content'>),
 ): AssistantMessage {
   if (typeof params === 'object' && 'content' in params) {
     return {
@@ -464,10 +463,10 @@ export function assistantMessage(
 export function jsonToolResult<T extends JSONValue>(
   value: T,
 ): [
-    Extract<ToolResultOutput, { type: 'json' }> & {
-      value: T
-    },
-  ] {
+  Extract<ToolResultOutput, { type: 'json' }> & {
+    value: T
+  },
+] {
   return [
     {
       type: 'json',

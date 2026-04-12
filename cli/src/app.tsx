@@ -186,7 +186,7 @@ export const App = ({
       resetChatStore()
       setResumeChatId(chatId)
     },
-    [closeChatHistory, resetChatStore]
+    [closeChatHistory, resetChatStore],
   )
 
   const handleNewChat = useCallback(() => {
@@ -223,7 +223,8 @@ export const App = ({
         <text
           style={{ wrapMode: 'word', marginBottom: 1, fg: theme.foreground }}
         >
-          {IS_FREEBUFF ? 'Freebuff' : 'Codebuff'} will run commands on your behalf to help you build.
+          {IS_FREEBUFF ? 'Freebuff' : 'Codebuff'} will run commands on your
+          behalf to help you build.
         </text>
         <text
           style={{ wrapMode: 'word', marginBottom: 1, fg: theme.foreground }}
@@ -243,7 +244,9 @@ export const App = ({
 
   // Derive auth reachability + retrying state from authQuery error
   const authError = authQuery.error
-  const authErrorStatusCode = authError ? getErrorStatusCode(authError) : undefined
+  const authErrorStatusCode = authError
+    ? getErrorStatusCode(authError)
+    : undefined
 
   let authStatus: AuthStatus = 'ok'
   if (authQuery.isError && authErrorStatusCode !== undefined) {

@@ -1,7 +1,15 @@
 import * as analyticsModule from '@codebuff/common/analytics'
 import { AnalyticsEvent } from '@codebuff/common/constants/analytics-events'
 import { createPostgresError } from '@codebuff/common/testing/errors'
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from 'bun:test'
 
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 
@@ -27,7 +35,9 @@ describe('transaction error handling', () => {
     describe('Class 40 — Transaction Rollback errors', () => {
       it('should return description for serialization_failure (40001)', () => {
         const error = { code: '40001' }
-        expect(getRetryableErrorDescription(error)).toBe('serialization_failure')
+        expect(getRetryableErrorDescription(error)).toBe(
+          'serialization_failure',
+        )
       })
 
       it('should return description for statement_completion_unknown (40003)', () => {
@@ -238,7 +248,9 @@ describe('transaction error handling', () => {
 
       it('should skip non-PG string codes and find real PG code in cause', () => {
         const error = { code: 'FETCH_ERROR', cause: { code: '40001' } }
-        expect(getRetryableErrorDescription(error)).toBe('serialization_failure')
+        expect(getRetryableErrorDescription(error)).toBe(
+          'serialization_failure',
+        )
       })
 
       it('should skip ECONNRESET and find PG code deeper in chain', () => {
@@ -438,7 +450,9 @@ describe('withSerializableTransaction', () => {
     let trackEventSpy: ReturnType<typeof spyOn>
 
     beforeEach(() => {
-      trackEventSpy = spyOn(analyticsModule, 'trackEvent').mockImplementation(() => {})
+      trackEventSpy = spyOn(analyticsModule, 'trackEvent').mockImplementation(
+        () => {},
+      )
     })
 
     afterEach(() => {
@@ -467,7 +481,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-abc', operationId: 'op-xyz' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(trackEventSpy).toHaveBeenCalledTimes(1)
@@ -475,7 +491,9 @@ describe('withSerializableTransaction', () => {
       const callArgs = trackEventSpy.mock.calls[0] as unknown[]
       const eventPayload = callArgs[0] as Record<string, unknown>
 
-      expect(eventPayload.event).toBe(AnalyticsEvent.TRANSACTION_RETRY_THRESHOLD_EXCEEDED)
+      expect(eventPayload.event).toBe(
+        AnalyticsEvent.TRANSACTION_RETRY_THRESHOLD_EXCEEDED,
+      )
       expect(eventPayload.userId).toBe('user-abc')
       expect(eventPayload.properties).toMatchObject({
         transactionType: 'serializable',
@@ -512,7 +530,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-abc' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       // First retry has cumulative delay of 1s < 3s threshold
@@ -543,7 +563,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: {}, // No userId or organizationId
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(trackEventSpy).toHaveBeenCalledTimes(1)
@@ -576,7 +598,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-123' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       // Retry 1: 1s (no event), Retry 2: 3s (event), Retry 3: 7s (event)
@@ -585,14 +609,22 @@ describe('withSerializableTransaction', () => {
       // Verify first event (attempt 2, cumulative 3s)
       const firstCall = trackEventSpy.mock.calls[0] as unknown[]
       const firstPayload = firstCall[0] as Record<string, unknown>
-      expect((firstPayload.properties as Record<string, unknown>).cumulativeDelayMs).toBe(3000)
-      expect((firstPayload.properties as Record<string, unknown>).attempt).toBe(2)
+      expect(
+        (firstPayload.properties as Record<string, unknown>).cumulativeDelayMs,
+      ).toBe(3000)
+      expect((firstPayload.properties as Record<string, unknown>).attempt).toBe(
+        2,
+      )
 
       // Verify second event (attempt 3, cumulative 7s)
       const secondCall = trackEventSpy.mock.calls[1] as unknown[]
       const secondPayload = secondCall[0] as Record<string, unknown>
-      expect((secondPayload.properties as Record<string, unknown>).cumulativeDelayMs).toBe(7000)
-      expect((secondPayload.properties as Record<string, unknown>).attempt).toBe(3)
+      expect(
+        (secondPayload.properties as Record<string, unknown>).cumulativeDelayMs,
+      ).toBe(7000)
+      expect(
+        (secondPayload.properties as Record<string, unknown>).attempt,
+      ).toBe(3)
 
       setTimeoutSpy.mockRestore()
     })
@@ -623,7 +655,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-123' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(attempts).toBe(2)
@@ -657,7 +691,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-123' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(attempts).toBe(3)
@@ -696,7 +732,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: {},
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(attempts).toBe(5)
@@ -708,9 +746,15 @@ describe('withSerializableTransaction', () => {
 
       const warnCalls = mockLogger.warn.mock.calls as unknown[][]
       // Verify cumulative delays: 3s, 7s, 15s
-      expect((warnCalls[0]![0] as Record<string, unknown>).cumulativeDelayMs).toBe(3000)
-      expect((warnCalls[1]![0] as Record<string, unknown>).cumulativeDelayMs).toBe(7000)
-      expect((warnCalls[2]![0] as Record<string, unknown>).cumulativeDelayMs).toBe(15000)
+      expect(
+        (warnCalls[0]![0] as Record<string, unknown>).cumulativeDelayMs,
+      ).toBe(3000)
+      expect(
+        (warnCalls[1]![0] as Record<string, unknown>).cumulativeDelayMs,
+      ).toBe(7000)
+      expect(
+        (warnCalls[2]![0] as Record<string, unknown>).cumulativeDelayMs,
+      ).toBe(15000)
 
       setTimeoutSpy.mockRestore()
     })
@@ -737,7 +781,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-abc', operationId: 'op-xyz' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(mockLogger.warn).toHaveBeenCalledTimes(1)
@@ -775,7 +821,9 @@ describe('withSerializableTransaction', () => {
       const result = await withSerializableTransaction({
         callback: async () => 'success',
         context: { userId: 'test-user' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(result).toBe('success')
@@ -794,7 +842,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: {},
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(transactionSpy).toHaveBeenCalled()
@@ -817,7 +867,9 @@ describe('withSerializableTransaction', () => {
       const result = await withSerializableTransaction({
         callback: async () => 'success after retry',
         context: { userId: 'test-user' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(result).toBe('success after retry')
@@ -841,7 +893,9 @@ describe('withSerializableTransaction', () => {
       const result = await withSerializableTransaction({
         callback: async () => 'success after retries',
         context: {},
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(result).toBe('success after retries')
@@ -863,7 +917,9 @@ describe('withSerializableTransaction', () => {
       const result = await withSerializableTransaction({
         callback: async () => 'success',
         context: {},
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       expect(result).toBe('success')
@@ -895,7 +951,9 @@ describe('withSerializableTransaction', () => {
       await withSerializableTransaction({
         callback: async () => 'result',
         context: { userId: 'user-123', operationId: 'op-456' },
-        logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+        logger: mockLogger as unknown as Parameters<
+          typeof withSerializableTransaction
+        >[0]['logger'],
       })
 
       // Verify logging was called after cumulative delay exceeded 3s threshold
@@ -931,7 +989,9 @@ describe('withSerializableTransaction', () => {
         withSerializableTransaction({
           callback: async () => 'should not reach',
           context: {},
-          logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+          logger: mockLogger as unknown as Parameters<
+            typeof withSerializableTransaction
+          >[0]['logger'],
         }),
       ).rejects.toThrow('unique violation')
 
@@ -951,7 +1011,9 @@ describe('withSerializableTransaction', () => {
         withSerializableTransaction({
           callback: async () => 'should not reach',
           context: {},
-          logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+          logger: mockLogger as unknown as Parameters<
+            typeof withSerializableTransaction
+          >[0]['logger'],
         }),
       ).rejects.toThrow('syntax error')
 
@@ -971,7 +1033,9 @@ describe('withSerializableTransaction', () => {
         withSerializableTransaction({
           callback: async () => 'should not reach',
           context: {},
-          logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+          logger: mockLogger as unknown as Parameters<
+            typeof withSerializableTransaction
+          >[0]['logger'],
         }),
       ).rejects.toThrow('foreign key violation')
 
@@ -985,12 +1049,12 @@ describe('withSerializableTransaction', () => {
     beforeEach(() => {
       // Mock setTimeout to execute callbacks immediately (no delay)
       // This speeds up the test by eliminating exponential backoff waits
-      setTimeoutSpy = spyOn(globalThis, 'setTimeout').mockImplementation(
-        ((callback: () => void) => {
-          callback()
-          return 0 as unknown as NodeJS.Timeout
-        }) as typeof setTimeout,
-      )
+      setTimeoutSpy = spyOn(globalThis, 'setTimeout').mockImplementation(((
+        callback: () => void,
+      ) => {
+        callback()
+        return 0 as unknown as NodeJS.Timeout
+      }) as typeof setTimeout)
     })
 
     afterEach(() => {
@@ -1010,7 +1074,9 @@ describe('withSerializableTransaction', () => {
         withSerializableTransaction({
           callback: async () => 'should not reach',
           context: {},
-          logger: mockLogger as unknown as Parameters<typeof withSerializableTransaction>[0]['logger'],
+          logger: mockLogger as unknown as Parameters<
+            typeof withSerializableTransaction
+          >[0]['logger'],
         }),
       ).rejects.toThrow('persistent serialization failure')
 
@@ -1039,7 +1105,9 @@ describe('withAdvisoryLockTransaction', () => {
     let trackEventSpy: ReturnType<typeof spyOn>
 
     beforeEach(() => {
-      trackEventSpy = spyOn(analyticsModule, 'trackEvent').mockImplementation(() => {})
+      trackEventSpy = spyOn(analyticsModule, 'trackEvent').mockImplementation(
+        () => {},
+      )
     })
 
     afterEach(() => {
@@ -1162,7 +1230,9 @@ describe('withAdvisoryLockTransaction', () => {
       const callArgs = trackEventSpy.mock.calls[0] as unknown[]
       const eventPayload = callArgs[0] as Record<string, unknown>
 
-      expect(eventPayload.event).toBe(AnalyticsEvent.TRANSACTION_RETRY_THRESHOLD_EXCEEDED)
+      expect(eventPayload.event).toBe(
+        AnalyticsEvent.TRANSACTION_RETRY_THRESHOLD_EXCEEDED,
+      )
       expect(eventPayload.userId).toBe('org-456')
       expect(eventPayload.properties).toMatchObject({
         transactionType: 'advisory_lock',
@@ -1415,7 +1485,7 @@ describe('withAdvisoryLockTransaction', () => {
         async (callback, options) => {
           // Verify we're using read committed isolation
           expect(options?.isolationLevel).toBe('read committed')
-          
+
           // Mock the tx object with execute method
           const mockTx = {
             execute: mock(async (sql: unknown) => {

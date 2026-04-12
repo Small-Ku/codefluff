@@ -303,7 +303,9 @@ describe('context-pruner handleSteps', () => {
       createToolCallMessage('call-1', 'read_files', {
         paths: ['file1.ts', 'file2.ts'],
       }),
-      createToolResultMessage('call-1', 'read_files', { content: 'file data' } as JSONValue),
+      createToolResultMessage('call-1', 'read_files', {
+        content: 'file data',
+      } as JSONValue),
       createMessage('user', 'Now edit this file'),
       createToolCallMessage('call-2', 'str_replace', {
         path: 'file1.ts',
@@ -1257,9 +1259,7 @@ First assistant response
   })
 
   test('keeps multi-part tool entries grouped across compaction cycles', () => {
-    const simulateCompaction = (
-      inputMessages: Message[],
-    ): Message => {
+    const simulateCompaction = (inputMessages: Message[]): Message => {
       const result = runHandleSteps(inputMessages, 250000, 200000)
       return result[0].input.messages[0]
     }
@@ -1285,7 +1285,9 @@ First assistant response
       .text
 
     // Both parts should be present in cycle 1
-    expect(summary1Text).toContain('[TOOL ERROR: run_terminal_command] Test suite failed')
+    expect(summary1Text).toContain(
+      '[TOOL ERROR: run_terminal_command] Test suite failed',
+    )
     expect(summary1Text).toContain('[COMMAND FAILED] Exit code: 1')
 
     // Cycle 2: re-compact — the multi-part entry should stay as one entry
@@ -1299,7 +1301,9 @@ First assistant response
       .text
 
     // Both parts should still be present together after re-compaction
-    expect(summary2Text).toContain('[TOOL ERROR: run_terminal_command] Test suite failed')
+    expect(summary2Text).toContain(
+      '[TOOL ERROR: run_terminal_command] Test suite failed',
+    )
     expect(summary2Text).toContain('[COMMAND FAILED] Exit code: 1')
 
     // They should be within the same --- delimited chunk (not split apart)
@@ -1562,7 +1566,8 @@ describe('context-pruner str_replace and write_file tool results', () => {
       createToolResultMessage('call-1', 'str_replace', {
         file: 'src/utils.ts',
         message: 'Updated file',
-        unifiedDiff: '--- a/src/utils.ts\n+++ b/src/utils.ts\n@@ -1,1 +1,1 @@\n-foo\n+bar',
+        unifiedDiff:
+          '--- a/src/utils.ts\n+++ b/src/utils.ts\n@@ -1,1 +1,1 @@\n-foo\n+bar',
       }),
     ]
 
@@ -1585,7 +1590,8 @@ describe('context-pruner str_replace and write_file tool results', () => {
       createToolResultMessage('call-1', 'write_file', {
         file: 'src/new-file.ts',
         message: 'Created file',
-        unifiedDiff: '--- /dev/null\n+++ b/src/new-file.ts\n@@ -0,0 +1 @@\n+export const hello = "world"',
+        unifiedDiff:
+          '--- /dev/null\n+++ b/src/new-file.ts\n@@ -0,0 +1 @@\n+export const hello = "world"',
       }),
     ]
 
@@ -1924,8 +1930,15 @@ describe('context-pruner dual-budget behavior', () => {
     const largeDiff = 'LARGE_DIFF_CONTENT_' + 'X'.repeat(900)
     const messages = [
       createMessage('user', 'Do something'),
-      createToolCallMessage('call-1', 'str_replace', { path: 'big.ts', replacements: [] }),
-      createToolResultMessage('call-1', 'str_replace', { file: 'big.ts', message: 'Updated', unifiedDiff: largeDiff }),
+      createToolCallMessage('call-1', 'str_replace', {
+        path: 'big.ts',
+        replacements: [],
+      }),
+      createToolResultMessage('call-1', 'str_replace', {
+        file: 'big.ts',
+        message: 'Updated',
+        unifiedDiff: largeDiff,
+      }),
       createMessage('user', 'Recent question'),
       createMessage('assistant', 'Recent answer'),
     ]
@@ -2133,11 +2146,23 @@ describe('context-pruner dual-budget behavior', () => {
     // Long user message (~45k chars, exceeds USER_MESSAGE_LIMIT of 13k tokens = 39k chars)
     // Middle marker placed ~85% through so it falls in the truncated gap
     // (past the 80% prefix but before the 20% suffix)
-    const longUserMessage = 'LONG_USER_START_' + 'Here is a detailed specification for the new feature. '.repeat(650) + '_LONG_USER_MIDDLE_MARKER_' + 'Here is a detailed specification for the new feature. '.repeat(150)
+    const longUserMessage =
+      'LONG_USER_START_' +
+      'Here is a detailed specification for the new feature. '.repeat(650) +
+      '_LONG_USER_MIDDLE_MARKER_' +
+      'Here is a detailed specification for the new feature. '.repeat(150)
 
     // Long assistant message with text (~8k chars, exceeds ASSISTANT_MESSAGE_LIMIT of 1.3k tokens = 3.9k chars)
     // plus multiple tool calls. Middle marker placed ~60% through so it falls in the truncated gap.
-    const longAssistantText = 'LONG_ASSISTANT_START_' + 'I will implement this step by step, starting with the data model changes. '.repeat(60) + '_LONG_ASST_MIDDLE_MARKER_' + 'I will implement this step by step, starting with the data model changes. '.repeat(40)
+    const longAssistantText =
+      'LONG_ASSISTANT_START_' +
+      'I will implement this step by step, starting with the data model changes. '.repeat(
+        60,
+      ) +
+      '_LONG_ASST_MIDDLE_MARKER_' +
+      'I will implement this step by step, starting with the data model changes. '.repeat(
+        40,
+      )
     const assistantWithToolCalls: Message = {
       role: 'assistant',
       content: [
@@ -2172,7 +2197,8 @@ describe('context-pruner dual-budget behavior', () => {
     }
 
     // str_replace result with a large diff (~3k chars, exceeds 2k truncation limit)
-    const largeDiff = 'DIFF_START_MARKER_' + '+added line\n'.repeat(250) + '_DIFF_END_MARKER'
+    const largeDiff =
+      'DIFF_START_MARKER_' + '+added line\n'.repeat(250) + '_DIFF_END_MARKER'
 
     // spawn_agents result with 5 non-blacklisted agents producing large outputs
     // Each ~4k chars, total ~20k, exceeds TOOL_ENTRY_LIMIT of 5k tokens = 15k chars
@@ -2180,7 +2206,10 @@ describe('context-pruner dual-budget behavior', () => {
       agentType: 'editor',
       value: {
         type: 'string',
-        value: `AGENT_${i}_OUTPUT_START_` + 'Implementation details. '.repeat(160) + `_AGENT_${i}_OUTPUT_END`,
+        value:
+          `AGENT_${i}_OUTPUT_START_` +
+          'Implementation details. '.repeat(160) +
+          `_AGENT_${i}_OUTPUT_END`,
       },
     }))
 
@@ -2188,8 +2217,14 @@ describe('context-pruner dual-budget behavior', () => {
       previousSummary,
       createMessage('user', longUserMessage),
       assistantWithToolCalls,
-      createToolResultMessage('call-1', 'read_files', { content: 'file data' } as JSONValue),
-      createToolResultMessage('call-2', 'str_replace', { file: 'src/model.ts', message: 'Updated', unifiedDiff: largeDiff }),
+      createToolResultMessage('call-1', 'read_files', {
+        content: 'file data',
+      } as JSONValue),
+      createToolResultMessage('call-2', 'str_replace', {
+        file: 'src/model.ts',
+        message: 'Updated',
+        unifiedDiff: largeDiff,
+      }),
       {
         role: 'tool',
         toolCallId: 'call-3',
@@ -2210,7 +2245,8 @@ describe('context-pruner dual-budget behavior', () => {
     // === Structure checks ===
     expect(content).toContain('<conversation_summary>')
     expect(content).toContain('</conversation_summary>')
-    const summaryTagCount = (content.match(/<conversation_summary>/g) || []).length
+    const summaryTagCount = (content.match(/<conversation_summary>/g) || [])
+      .length
     expect(summaryTagCount).toBe(1)
 
     // === Previous summary entries preserved ===
@@ -2264,7 +2300,10 @@ describe('context-pruner dual-budget behavior', () => {
     }
 
     // Long user message (~12k chars, under truncation limit but uses significant budget)
-    const longUserMessage = 'SURVIVED_USER_START_' + 'Feature request details. '.repeat(400) + '_SURVIVED_USER_END'
+    const longUserMessage =
+      'SURVIVED_USER_START_' +
+      'Feature request details. '.repeat(400) +
+      '_SURVIVED_USER_END'
 
     // Assistant with tool calls
     const assistantMsg: Message = {
@@ -2284,7 +2323,8 @@ describe('context-pruner dual-budget behavior', () => {
     const toolResult = createToolResultMessage('call-1', 'str_replace', {
       file: 'src/app.ts',
       message: 'Updated file',
-      unifiedDiff: '--- a/src/app.ts\n+++ b/src/app.ts\n@@ -1 +1 @@\n-old\n+SURVIVED_DIFF_CONTENT',
+      unifiedDiff:
+        '--- a/src/app.ts\n+++ b/src/app.ts\n@@ -1 +1 @@\n-old\n+SURVIVED_DIFF_CONTENT',
     })
 
     const messages: Message[] = [

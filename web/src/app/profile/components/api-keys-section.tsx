@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/components/ui/use-toast'
 
-
 async function fetchTokens(): Promise<{
   tokens: {
     id: string

@@ -98,7 +98,10 @@ export function codeSearch({
 
     const rgPath = getBundledRgPath(import.meta.url)
     if (logger) {
-      logger.info({ rgPath, args, searchCwd }, 'code-search: Spawning ripgrep process')
+      logger.info(
+        { rgPath, args, searchCwd },
+        'code-search: Spawning ripgrep process',
+      )
     }
     const childProcess = spawn(rgPath, args, {
       cwd: searchCwd,
@@ -140,7 +143,7 @@ export function codeSearch({
     const hardKill = () => {
       try {
         childProcess.kill('SIGTERM')
-      } catch { }
+      } catch {}
       // Store timeout reference so it can be cleared if process closes normally
       killTimeoutId = setTimeout(() => {
         try {
@@ -148,7 +151,7 @@ export function codeSearch({
         } catch {
           try {
             childProcess.kill()
-          } catch { }
+          } catch {}
         }
         killTimeoutId = null
       }, 1000)
@@ -258,7 +261,7 @@ export function codeSearch({
                 const finalOutput =
                   formattedOutput.length > maxOutputStringLength
                     ? formattedOutput.substring(0, maxOutputStringLength) +
-                    '\n\n[Output truncated]'
+                      '\n\n[Output truncated]'
                     : formattedOutput
 
                 const limitReason =
@@ -335,10 +338,10 @@ export function codeSearch({
                   }
                 }
               }
-            } catch { }
+            } catch {}
           }
         }
-      } catch { }
+      } catch {}
 
       // Build final output from collected matches
       const limitedLines: string[] = []
@@ -380,14 +383,14 @@ export function codeSearch({
       const truncatedStdout =
         formattedOutput.length > maxOutputStringLength
           ? formattedOutput.substring(0, maxOutputStringLength) +
-          '\n\n[Output truncated]'
+            '\n\n[Output truncated]'
           : formattedOutput
 
       const truncatedStderr = stderrBuf
         ? stderrBuf +
-        (stderrBuf.length >= Math.floor(maxOutputStringLength / 5)
-          ? '\n\n[Error output truncated]'
-          : '')
+          (stderrBuf.length >= Math.floor(maxOutputStringLength / 5)
+            ? '\n\n[Error output truncated]'
+            : '')
         : ''
 
       settle({

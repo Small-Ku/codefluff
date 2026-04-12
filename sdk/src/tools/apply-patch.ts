@@ -431,7 +431,9 @@ function applyChunks(input: string, chunks: Chunk[]): string {
       )
     }
 
-    destinationLines.push(...originalLines.slice(originalIndex, chunk.origIndex))
+    destinationLines.push(
+      ...originalLines.slice(originalIndex, chunk.origIndex),
+    )
     originalIndex = chunk.origIndex
 
     if (chunk.insLines.length > 0) {
@@ -526,7 +528,11 @@ function tryApplyPatchWithFallbacks(params: {
     attemptedStrategies.push(attempt.name)
 
     try {
-      const { result: patched } = applyDiff(attempt.source, attempt.diff, 'default')
+      const { result: patched } = applyDiff(
+        attempt.source,
+        attempt.diff,
+        'default',
+      )
 
       if (patchHasIntendedChanges(attempt.diff) && patched === attempt.source) {
         lastError = 'Patch produced no content changes'

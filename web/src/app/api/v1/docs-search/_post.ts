@@ -22,7 +22,6 @@ import type {
 import type { BlockGrantResult } from '@codebuff/billing/subscription'
 import type { NextRequest } from 'next/server'
 
-
 const bodySchema = z.object({
   libraryTitle: z.string().min(1, 'libraryTitle is required'),
   topic: z.string().optional(),
@@ -39,7 +38,10 @@ export async function postDocsSearch(params: {
   getUserUsageData: GetUserUsageDataFn
   consumeCreditsWithFallback: ConsumeCreditsWithFallbackFn
   fetch: typeof globalThis.fetch
-  ensureSubscriberBlockGrant?: (params: { userId: string; logger: Logger }) => Promise<BlockGrantResult | null>
+  ensureSubscriberBlockGrant?: (params: {
+    userId: string
+    logger: Logger
+  }) => Promise<BlockGrantResult | null>
 }) {
   const {
     req,

@@ -11,35 +11,31 @@ const basher: AgentDefinition = {
   model: 'google/gemini-3.1-flash-lite-preview',
   displayName: 'Basher',
   spawnerPrompt:
-    'Runs a single terminal command and describes its output using an LLM. A lightweight shell command executor. Requires both a shell command and a prompt.',
+    'Runs a single terminal command and (recommended) describes its output using an LLM using the what_to_summarize field. A lightweight shell command executor. Every basher spawn MUST include params: { command: "<shell>" }.',
 
   inputSchema: {
-    prompt: {
-      type: 'string',
-      description:
-        'What information from the command output is desired. Be specific about what to look for or extract.',
-    },
     params: {
       type: 'object',
       properties: {
         command: {
           type: 'string',
-          description: 'Terminal command to run in bash shell',
+          description:
+            "The terminal command to run in bash shell. Don't forget this field!",
+        },
+        what_to_summarize: {
+          type: 'string',
+          description:
+            'What information from the command output is desired. Be specific about what to look for or extract. This is optional, and if not provided, the basher will return the full command output without summarization.',
         },
         shell: {
           type: 'string',
           enum: ['bash', 'pwsh', 'powershell', 'cmd'],
           description:
-            "Shell to use for command execution. If omitted, run_terminal_command default applies.",
+            'Shell to use for command execution. If omitted, run_terminal_command default applies.',
         },
         timeout_seconds: {
           type: 'number',
           description: 'Set to -1 for no timeout. Default 30',
-        },
-        rawOutput: {
-          type: 'boolean',
-          description:
-            'If true, returns the full command output without summarization. Defaults to false.',
         },
       },
       required: ['command'],
@@ -79,8 +75,13 @@ Do not use any tools! Only analyze the output of the command.`,
     }
 
     const timeout_seconds = params?.timeout_seconds as number | undefined
-    const rawOutput = params?.rawOutput as boolean | undefined
-    const shell = params?.shell as 'bash' | 'powershell' | 'pwsh' | 'cmd' | undefined
+    const what_to_summarize = params?.what_to_summarize as string | undefined
+    const shell = params?.shell as
+      | 'bash'
+      | 'powershell'
+      | 'pwsh'
+      | 'cmd'
+      | undefined
 
     const explicitShell = shell !== undefined
 
@@ -115,7 +116,8 @@ Do not use any tools! Only analyze the output of the command.`,
         return false
 
       const firstResult = toolResult[0]
-      const resultValue = firstResult?.type === 'json' ? firstResult.value : null
+      const resultValue =
+        firstResult?.type === 'json' ? firstResult.value : null
 
       const exitCode = resultValue?.exitCode
       const hasFailed = exitCode !== undefined && exitCode !== 0
@@ -151,16 +153,20 @@ Do not use any tools! Only analyze the output of the command.`,
       toolResult = result
 
       if (isWindows && shouldFallbackToWindowsPowerShell(result)) {
-        const { toolResult: fallbackToolResult } = yield buildRunToolCall(
-          'powershell',
-        )
+        const { toolResult: fallbackToolResult } =
+          yield buildRunToolCall('powershell')
         toolResult = fallbackToolResult
       }
     }
 
-    if (rawOutput) {
-      const first = toolResult?.[0]
-      const output = first?.type === 'json' ? first.value : first ?? ''
+    if (!what_to_summarize) {
+      // Return the raw command output without summarization
+      const result = toolResult?.[0]
+      // Only return object values (command output objects), not plain strings
+      const output =
+        result?.type === 'json' && typeof result.value === 'object'
+          ? result.value
+          : ''
       yield {
         toolName: 'set_output',
         input: { output },

@@ -28,12 +28,15 @@ ensureEnv()
 
 const { useChatStore } = await import('../../../state/chat-store')
 const { createStreamController } = await import('../../stream-state')
-const { setupStreamingContext, handleRunCompletion, handleRunError, finalizeQueueState, resetEarlyReturnState } = await import(
-  '../send-message'
-)
-const { createBatchedMessageUpdater } = await import(
-  '../../../utils/message-updater'
-)
+const {
+  setupStreamingContext,
+  handleRunCompletion,
+  handleRunError,
+  finalizeQueueState,
+  resetEarlyReturnState,
+} = await import('../send-message')
+const { createBatchedMessageUpdater } =
+  await import('../../../utils/message-updater')
 import { createPaymentRequiredError } from '@codebuff/sdk'
 import type { RunState } from '@codebuff/sdk'
 
@@ -363,10 +366,21 @@ describe('handleRunCompletion', () => {
         updater,
         aiMessageId: 'ai-1',
         wasAbortedByUser: true,
-        setStreamStatus: (status: StreamStatus) => { setStreamStatusCalled = true; streamStatus = status },
-        setCanProcessQueue: (can: boolean) => { setCanProcessQueueCalled = true; canProcessQueue = can },
-        updateChainInProgress: (value: boolean) => { updateChainInProgressCalled = true; chainInProgress = value },
-        setHasReceivedPlanResponse: (value: boolean) => { hasReceivedPlanResponse = value },
+        setStreamStatus: (status: StreamStatus) => {
+          setStreamStatusCalled = true
+          streamStatus = status
+        },
+        setCanProcessQueue: (can: boolean) => {
+          setCanProcessQueueCalled = true
+          canProcessQueue = can
+        },
+        updateChainInProgress: (value: boolean) => {
+          updateChainInProgressCalled = true
+          chainInProgress = value
+        },
+        setHasReceivedPlanResponse: (value: boolean) => {
+          hasReceivedPlanResponse = value
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -391,7 +405,12 @@ describe('handleRunCompletion', () => {
         sessionState: undefined,
         output: {
           type: 'lastMessage' as const,
-          value: [{ type: 'text' as const, text: 'Server response that should be ignored' }],
+          value: [
+            {
+              type: 'text' as const,
+              text: 'Server response that should be ignored',
+            },
+          ],
         },
       }
 
@@ -406,7 +425,9 @@ describe('handleRunCompletion', () => {
         setStreamStatus: () => {},
         setCanProcessQueue: () => {},
         updateChainInProgress: () => {},
-        setHasReceivedPlanResponse: (value: boolean) => { hasReceivedPlanResponse = value },
+        setHasReceivedPlanResponse: (value: boolean) => {
+          hasReceivedPlanResponse = value
+        },
       })
 
       // Should NOT set plan response (abort path returns early before processing output)
@@ -441,10 +462,14 @@ describe('handleRunCompletion', () => {
         aiMessageId: 'ai-1',
         wasAbortedByUser: true,
         setStreamStatus: () => {},
-        setCanProcessQueue: () => { canProcessQueueCalled = true },
+        setCanProcessQueue: () => {
+          canProcessQueueCalled = true
+        },
         updateChainInProgress: () => {},
         setHasReceivedPlanResponse: () => {},
-        resumeQueue: () => { resumeQueueCalled = true },
+        resumeQueue: () => {
+          resumeQueueCalled = true
+        },
       })
 
       // Neither should be called - abort handler already handled cleanup
@@ -462,9 +487,15 @@ describe('finalizeQueueState', () => {
     const isProcessingQueueRef = { current: true }
 
     finalizeQueueState({
-      setStreamStatus: (status) => { streamStatus = status },
-      setCanProcessQueue: (can) => { canProcessQueue = can },
-      updateChainInProgress: (value) => { chainInProgress = value },
+      setStreamStatus: (status) => {
+        streamStatus = status
+      },
+      setCanProcessQueue: (can) => {
+        canProcessQueue = can
+      },
+      updateChainInProgress: (value) => {
+        chainInProgress = value
+      },
       isProcessingQueueRef,
     })
 
@@ -481,10 +512,18 @@ describe('finalizeQueueState', () => {
     let chainInProgress = true
 
     finalizeQueueState({
-      setStreamStatus: (status) => { streamStatus = status },
-      setCanProcessQueue: () => { canProcessQueueCalled = true },
-      updateChainInProgress: (value) => { chainInProgress = value },
-      resumeQueue: () => { resumeQueueCalled = true },
+      setStreamStatus: (status) => {
+        streamStatus = status
+      },
+      setCanProcessQueue: () => {
+        canProcessQueueCalled = true
+      },
+      updateChainInProgress: (value) => {
+        chainInProgress = value
+      },
+      resumeQueue: () => {
+        resumeQueueCalled = true
+      },
     })
 
     expect(streamStatus).toBe('idle')
@@ -499,7 +538,9 @@ describe('finalizeQueueState', () => {
 
     finalizeQueueState({
       setStreamStatus: () => {},
-      setCanProcessQueue: (can) => { canProcessQueue = can },
+      setCanProcessQueue: (can) => {
+        canProcessQueue = can
+      },
       updateChainInProgress: () => {},
       isQueuePausedRef,
     })
@@ -736,12 +777,12 @@ describe('handleRunError', () => {
     // Create an error that matches the real AI_APICallError structure
     const contextLengthError = Object.assign(
       new Error(
-        "This endpoint's maximum context length is 200000 tokens. However, you requested about 201209 tokens (158536 of text input, 10673 of tool input, 32000 in the output). Please reduce the length of either one, or use the \"middle-out\" transform to compress your prompt automatically."
+        'This endpoint\'s maximum context length is 200000 tokens. However, you requested about 201209 tokens (158536 of text input, 10673 of tool input, 32000 in the output). Please reduce the length of either one, or use the "middle-out" transform to compress your prompt automatically.',
       ),
       {
         name: 'AI_APICallError',
         statusCode: 400,
-      }
+      },
     )
 
     let streamStatus = 'streaming' as StreamStatus
@@ -774,10 +815,14 @@ describe('handleRunError', () => {
     expect(aiMessage!.content).toBe('Partial streamed content before error')
 
     // Blocks should be preserved
-    expect(aiMessage!.blocks).toEqual([{ type: 'text', content: 'some block content' }])
+    expect(aiMessage!.blocks).toEqual([
+      { type: 'text', content: 'some block content' },
+    ])
 
     // Error should be stored in userError (displayed in UserErrorBanner)
-    expect(aiMessage!.userError).toContain('maximum context length is 200000 tokens')
+    expect(aiMessage!.userError).toContain(
+      'maximum context length is 200000 tokens',
+    )
     expect(aiMessage!.userError).toContain('201209 tokens')
 
     // Message should be marked complete
@@ -884,13 +929,19 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     // --- Shared mutable state (simulates React refs and state in the CLI) ---
     let streamStatus: StreamStatus = 'idle'
     let canProcessQueue = false
-    let chainInProgress = true  // Set true at start of sendMessage
+    let chainInProgress = true // Set true at start of sendMessage
     const isProcessingQueueRef = { current: false }
     const isQueuePausedRef = { current: false }
 
-    const setStreamStatus = (status: StreamStatus) => { streamStatus = status }
-    const setCanProcessQueue = (can: boolean) => { canProcessQueue = can }
-    const updateChainInProgress = (value: boolean) => { chainInProgress = value }
+    const setStreamStatus = (status: StreamStatus) => {
+      streamStatus = status
+    }
+    const setCanProcessQueue = (can: boolean) => {
+      canProcessQueue = can
+    }
+    const updateChainInProgress = (value: boolean) => {
+      chainInProgress = value
+    }
 
     // --- PHASE 1: Start run A (setupStreamingContext) ---
     let messagesA = createBaseMessages()
@@ -898,20 +949,23 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     const timerControllerA = createMockTimerController()
     const abortControllerRefA = { current: null as AbortController | null }
 
-    const { updater: updaterA, abortController: abortControllerA } = setupStreamingContext({
-      aiMessageId: 'ai-1',
-      timerController: timerControllerA,
-      setMessages: (fn: any) => { messagesA = fn(messagesA) },
-      streamRefs: streamRefsA,
-      abortControllerRef: abortControllerRefA,
-      setStreamStatus,
-      setCanProcessQueue,
-      isQueuePausedRef,
-      isProcessingQueueRef,
-      updateChainInProgress,
-      setIsRetrying: () => {},
-      setStreamingAgents: () => {},
-    })
+    const { updater: updaterA, abortController: abortControllerA } =
+      setupStreamingContext({
+        aiMessageId: 'ai-1',
+        timerController: timerControllerA,
+        setMessages: (fn: any) => {
+          messagesA = fn(messagesA)
+        },
+        streamRefs: streamRefsA,
+        abortControllerRef: abortControllerRefA,
+        setStreamStatus,
+        setCanProcessQueue,
+        isQueuePausedRef,
+        isProcessingQueueRef,
+        updateChainInProgress,
+        setIsRetrying: () => {},
+        setStreamingAgents: () => {},
+      })
 
     // Simulate streaming has started
     streamStatus = 'streaming'
@@ -976,9 +1030,15 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
       updater,
       aiMessageId: 'ai-1',
       wasAbortedByUser: true,
-      setStreamStatus: () => { setStreamStatusCallCount++ },
-      setCanProcessQueue: (can: boolean) => { canProcessQueue = can },
-      updateChainInProgress: () => { updateChainInProgressCallCount++ },
+      setStreamStatus: () => {
+        setStreamStatusCallCount++
+      },
+      setCanProcessQueue: (can: boolean) => {
+        canProcessQueue = can
+      },
+      updateChainInProgress: () => {
+        updateChainInProgressCallCount++
+      },
       setHasReceivedPlanResponse: () => {},
       isProcessingQueueRef,
       isQueuePausedRef,
@@ -1015,14 +1075,22 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     const { abortController: abortA } = setupStreamingContext({
       aiMessageId: 'ai-run-a',
       timerController: timerA,
-      setMessages: (fn: any) => { messagesA = fn(messagesA) },
+      setMessages: (fn: any) => {
+        messagesA = fn(messagesA)
+      },
       streamRefs: sharedStreamRefs,
       abortControllerRef: abortRefA,
-      setStreamStatus: (status: StreamStatus) => { streamStatus = status },
-      setCanProcessQueue: (can: boolean) => { canProcessQueue = can },
+      setStreamStatus: (status: StreamStatus) => {
+        streamStatus = status
+      },
+      setCanProcessQueue: (can: boolean) => {
+        canProcessQueue = can
+      },
       isQueuePausedRef,
       isProcessingQueueRef,
-      updateChainInProgress: (value: boolean) => { chainInProgress = value },
+      updateChainInProgress: (value: boolean) => {
+        chainInProgress = value
+      },
       setIsRetrying: () => {},
       setStreamingAgents: () => {},
     })
@@ -1090,9 +1158,15 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
         timerController: createMockTimerController(),
         updater: createBatchedMessageUpdater('ai-1', () => {}),
         setIsRetrying: () => {},
-        setStreamStatus: (status: StreamStatus) => { streamStatus = status },
-        setCanProcessQueue: (can: boolean) => { canProcessQueue = can },
-        updateChainInProgress: (value: boolean) => { chainInProgress = value },
+        setStreamStatus: (status: StreamStatus) => {
+          streamStatus = status
+        },
+        setCanProcessQueue: (can: boolean) => {
+          canProcessQueue = can
+        },
+        updateChainInProgress: (value: boolean) => {
+          chainInProgress = value
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1121,9 +1195,15 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
       timerController: createMockTimerController(),
       updater: createBatchedMessageUpdater('ai-1', (fn: any) => {}),
       setIsRetrying: () => {},
-      setStreamStatus: (status: StreamStatus) => { streamStatus = status },
-      setCanProcessQueue: (can: boolean) => { canProcessQueue = can },
-      updateChainInProgress: (value: boolean) => { chainInProgress = value },
+      setStreamStatus: (status: StreamStatus) => {
+        streamStatus = status
+      },
+      setCanProcessQueue: (can: boolean) => {
+        canProcessQueue = can
+      },
+      updateChainInProgress: (value: boolean) => {
+        chainInProgress = value
+      },
       isProcessingQueueRef,
       isQueuePausedRef,
     })
@@ -1148,9 +1228,15 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     const isQueuePausedRef = { current: false }
     let previousRunState: RunState | null = null
 
-    const setStreamStatus = (status: StreamStatus) => { streamStatus = status }
-    const setCanProcessQueue = (can: boolean) => { canProcessQueue = can }
-    const updateChainInProgress = (value: boolean) => { chainInProgress = value }
+    const setStreamStatus = (status: StreamStatus) => {
+      streamStatus = status
+    }
+    const setCanProcessQueue = (can: boolean) => {
+      canProcessQueue = can
+    }
+    const updateChainInProgress = (value: boolean) => {
+      chainInProgress = value
+    }
 
     // CRITICAL: Use a single shared streamRefs instance, just like production.
     // In production, streamRefsRef is created once via useRef and reused.
@@ -1161,20 +1247,23 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     const timerA = createMockTimerController()
     const abortRefA = { current: null as AbortController | null }
 
-    const { updater: updaterA, abortController: abortA } = setupStreamingContext({
-      aiMessageId: 'ai-run-a',
-      timerController: timerA,
-      setMessages: (fn: any) => { messagesA = fn(messagesA) },
-      streamRefs: sharedStreamRefs,
-      abortControllerRef: abortRefA,
-      setStreamStatus,
-      setCanProcessQueue,
-      isQueuePausedRef,
-      isProcessingQueueRef,
-      updateChainInProgress,
-      setIsRetrying: () => {},
-      setStreamingAgents: () => {},
-    })
+    const { updater: updaterA, abortController: abortA } =
+      setupStreamingContext({
+        aiMessageId: 'ai-run-a',
+        timerController: timerA,
+        setMessages: (fn: any) => {
+          messagesA = fn(messagesA)
+        },
+        streamRefs: sharedStreamRefs,
+        abortControllerRef: abortRefA,
+        setStreamStatus,
+        setCanProcessQueue,
+        isQueuePausedRef,
+        isProcessingQueueRef,
+        updateChainInProgress,
+        setIsRetrying: () => {},
+        setStreamingAgents: () => {},
+      })
 
     streamStatus = 'streaming'
 
@@ -1189,27 +1278,36 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
     canProcessQueue = false
 
     let messagesB: ChatMessage[] = [
-      { id: 'ai-run-b', variant: 'ai', content: '', blocks: [], timestamp: 'now' },
+      {
+        id: 'ai-run-b',
+        variant: 'ai',
+        content: '',
+        blocks: [],
+        timestamp: 'now',
+      },
     ]
     const timerB = createMockTimerController()
     const abortRefB = { current: null as AbortController | null }
 
     // Run B's setupStreamingContext calls sharedStreamRefs.reset(),
     // which clears wasAbortedByUser. This is the key race condition.
-    const { updater: updaterB, abortController: abortB } = setupStreamingContext({
-      aiMessageId: 'ai-run-b',
-      timerController: timerB,
-      setMessages: (fn: any) => { messagesB = fn(messagesB) },
-      streamRefs: sharedStreamRefs,
-      abortControllerRef: abortRefB,
-      setStreamStatus,
-      setCanProcessQueue,
-      isQueuePausedRef,
-      isProcessingQueueRef,
-      updateChainInProgress,
-      setIsRetrying: () => {},
-      setStreamingAgents: () => {},
-    })
+    const { updater: updaterB, abortController: abortB } =
+      setupStreamingContext({
+        aiMessageId: 'ai-run-b',
+        timerController: timerB,
+        setMessages: (fn: any) => {
+          messagesB = fn(messagesB)
+        },
+        streamRefs: sharedStreamRefs,
+        abortControllerRef: abortRefB,
+        setStreamStatus,
+        setCanProcessQueue,
+        isQueuePausedRef,
+        isProcessingQueueRef,
+        updateChainInProgress,
+        setIsRetrying: () => {},
+        setStreamingAgents: () => {},
+      })
 
     // After B starts, shared streamRefs.wasAbortedByUser is reset to false.
     // This is why we use per-run abortController.signal.aborted instead.
@@ -1261,7 +1359,10 @@ describe('CLI-level race condition: abort run A, attempt run B before A resolves
           { role: 'assistant', content: 'full response to second message' },
         ],
       } as any,
-      output: { type: 'lastMessage' as const, value: [{ type: 'text' as const, text: 'full response' }] },
+      output: {
+        type: 'lastMessage' as const,
+        value: [{ type: 'text' as const, text: 'full response' }],
+      },
     }
     previousRunState = runStateB
 
@@ -1309,7 +1410,9 @@ describe('resetEarlyReturnState', () => {
       let chainInProgress = true
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
         setCanProcessQueue: () => {},
       })
 
@@ -1322,7 +1425,9 @@ describe('resetEarlyReturnState', () => {
 
       resetEarlyReturnState({
         updateChainInProgress: () => {},
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isQueuePausedRef,
       })
 
@@ -1335,7 +1440,9 @@ describe('resetEarlyReturnState', () => {
 
       resetEarlyReturnState({
         updateChainInProgress: () => {},
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isQueuePausedRef,
       })
 
@@ -1369,7 +1476,9 @@ describe('resetEarlyReturnState', () => {
 
       resetEarlyReturnState({
         updateChainInProgress: () => {},
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         // No isQueuePausedRef - should default to !undefined = true
       })
 
@@ -1385,8 +1494,12 @@ describe('resetEarlyReturnState', () => {
       const isQueuePausedRef = { current: false }
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1403,8 +1516,12 @@ describe('resetEarlyReturnState', () => {
       const isQueuePausedRef = { current: true }
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1424,8 +1541,12 @@ describe('resetEarlyReturnState', () => {
 
       // Simulating what happens after catching validation exception
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1442,7 +1563,9 @@ describe('resetEarlyReturnState', () => {
 
       resetEarlyReturnState({
         updateChainInProgress: () => {},
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1464,8 +1587,12 @@ describe('resetEarlyReturnState', () => {
 
       // After exception, reset is called
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1484,8 +1611,12 @@ describe('resetEarlyReturnState', () => {
       const isQueuePausedRef = { current: false }
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1504,8 +1635,12 @@ describe('resetEarlyReturnState', () => {
       const isQueuePausedRef = { current: false }
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })
@@ -1525,8 +1660,12 @@ describe('resetEarlyReturnState', () => {
       const isQueuePausedRef = { current: true } // User explicitly paused
 
       resetEarlyReturnState({
-        updateChainInProgress: (value) => { chainInProgress = value },
-        setCanProcessQueue: (can) => { canProcessQueue = can },
+        updateChainInProgress: (value) => {
+          chainInProgress = value
+        },
+        setCanProcessQueue: (can) => {
+          canProcessQueue = can
+        },
         isProcessingQueueRef,
         isQueuePausedRef,
       })

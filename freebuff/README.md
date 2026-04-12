@@ -38,17 +38,17 @@ freebuff
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `/help` | Show keyboard shortcuts and tips |
-| `/new` | Start a new conversation |
-| `/history` | Browse past conversations |
-| `/bash` | Enter bash mode |
-| `/init` | Create a starter knowledge.md |
-| `/feedback` | Share feedback |
-| `/theme:toggle` | Toggle light/dark mode |
-| `/logout` | Sign out |
-| `/exit` | Quit |
+| Command         | Description                      |
+| --------------- | -------------------------------- |
+| `/help`         | Show keyboard shortcuts and tips |
+| `/new`          | Start a new conversation         |
+| `/history`      | Browse past conversations        |
+| `/bash`         | Enter bash mode                  |
+| `/init`         | Create a starter knowledge.md    |
+| `/feedback`     | Share feedback                   |
+| `/theme:toggle` | Toggle light/dark mode           |
+| `/logout`       | Sign out                         |
+| `/exit`         | Quit                             |
 
 ## FAQ
 

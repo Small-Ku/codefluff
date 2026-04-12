@@ -16,7 +16,12 @@ describe('codefluff-config', () => {
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE
   const testConfigDir = join(tmpdir(), 'codefluff-config-test')
-  const testConfigPath = join(testConfigDir, '.config', 'codefluff', 'config.json')
+  const testConfigPath = join(
+    testConfigDir,
+    '.config',
+    'codefluff',
+    'config.json',
+  )
 
   function writeConfig(obj: unknown) {
     mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })
@@ -82,7 +87,9 @@ describe('codefluff-config', () => {
         anthropic: 'sk-def',
       })
       expect(config.mapping?.normal?.base).toBe('anthropic/claude-sonnet-4')
-      expect(config.mapping?.normal?.['file-picker']).toBe('google/gemini-2.5-flash-lite')
+      expect(config.mapping?.normal?.['file-picker']).toBe(
+        'google/gemini-2.5-flash-lite',
+      )
       expect(config.mapping?.normal?.editor).toBe('anthropic/claude-opus-4')
       expect(config.defaultMode).toBe('normal')
       expect(config.searchProviders?.linkup).toBe('lk-123')
@@ -150,7 +157,9 @@ describe('codefluff-config', () => {
 
     test('warns on invalid JSON and returns {}', () => {
       overrideHome()
-      mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })
+      mkdirSync(join(testConfigDir, '.config', 'codefluff'), {
+        recursive: true,
+      })
       writeFileSync(testConfigPath, '{ invalid json }')
 
       const warnFn = mock(() => {})

@@ -70,7 +70,7 @@ sequenceDiagram
 
     loop For each task
         Orchestrator->>AgentRunner: Run all agents in parallel
-        
+
         par Agent 1
             AgentRunner->>Agent: Execute with prompt
             Agent->>AgentRunner: Return trace + changes
@@ -78,16 +78,16 @@ sequenceDiagram
             AgentRunner->>Agent: Execute with prompt
             Agent->>AgentRunner: Return trace + changes
         end
-        
+
         AgentRunner->>Judge: Judge each agent's output (3 judges)
         Judge->>AgentRunner: Return median scores + analysis
-        
+
         AgentRunner->>TraceAnalyzer: Analyze all agent traces
         TraceAnalyzer->>AgentRunner: Return process insights
-        
+
         Orchestrator->>Orchestrator: Save task results + analysis
     end
-    
+
     Orchestrator->>MetaAnalyzer: Analyze all tasks
     MetaAnalyzer->>Orchestrator: Return aggregate insights
 ```
@@ -104,7 +104,9 @@ sequenceDiagram
 ### Advanced Analysis
 
 #### Trace Analysis (Per-Task)
+
 After each task, the trace analyzer examines:
+
 - How agents approached the problem
 - Tool usage patterns and sequences
 - Context gathering strategies
@@ -112,7 +114,9 @@ After each task, the trace analyzer examines:
 - Relative performance comparison
 
 #### Meta-Analysis (Across All Tasks)
+
 After all tasks complete, the meta analyzer identifies:
+
 - Consistent strengths and weaknesses per agent
 - Performance trends and patterns
 - Cost vs quality trade-offs
@@ -153,12 +157,14 @@ await runBuffBench({
 ### Prerequisites for External Agents
 
 **Claude Code CLI:**
+
 ```bash
 npm install -g @anthropic-ai/claude-code
 # Set ANTHROPIC_API_KEY or CLAUDE_CODE_KEY environment variable
 ```
 
 **Codex CLI:**
+
 ```bash
 npm install -g @openai/codex
 # Set OPENAI_API_KEY environment variable
@@ -243,6 +249,7 @@ bun run evals/buffbench/gen-repo-eval.ts \
 ```
 
 This will:
+
 1. Clone the repository
 2. Select high-quality commits using AI
 3. Generate evaluation tasks for each commit
@@ -254,31 +261,31 @@ This will:
 
 ```typescript
 interface EvalDataV2 {
-  repoUrl: string              // Source repository URL
-  testRepoName?: string        // Optional repo name override
-  generationDate: string       // ISO timestamp of creation
-  initCommand?: string         // Optional setup command
-  binInstalls?: BinInstall[]   // Binaries to install
+  repoUrl: string // Source repository URL
+  testRepoName?: string // Optional repo name override
+  generationDate: string // ISO timestamp of creation
+  initCommand?: string // Optional setup command
+  binInstalls?: BinInstall[] // Binaries to install
   env?: Record<string, string> // Environment variables
   finalCheckCommands?: string[] // Validation commands
-  evalCommits: EvalCommitV2[]  // List of evaluation tasks
+  evalCommits: EvalCommitV2[] // List of evaluation tasks
 }
 
 interface EvalCommitV2 {
-  id: string                   // Unique task identifier
-  sha: string                  // Target commit SHA
-  parentSha: string            // Parent commit SHA
-  spec: string                 // Technical specification
-  prompt: string               // Natural language prompt
-  supplementalFiles: string[]  // Context files
-  fileDiffs: FileDiff[]        // Ground truth changes
+  id: string // Unique task identifier
+  sha: string // Target commit SHA
+  parentSha: string // Parent commit SHA
+  spec: string // Technical specification
+  prompt: string // Natural language prompt
+  supplementalFiles: string[] // Context files
+  fileDiffs: FileDiff[] // Ground truth changes
 }
 
 interface FileDiff {
-  path: string                 // File path
+  path: string // File path
   status: 'modified' | 'added' | 'deleted' | 'renamed'
-  oldPath?: string             // For renamed files
-  diff: string                 // Unified diff
+  oldPath?: string // For renamed files
+  diff: string // Unified diff
 }
 ```
 
@@ -288,7 +295,7 @@ interface FileDiff {
 interface AgentEvalResults {
   agentId: string
   runs: EvalRun[]
-  averageScore: number               // Overall score across valid runs
+  averageScore: number // Overall score across valid runs
   averageScoreExcludingFailures: number // Score excluding failures (≤1.0)
   averageCost: number
   averageDuration: number
@@ -297,7 +304,7 @@ interface AgentEvalResults {
 interface EvalRun {
   commitSha: string
   prompt: string
-  diff: string                       // Agent's changes
+  diff: string // Agent's changes
   judging: JudgingResult
   cost: number
   durationMs: number
@@ -306,12 +313,12 @@ interface EvalRun {
 }
 
 interface JudgingResult {
-  analysis: string                   // Detailed analysis
+  analysis: string // Detailed analysis
   strengths: string[]
   weaknesses: string[]
-  completionScore: number            // 0-10
-  codeQualityScore: number           // 0-10
-  overallScore: number               // 0-10
+  completionScore: number // 0-10
+  codeQualityScore: number // 0-10
+  overallScore: number // 0-10
 }
 ```
 
@@ -339,11 +346,7 @@ Run validation commands after agent execution:
 
 ```json
 {
-  "finalCheckCommands": [
-    "npm run typecheck",
-    "npm test",
-    "npm run lint"
-  ]
+  "finalCheckCommands": ["npm run typecheck", "npm test", "npm run lint"]
 }
 ```
 
@@ -416,9 +419,9 @@ EVAL_RESULTS_EMAIL=team@codebuff.com  # For nightly email reports
 Control parallel execution:
 
 ```typescript
-taskConcurrency: 1   // Sequential (safest, slowest)
-taskConcurrency: 3   // Moderate parallelism
-taskConcurrency: 10  // High parallelism (faster, more resources)
+taskConcurrency: 1 // Sequential (safest, slowest)
+taskConcurrency: 3 // Moderate parallelism
+taskConcurrency: 10 // High parallelism (faster, more resources)
 ```
 
 ## Examples

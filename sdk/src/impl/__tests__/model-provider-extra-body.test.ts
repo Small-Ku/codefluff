@@ -14,7 +14,12 @@ describe('model-provider extraBody', () => {
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE
   const testConfigDir = join(tmpdir(), 'model-provider-test')
-  const testConfigPath = join(testConfigDir, '.config', 'codefluff', 'config.json')
+  const testConfigPath = join(
+    testConfigDir,
+    '.config',
+    'codefluff',
+    'config.json',
+  )
 
   function writeConfig(obj: unknown) {
     mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })

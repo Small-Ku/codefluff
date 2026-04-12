@@ -157,7 +157,6 @@ export const AdBanner: React.FC<AdBannerProps> = ({
               {domain}
             </text>
           )}
-
         </box>
       </Button>
       {/* Info panel: shown when Ad label is clicked, below the ad */}

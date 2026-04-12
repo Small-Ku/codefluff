@@ -268,7 +268,6 @@ async function runOnce({
   const { ensureCodefluffSetup } = await import('./impl/codefluff')
   await ensureCodefluffSetup()
 
-
   let resolve: (value: RunReturnType) => any = () => {}
   let _reject: (error: any) => any = () => {}
   const promise = new Promise<RunReturnType>((res, rej) => {

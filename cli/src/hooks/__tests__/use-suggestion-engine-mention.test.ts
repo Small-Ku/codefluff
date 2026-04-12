@@ -1,6 +1,9 @@
 import { describe, test, expect } from 'bun:test'
 
-import { isInsideStringDelimiters, parseAtInLine } from '../use-suggestion-engine'
+import {
+  isInsideStringDelimiters,
+  parseAtInLine,
+} from '../use-suggestion-engine'
 
 describe('@ mention edge cases - quote detection', () => {
   test('isInsideStringDelimiters detects position inside double quotes', () => {

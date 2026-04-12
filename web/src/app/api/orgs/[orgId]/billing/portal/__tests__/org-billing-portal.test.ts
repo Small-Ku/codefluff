@@ -23,11 +23,13 @@ const createMockGetSession = (session: Session): GetSessionFn =>
   mock(() => Promise.resolve(session))
 
 const createMockGetMembership = (
-  result: OrgMembership | null
+  result: OrgMembership | null,
 ): GetMembershipFn => mock(() => Promise.resolve(result))
 
 const createMockCreateBillingPortalSession = (
-  result: { url: string } | Error = { url: 'https://billing.stripe.com/session/test_123' }
+  result: { url: string } | Error = {
+    url: 'https://billing.stripe.com/session/test_123',
+  },
 ): CreateBillingPortalSessionFn => {
   if (result instanceof Error) {
     return mock(() => Promise.reject(result))
@@ -42,7 +44,8 @@ const defaultOrg = {
   stripe_customer_id: 'cus_org_123',
 }
 
-const buildReturnUrl = (orgSlug: string) => `https://codebuff.com/orgs/${orgSlug}/settings`
+const buildReturnUrl = (orgSlug: string) =>
+  `https://codebuff.com/orgs/${orgSlug}/settings`
 
 describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
   const orgId = 'org-123'
@@ -64,7 +67,9 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
 
       expect(response.status).toBe(503)
       const body = await response.json()
-      expect(body).toEqual({ error: 'Organization billing is temporarily disabled' })
+      expect(body).toEqual({
+        error: 'Organization billing is temporarily disabled',
+      })
     })
   })
 
@@ -231,7 +236,9 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
 
       expect(response.status).toBe(400)
       const body = await response.json()
-      expect(body).toEqual({ error: 'No Stripe customer ID found for organization' })
+      expect(body).toEqual({
+        error: 'No Stripe customer ID found for organization',
+      })
     })
   })
 
@@ -245,7 +252,9 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
           role: 'owner',
           organization: defaultOrg,
         }),
-        createBillingPortalSession: createMockCreateBillingPortalSession({ url: expectedUrl }),
+        createBillingPortalSession: createMockCreateBillingPortalSession({
+          url: expectedUrl,
+        }),
         logger: createMockLogger(),
         orgBillingEnabled: true,
         buildReturnUrl,
@@ -294,7 +303,7 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
           organization: defaultOrg,
         }),
         createBillingPortalSession: createMockCreateBillingPortalSession(
-          new Error('Stripe API error')
+          new Error('Stripe API error'),
         ),
         logger: createMockLogger(),
         orgBillingEnabled: true,
@@ -317,7 +326,8 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
           role: 'owner',
           organization: defaultOrg,
         }),
-        createBillingPortalSession: createMockCreateBillingPortalSession(testError),
+        createBillingPortalSession:
+          createMockCreateBillingPortalSession(testError),
         logger: createMockLogger(mockLoggerError),
         orgBillingEnabled: true,
         buildReturnUrl,
@@ -326,7 +336,7 @@ describe('/api/orgs/[orgId]/billing/portal POST endpoint', () => {
       expect(mockLoggerError).toHaveBeenCalledTimes(1)
       expect(mockLoggerError).toHaveBeenCalledWith(
         { userId: 'user-error', orgId: 'org-error-test', error: testError },
-        'Failed to create org billing portal session'
+        'Failed to create org billing portal session',
       )
     })
   })

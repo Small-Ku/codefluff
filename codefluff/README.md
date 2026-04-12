@@ -95,16 +95,16 @@ codefluff
 
 Supported providers:
 
-| Provider | Key Name | Example Key Format | API Style |
-|----------|----------|-------------------|-----------|
-| OpenRouter | `openrouter` | `sk-or-...` | OpenAI-compatible |
-| Anthropic | `anthropic` | `sk-ant-...` | Native Anthropic |
-| OpenAI | `openai` | `sk-...` | Native OpenAI |
-| Google | `google` | `AIza...` | Native Gemini |
-| DeepSeek | `deepseek` | `sk-...` | OpenAI-compatible |
-| XAI (Grok) | `xai` | `xai-...` | OpenAI-compatible |
-| Nvidia NIM | `nvidia-nim` | `nvapi-...` | OpenAI-compatible |
-| Custom | any name | varies | OpenAI-compatible |
+| Provider   | Key Name     | Example Key Format | API Style         |
+| ---------- | ------------ | ------------------ | ----------------- |
+| OpenRouter | `openrouter` | `sk-or-...`        | OpenAI-compatible |
+| Anthropic  | `anthropic`  | `sk-ant-...`       | Native Anthropic  |
+| OpenAI     | `openai`     | `sk-...`           | Native OpenAI     |
+| Google     | `google`     | `AIza...`          | Native Gemini     |
+| DeepSeek   | `deepseek`   | `sk-...`           | OpenAI-compatible |
+| XAI (Grok) | `xai`        | `xai-...`          | OpenAI-compatible |
+| Nvidia NIM | `nvidia-nim` | `nvapi-...`        | OpenAI-compatible |
+| Custom     | any name     | varies             | OpenAI-compatible |
 
 Custom providers with their own API endpoint:
 
@@ -178,6 +178,7 @@ Model IDs use OpenRouter format: `provider/model-name` (e.g., `anthropic/claude-
 ```
 
 In this example:
+
 - Most agents use `claude-sonnet-4` (the `base`)
 - `file-picker` uses the faster, cheaper `gemini-2.5-flash-lite`
 - `editor` and `thinker` use the more capable `claude-opus-4`
@@ -187,38 +188,38 @@ In this example:
 
 These are the agent IDs you can use in your mapping configuration:
 
-| Agent ID | Description |
-|----------|-------------|
-| **File Operations** ||
-| `file-picker` | Selects relevant files from the codebase |
-| `file-picker-max` | Enhanced file picker (MAX mode only) |
-| `file-lister` | Lists files in directories |
-| `code-searcher` | Searches code using patterns |
-| `directory-lister` | Lists directory contents |
-| `glob-matcher` | Finds files matching glob patterns |
-| **Research** ||
-| `researcher-web` | Web search and research |
-| `researcher-docs` | Documentation lookup |
-| **Editing** ||
-| `editor` | Code editing and file modifications |
-| `editor-multi-prompt` | Multi-prompt editing (MAX mode only) |
-| `editor-lite` | Lightweight editor |
-| **Review** ||
-| `code-reviewer` | Code review and analysis |
-| `code-reviewer-lite` | Lightweight code review (FREE mode only) |
-| `code-reviewer-multi-prompt` | Multi-prompt review (MAX mode only) |
-| **Thinking** ||
-| `thinker` | Problem solving and analysis |
-| `thinker-gpt` | Alternative thinker using GPT models |
-| `thinker-best-of-n-opus` | Multi-sample thinking (MAX mode only) |
-| **Tools** ||
-| `basher` | Terminal command execution |
-| `tmux-cli` | Terminal multiplexer control |
-| `browser-use` | Browser automation |
-| **Advanced** ||
-| `opus-agent` | Claude Opus for complex tasks |
-| `gpt-5-agent` | GPT-5 for complex tasks |
-| `context-pruner` | Manages conversation context |
+| Agent ID                     | Description                              |
+| ---------------------------- | ---------------------------------------- |
+| **File Operations**          |                                          |
+| `file-picker`                | Selects relevant files from the codebase |
+| `file-picker-max`            | Enhanced file picker (MAX mode only)     |
+| `file-lister`                | Lists files in directories               |
+| `code-searcher`              | Searches code using patterns             |
+| `directory-lister`           | Lists directory contents                 |
+| `glob-matcher`               | Finds files matching glob patterns       |
+| **Research**                 |                                          |
+| `researcher-web`             | Web search and research                  |
+| `researcher-docs`            | Documentation lookup                     |
+| **Editing**                  |                                          |
+| `editor`                     | Code editing and file modifications      |
+| `editor-multi-prompt`        | Multi-prompt editing (MAX mode only)     |
+| `editor-lite`                | Lightweight editor                       |
+| **Review**                   |                                          |
+| `code-reviewer`              | Code review and analysis                 |
+| `code-reviewer-lite`         | Lightweight code review (FREE mode only) |
+| `code-reviewer-multi-prompt` | Multi-prompt review (MAX mode only)      |
+| **Thinking**                 |                                          |
+| `thinker`                    | Problem solving and analysis             |
+| `thinker-gpt`                | Alternative thinker using GPT models     |
+| `thinker-best-of-n-opus`     | Multi-sample thinking (MAX mode only)    |
+| **Tools**                    |                                          |
+| `basher`                     | Terminal command execution               |
+| `tmux-cli`                   | Terminal multiplexer control             |
+| `browser-use`                | Browser automation                       |
+| **Advanced**                 |                                          |
+| `opus-agent`                 | Claude Opus for complex tasks            |
+| `gpt-5-agent`                | GPT-5 for complex tasks                  |
+| `context-pruner`             | Manages conversation context             |
 
 **Note:** Some agents are only available in specific modes (e.g., `file-picker-max` only in MAX mode).
 
@@ -247,14 +248,15 @@ Codefluff supports pluggable web search providers with automatic fallback. Add `
   }
 }
 ```
+
 Supported providers:
 
-| Provider | Value | Description |
-|----------|-------|-------------|
-| `linkup` | API key | [Linkup](https://linkup.so) — AI-powered search |
-| `langsearch` | API key | [LangSearch](https://langsearch.com) — LLM-optimized web search |
-| `ollama` | API key | [Ollama Web Search](https://ollama.com) — Ollama's cloud search API |
-| `searxng` | Instance URL | [SearXNG](https://searx.space) — Specific SearXNG instance URL |
+| Provider      | Value                           | Description                                                                                             |
+| ------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `linkup`      | API key                         | [Linkup](https://linkup.so) — AI-powered search                                                         |
+| `langsearch`  | API key                         | [LangSearch](https://langsearch.com) — LLM-optimized web search                                         |
+| `ollama`      | API key                         | [Ollama Web Search](https://ollama.com) — Ollama's cloud search API                                     |
+| `searxng`     | Instance URL                    | [SearXNG](https://searx.space) — Specific SearXNG instance URL                                          |
 | `searx-space` | Any value (presence enables it) | Auto-discovery from searx.space — fetches healthy instances, shuffles, and tries up to 15 with fallback |
 
 Providers are tried in the order they appear above (known providers first, then any custom ones). The first successful result is returned — if one provider fails, the next is automatically tried.
@@ -271,17 +273,17 @@ codefluff "Fix the bug"      # Run with a prompt
 
 Codefluff routes model calls directly to providers based on the model prefix:
 
-| Prefix | Provider | Base URL (default) |
-|--------|----------|-------------------|
-| `anthropic/` | Anthropic API | `https://api.anthropic.com/v1` |
-| `openai/` | OpenAI API | `https://api.openai.com/v1` |
-| `google/` | Google Gemini API | `https://generativelanguage.googleapis.com/v1beta` |
-| `openrouter/` | OpenRouter API | `https://openrouter.ai/api/v1` |
-| `deepseek/` | DeepSeek API | `https://api.deepseek.com/v1` |
-| `xai/` | XAI (Grok) API | `https://api.x.ai/v1` |
-| `nvidia-nim/` | Nvidia NIM API | `https://integrate.api.nvidia.com/v1` |
-| `openrouter/` | OpenRouter API | `https://openrouter.ai/api/v1` |
-| `new-api/` | Custom OpenAI-compatible | Configurable via `baseURL` |
+| Prefix        | Provider                 | Base URL (default)                                 |
+| ------------- | ------------------------ | -------------------------------------------------- |
+| `anthropic/`  | Anthropic API            | `https://api.anthropic.com/v1`                     |
+| `openai/`     | OpenAI API               | `https://api.openai.com/v1`                        |
+| `google/`     | Google Gemini API        | `https://generativelanguage.googleapis.com/v1beta` |
+| `openrouter/` | OpenRouter API           | `https://openrouter.ai/api/v1`                     |
+| `deepseek/`   | DeepSeek API             | `https://api.deepseek.com/v1`                      |
+| `xai/`        | XAI (Grok) API           | `https://api.x.ai/v1`                              |
+| `nvidia-nim/` | Nvidia NIM API           | `https://integrate.api.nvidia.com/v1`              |
+| `openrouter/` | OpenRouter API           | `https://openrouter.ai/api/v1`                     |
+| `new-api/`    | Custom OpenAI-compatible | Configurable via `baseURL`                         |
 
 All calls use your configured API keys — no data goes through Codebuff servers.
 
@@ -306,12 +308,12 @@ For OpenAI-compatible providers, you can specify additional options:
 }
 ```
 
-| Option | Description |
-|--------|-------------|
-| `key` | API key (required) |
-| `baseURL` | Custom API endpoint |
-| `style` | API style: `"openai"`, `"anthropic"`, or `"google"` |
-| `headers` | Custom HTTP headers |
+| Option    | Description                                         |
+| --------- | --------------------------------------------------- |
+| `key`     | API key (required)                                  |
+| `baseURL` | Custom API endpoint                                 |
+| `style`   | API style: `"openai"`, `"anthropic"`, or `"google"` |
+| `headers` | Custom HTTP headers                                 |
 
 #### Per-Model Configuration (OpenAI-compatible API only)
 
@@ -324,14 +326,17 @@ Configure specific parameters for individual models using the `models` section:
       "max_tokens": 16384,
       "top_p": 0.95,
       "extraBody": {
-        "chat_template_kwargs": {"thinking": true}
+        "chat_template_kwargs": { "thinking": true }
       }
     },
     "nvidia-nim/z-ai/glm5": {
       "max_tokens": 8192,
       "top_p": 0.95,
       "extraBody": {
-        "chat_template_kwargs": {"enable_thinking":true,"clear_thinking":false}
+        "chat_template_kwargs": {
+          "enable_thinking": true,
+          "clear_thinking": false
+        }
       }
     }
   }
@@ -340,17 +345,18 @@ Configure specific parameters for individual models using the `models` section:
 
 Supported parameters:
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `temperature` | Number (0-2) | Controls randomness. Lower is more deterministic. |
-| `top_p` | Number (0-1) | Nucleus sampling: considers tokens with cumulative probability $\le$ P. |
-| `top_k` | Integer ($\ge -1$) | Top-K sampling: considers only the K most likely tokens. `-1` disables filtering (Anthropic default). |
-| `max_tokens` | Integer | Maximum number of tokens to generate. |
-| `extraBody` | Object | Provider-specific parameters passed directly in the request body. |
+| Parameter     | Type               | Description                                                                                           |
+| ------------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `temperature` | Number (0-2)       | Controls randomness. Lower is more deterministic.                                                     |
+| `top_p`       | Number (0-1)       | Nucleus sampling: considers tokens with cumulative probability $\le$ P.                               |
+| `top_k`       | Integer ($\ge -1$) | Top-K sampling: considers only the K most likely tokens. `-1` disables filtering (Anthropic default). |
+| `max_tokens`  | Integer            | Maximum number of tokens to generate.                                                                 |
+| `extraBody`   | Object             | Provider-specific parameters passed directly in the request body.                                     |
 
 Each model can have its own configuration to fine-tune its behavior.
 
 **Note on Environment Variable Interpolation:**
+
 - String values in `models` (including nested values in `extraBody`) support `${ENV_VAR}` interpolation
 - Numeric fields like `max_tokens` must be specified as numeric literals, not env var references
 - Example: `"custom_param": "${CUSTOM_VALUE}"` works, but `max_tokens: "${MAX_TOKENS}"` will fail validation
@@ -360,7 +366,11 @@ Each model can have its own configuration to fine-tune its behavior.
 List available models from configured providers using the SDK:
 
 ```typescript
-import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
+import {
+  listModelsForProvider,
+  listAllModels,
+  formatModelList,
+} from '@codebuff/sdk'
 
 // List from a specific provider
 const nvidiaModels = await listModelsForProvider('nvidia-nim')
@@ -374,10 +384,10 @@ console.log(formatModelList(allModels))
 
 Because codefluff runs standalone without the Codebuff web server, some tools that depend on server-hosted APIs are unavailable:
 
-| Tool | Status | Notes |
-|------|--------|-------|
-| `web_search` | ✅ Available | Configure via `searchProviders` in config (see below) |
-| `read_docs` | ❌ Unavailable | Requires Codebuff web server for Context7 docs fetching and credit billing |
+| Tool         | Status         | Notes                                                                      |
+| ------------ | -------------- | -------------------------------------------------------------------------- |
+| `web_search` | ✅ Available   | Configure via `searchProviders` in config (see below)                      |
+| `read_docs`  | ❌ Unavailable | Requires Codebuff web server for Context7 docs fetching and credit billing |
 
 > Token counting falls back to local estimation when the web API is unavailable — this is transparent and has no impact on functionality.
 

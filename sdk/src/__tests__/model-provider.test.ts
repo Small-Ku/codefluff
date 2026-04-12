@@ -230,7 +230,10 @@ describe('model-provider', () => {
       await fetchClaudeOAuthResetTime('my-test-token')
 
       expect(mockFetch).toHaveBeenCalledTimes(1)
-      const [url, options] = mockFetch.mock.calls[0] as unknown as [string, RequestInit]
+      const [url, options] = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ]
 
       expect(url).toBe('https://api.anthropic.com/api/oauth/usage')
       expect(options.method).toBe('GET')
@@ -243,6 +246,4 @@ describe('model-provider', () => {
       expect(headers['anthropic-beta']).toContain('claude-code-20250219')
     })
   })
-
-
 })

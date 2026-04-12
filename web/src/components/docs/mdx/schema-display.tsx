@@ -8,10 +8,7 @@ import { useState, useRef } from 'react'
 import { CodeDemo } from './code-demo'
 
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 // Configuration constant for easy adjustment

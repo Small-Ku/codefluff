@@ -69,7 +69,7 @@ type ClientActionMcpToolData = {
   tools: {
     name: string
     description?: string
-    inputSchema: { type: 'object';[k: string]: unknown }
+    inputSchema: { type: 'object'; [k: string]: unknown }
   }[]
 }
 

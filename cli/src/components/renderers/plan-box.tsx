@@ -1,7 +1,10 @@
 import { memo } from 'react'
 
 import { useTheme } from '../../hooks/use-theme'
-import { renderMarkdown, type MarkdownPalette } from '../../utils/markdown-renderer'
+import {
+  renderMarkdown,
+  type MarkdownPalette,
+} from '../../utils/markdown-renderer'
 import { BORDER_CHARS } from '../../utils/ui-constants'
 import { BuildModeButtons } from '../build-mode-buttons'
 
@@ -56,4 +59,3 @@ export const PlanBox = memo(
     )
   },
 )
-

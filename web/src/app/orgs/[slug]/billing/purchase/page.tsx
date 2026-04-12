@@ -69,14 +69,19 @@ export default function OrganizationBillingPurchasePage() {
           const purchaseCredits = async () => {
             if (!organization) return
             try {
-              const response = await fetch(`/api/orgs/${organization.id}/credits`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: credits }),
-              })
+              const response = await fetch(
+                `/api/orgs/${organization.id}/credits`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ amount: credits }),
+                },
+              )
               if (!response.ok) {
                 const error = await response.json()
-                throw new Error(error.error || 'Failed to initiate credit purchase')
+                throw new Error(
+                  error.error || 'Failed to initiate credit purchase',
+                )
               }
               const responseData = await response.json()
               if (responseData.direct_charge && responseData.success) {
@@ -91,7 +96,10 @@ export default function OrganizationBillingPurchasePage() {
             } catch (error) {
               toast({
                 title: 'Error',
-                description: error instanceof Error ? error.message : 'Failed to purchase credits',
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to purchase credits',
                 variant: 'destructive',
               })
             }

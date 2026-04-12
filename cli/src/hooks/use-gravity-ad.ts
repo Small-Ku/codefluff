@@ -8,7 +8,7 @@ import { isUserActive, subscribeToActivity } from '../utils/activity-tracker'
 import { getAuthToken } from '../utils/auth'
 import { logger } from '../utils/logger'
 
-import type { Message} from '@codebuff/sdk';
+import type { Message } from '@codebuff/sdk'
 
 const AD_ROTATION_INTERVAL_MS = 60 * 1000 // 60 seconds per ad
 const MAX_ADS_AFTER_ACTIVITY = 3 // Show up to 3 ads after last activity, then pause fetching new ads
@@ -96,7 +96,9 @@ function nextFromChoiceCache(ctrl: GravityController): AdResponse[] | null {
  *
  * Activity is tracked via the global activity-tracker module.
  */
-export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState => {
+export const useGravityAd = (options?: {
+  enabled?: boolean
+}): GravityAdState => {
   const enabled = options?.enabled ?? true
   const [ad, setAd] = useState<AdResponse | null>(null)
   const [adData, setAdData] = useState<AdData | null>(null)
@@ -133,7 +135,7 @@ export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState =>
   })
 
   // Ref for the tick function (avoids useCallback dependency issues)
-  const tickRef = useRef<() => void>(() => { })
+  const tickRef = useRef<() => void>(() => {})
 
   // Ref to track whether ads should be hidden for use in async code
   const shouldHideAdsRef = useRef(shouldHideAds)
@@ -184,7 +186,9 @@ export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState =>
               return {
                 ...cur,
                 ads: cur.ads.map((a) =>
-                  a.impUrl === impUrl ? { ...a, credits: data.creditsGranted } : a,
+                  a.impUrl === impUrl
+                    ? { ...a, credits: data.creditsGranted }
+                    : a,
                 ),
               }
             }
@@ -285,7 +289,11 @@ export const useGravityAd = (options?: { enabled?: boolean }): GravityAdState =>
       const data = await response.json()
       const variant = data.variant ?? 'banner'
 
-      if (variant === 'choice' && Array.isArray(data.ads) && data.ads.length > 0) {
+      if (
+        variant === 'choice' &&
+        Array.isArray(data.ads) &&
+        data.ads.length > 0
+      ) {
         return { variant: 'choice', ads: data.ads as AdResponse[] }
       }
 

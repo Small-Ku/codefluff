@@ -40,7 +40,9 @@ async function fetchMonthlyRevenue() {
   // Check if we're in test or live mode
   const isTestMode = env.STRIPE_SECRET_KEY.startsWith('sk_test_')
   console.log(`Stripe mode: ${isTestMode ? '⚠️  TEST MODE' : '✅ LIVE MODE'}`)
-  console.log('Fetching monthly revenue from Stripe (using Balance Transactions)...\n')
+  console.log(
+    'Fetching monthly revenue from Stripe (using Balance Transactions)...\n',
+  )
 
   const results: MonthlyRevenue[] = []
 
@@ -59,16 +61,17 @@ async function fetchMonthlyRevenue() {
     try {
       while (hasMore && batchCount < MAX_BATCHES) {
         batchCount++
-        const transactions: Stripe.Response<Stripe.ApiList<Stripe.BalanceTransaction>> =
-          await stripeServer.balanceTransactions.list({
-            starting_after: startingAfter,
-            created: {
-              gte: Math.floor(month.start.getTime() / 1000),
-              lt: Math.floor(month.end.getTime() / 1000),
-            },
-            // Don't filter by type - get all transactions to match Stripe dashboard
-            limit: 100,
-          })
+        const transactions: Stripe.Response<
+          Stripe.ApiList<Stripe.BalanceTransaction>
+        > = await stripeServer.balanceTransactions.list({
+          starting_after: startingAfter,
+          created: {
+            gte: Math.floor(month.start.getTime() / 1000),
+            lt: Math.floor(month.end.getTime() / 1000),
+          },
+          // Don't filter by type - get all transactions to match Stripe dashboard
+          limit: 100,
+        })
 
         for (const txn of transactions.data) {
           if (txn.type === 'charge' || txn.type === 'payment') {

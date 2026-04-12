@@ -10,7 +10,6 @@ import { Icons } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/use-toast'
 
-
 interface GitHubSignInButtonProps {
   referralCode: string
   referrerName?: string

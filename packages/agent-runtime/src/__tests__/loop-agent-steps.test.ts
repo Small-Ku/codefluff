@@ -1,9 +1,7 @@
 import * as analytics from '@codebuff/common/analytics'
 import { TEST_USER_ID } from '@codebuff/common/old-constants'
 import { createTestAgentRuntimeParams } from '@codebuff/common/testing/fixtures/agent-runtime'
-import {
-  clearMockedModules,
-} from '@codebuff/common/testing/mock-modules'
+import { clearMockedModules } from '@codebuff/common/testing/mock-modules'
 import { setupDbSpies } from '@codebuff/common/testing/mocks/database'
 import { getInitialSessionState } from '@codebuff/common/types/session-state'
 import { AbortError, promptSuccess } from '@codebuff/common/util/error'
@@ -661,13 +659,15 @@ describe('loopAgentSteps - runAgentStep vs runProgrammaticStep behavior', () => 
     // Mock promptAiSdk to capture the n parameter
     loopAgentStepsBaseParams.promptAiSdk = async (params: any) => {
       agentStepN = params.n
-      return promptSuccess(JSON.stringify([
-        'Response 1',
-        'Response 2',
-        'Response 3',
-        'Response 4',
-        'Response 5',
-      ]))
+      return promptSuccess(
+        JSON.stringify([
+          'Response 1',
+          'Response 2',
+          'Response 3',
+          'Response 4',
+          'Response 5',
+        ]),
+      )
     }
 
     await loopAgentSteps({
@@ -969,7 +969,9 @@ describe('loopAgentSteps - runAgentStep vs runProgrammaticStep behavior', () => 
       expect(result.output.type).toBe('error')
       if (result.output.type === 'error') {
         // Should use the server's message, NOT the generic "Forbidden"
-        expect(result.output.message).toBe('Free mode is not available in your country.')
+        expect(result.output.message).toBe(
+          'Free mode is not available in your country.',
+        )
         // Should NOT have the 'Agent run error: ' prefix since message came from responseBody
         expect(result.output.message).not.toContain('Agent run error:')
         // Should propagate the error code so the CLI can match on it

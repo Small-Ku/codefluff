@@ -3,7 +3,6 @@ import { CHATGPT_OAUTH_ENABLED } from '@codebuff/common/constants/chatgpt-oauth'
 import { CLAUDE_OAUTH_ENABLED } from '@codebuff/common/constants/claude-oauth'
 import { runTerminalCommand } from '@codebuff/sdk'
 
-
 import {
   findCommand,
   type RouterParams,
@@ -19,7 +18,11 @@ import {
 } from './router-utils'
 import { handleClaudeAuthCode } from '../components/claude-connect-banner'
 import { handleChatGptAuthCode } from '../components/chatgpt-connect-banner'
-import { buildInterviewPrompt, buildPlanPrompt, buildReviewPrompt } from './prompt-builders'
+import {
+  buildInterviewPrompt,
+  buildPlanPrompt,
+  buildReviewPrompt,
+} from './prompt-builders'
 import { getProjectRoot } from '../project-files'
 import { useChatStore } from '../state/chat-store'
 import { trackEvent } from '../utils/analytics'
@@ -88,7 +91,7 @@ export function runBashCommand(command: string) {
     .then(([{ value }]) => {
       const stdout = 'stdout' in value ? value.stdout || '' : ''
       const stderr = 'stderr' in value ? value.stderr || '' : ''
-      const exitCode = 'exitCode' in value ? value.exitCode ?? 0 : 0
+      const exitCode = 'exitCode' in value ? (value.exitCode ?? 0) : 0
 
       // Track terminal command completion
       const durationMs = Date.now() - startTime

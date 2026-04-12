@@ -8,13 +8,13 @@ interface ErrorBoundaryPlaceholderProps {
 
 /**
  * **WARNING: This component does NOT catch render errors.**
- * 
+ *
  * This is a placeholder/passthrough component that exists for structural purposes.
  * OpenTUI's JSX types don't support React class components, which are required
  * for true error boundary functionality.
- * 
+ *
  * For actual error catching in render functions, use `withErrorFallback()` instead.
- * 
+ *
  * @example
  * // Use withErrorFallback for catching render errors:
  * const safeContent = withErrorFallback(
@@ -49,7 +49,10 @@ export function withErrorFallback<T>(
   try {
     return renderFn()
   } catch (error) {
-    console.error(`[${componentName ?? 'withErrorFallback'}] Error caught:`, error)
+    console.error(
+      `[${componentName ?? 'withErrorFallback'}] Error caught:`,
+      error,
+    )
     return fallback
   }
 }

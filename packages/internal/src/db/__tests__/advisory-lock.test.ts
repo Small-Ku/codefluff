@@ -70,7 +70,9 @@ describe('advisory-lock', () => {
       it('should return acquired: true with a valid handle', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(result.acquired).toBe(true)
         expect(result.handle).not.toBeNull()
@@ -84,7 +86,9 @@ describe('advisory-lock', () => {
       it('should create postgres connection with correct options', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(postgresMock).toHaveBeenCalledTimes(1)
         const callArgs = postgresMock.mock.calls[0]
@@ -101,7 +105,9 @@ describe('advisory-lock', () => {
       it('should call pg_try_advisory_lock with the correct lock ID', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(mockConnection.tagged).toHaveBeenCalled()
         const [strings, lockId] = mockConnection.tagged.mock.calls[0]
@@ -114,7 +120,9 @@ describe('advisory-lock', () => {
       it('should set up health check interval', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(setIntervalSpy).toHaveBeenCalledTimes(1)
         expect(setIntervalSpy.mock.calls[0][1]).toBe(10_000) // 10 seconds
@@ -127,7 +135,9 @@ describe('advisory-lock', () => {
       it('should return acquired: false when lock is held by another', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: false }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(result.acquired).toBe(false)
         expect(result.handle).toBeNull()
@@ -186,7 +196,9 @@ describe('advisory-lock', () => {
       it('should close connection when released', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
         await result.handle?.release()
 
         expect(mockConnection.end).toHaveBeenCalledTimes(1)
@@ -195,7 +207,9 @@ describe('advisory-lock', () => {
       it('should clear health check interval when released', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
         await result.handle?.release()
 
         expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
@@ -204,7 +218,9 @@ describe('advisory-lock', () => {
       it('should be idempotent - calling twice should not error', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
         await result.handle?.release()
         await result.handle?.release()
 
@@ -216,7 +232,9 @@ describe('advisory-lock', () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
         mockConnection.end.mockRejectedValue(new Error('End failed'))
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         // Should not throw
         await result.handle?.release()
@@ -231,7 +249,9 @@ describe('advisory-lock', () => {
       it('should register callback', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: true }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
 
@@ -261,7 +281,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
@@ -272,7 +294,9 @@ describe('advisory-lock', () => {
 
         expect(lostCallback).toHaveBeenCalledTimes(1)
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Advisory lock health check failed - connection lost'),
+          expect.stringContaining(
+            'Advisory lock health check failed - connection lost',
+          ),
         )
       })
 
@@ -341,7 +365,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
@@ -371,7 +397,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
@@ -402,7 +430,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
@@ -435,7 +465,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         const lostCallback = mock(() => {})
         result.handle?.onLost(lostCallback)
@@ -445,7 +477,9 @@ describe('advisory-lock', () => {
 
         expect(lostCallback).toHaveBeenCalledTimes(1)
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Advisory lock health check failed - lock no longer held'),
+          expect.stringContaining(
+            'Advisory lock health check failed - lock no longer held',
+          ),
         )
       })
 
@@ -466,7 +500,9 @@ describe('advisory-lock', () => {
           return 123 as unknown as NodeJS.Timeout
         })
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         // Trigger health check
         await healthCheckCallback!()
@@ -500,7 +536,9 @@ describe('advisory-lock', () => {
       it('should handle empty result from pg_try_advisory_lock', async () => {
         mockConnection.tagged.mockResolvedValue([])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(result.acquired).toBe(false)
         expect(result.handle).toBeNull()
@@ -509,7 +547,9 @@ describe('advisory-lock', () => {
       it('should handle undefined acquired value', async () => {
         mockConnection.tagged.mockResolvedValue([{ acquired: undefined }])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(result.acquired).toBe(false)
         expect(result.handle).toBeNull()
@@ -518,7 +558,9 @@ describe('advisory-lock', () => {
       it('should handle null result', async () => {
         mockConnection.tagged.mockResolvedValue([null])
 
-        const result = await tryAcquireAdvisoryLock(ADVISORY_LOCK_IDS.DISCORD_BOT)
+        const result = await tryAcquireAdvisoryLock(
+          ADVISORY_LOCK_IDS.DISCORD_BOT,
+        )
 
         expect(result.acquired).toBe(false)
         expect(result.handle).toBeNull()

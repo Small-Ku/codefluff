@@ -21,15 +21,25 @@ const FIREWORKS_MODEL = 'accounts/fireworks/models/minimax-m2p5'
 const OPENROUTER_MODEL = 'minimax/minimax-m2.5'
 
 // Same pricing constants as web/src/llm-api/fireworks.ts
-const FIREWORKS_INPUT_COST_PER_TOKEN = 0.30 / 1_000_000
+const FIREWORKS_INPUT_COST_PER_TOKEN = 0.3 / 1_000_000
 const FIREWORKS_CACHED_INPUT_COST_PER_TOKEN = 0.03 / 1_000_000
-const FIREWORKS_OUTPUT_COST_PER_TOKEN = 1.20 / 1_000_000
+const FIREWORKS_OUTPUT_COST_PER_TOKEN = 1.2 / 1_000_000
 
-function computeCost(usage: Record<string, unknown>): { cost: number; breakdown: string } {
-  const inputTokens = typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0
-  const outputTokens = typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0
-  const promptDetails = usage.prompt_tokens_details as Record<string, unknown> | undefined
-  const cachedTokens = typeof promptDetails?.cached_tokens === 'number' ? promptDetails.cached_tokens : 0
+function computeCost(usage: Record<string, unknown>): {
+  cost: number
+  breakdown: string
+} {
+  const inputTokens =
+    typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0
+  const outputTokens =
+    typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0
+  const promptDetails = usage.prompt_tokens_details as
+    | Record<string, unknown>
+    | undefined
+  const cachedTokens =
+    typeof promptDetails?.cached_tokens === 'number'
+      ? promptDetails.cached_tokens
+      : 0
   const nonCachedInput = Math.max(0, inputTokens - cachedTokens)
 
   const inputCost = nonCachedInput * FIREWORKS_INPUT_COST_PER_TOKEN
@@ -54,7 +64,9 @@ const testPrompt = 'Say "hello world" and nothing else.'
 async function testFireworksDirect() {
   const apiKey = process.env.FIREWORKS_API_KEY
   if (!apiKey) {
-    console.error('❌ FIREWORKS_API_KEY is not set. Add it to .env.local or pass it directly.')
+    console.error(
+      '❌ FIREWORKS_API_KEY is not set. Add it to .env.local or pass it directly.',
+    )
     process.exit(1)
   }
 
@@ -117,7 +129,9 @@ async function testFireworksDirect() {
 
   if (!streamResponse.ok) {
     const errorText = await streamResponse.text()
-    console.error(`❌ Fireworks streaming API returned ${streamResponse.status}: ${errorText}`)
+    console.error(
+      `❌ Fireworks streaming API returned ${streamResponse.status}: ${errorText}`,
+    )
     process.exit(1)
   }
 
@@ -151,7 +165,9 @@ async function testFireworksDirect() {
         const delta = chunk.choices?.[0]?.delta
         if (delta?.content) streamContent += delta.content
         if (delta?.reasoning_content) {
-          console.log(`   [reasoning chunk] ${delta.reasoning_content.slice(0, 80)}...`)
+          console.log(
+            `   [reasoning chunk] ${delta.reasoning_content.slice(0, 80)}...`,
+          )
         }
         if (chunk.usage) streamUsage = chunk.usage
       } catch {
@@ -164,7 +180,9 @@ async function testFireworksDirect() {
   console.log(`✅ Stream response (${streamElapsed}ms, ${chunkCount} chunks):`)
   console.log(`   Content: ${streamContent}`)
   if (streamUsage) {
-    const { cost: streamCost, breakdown: streamBreakdown } = computeCost(streamUsage as Record<string, unknown>)
+    const { cost: streamCost, breakdown: streamBreakdown } = computeCost(
+      streamUsage as Record<string, unknown>,
+    )
     console.log(`   Usage: ${JSON.stringify(streamUsage)}`)
     console.log(`   Computed cost: $${streamCost.toFixed(8)}`)
     console.log(`         ${streamBreakdown}`)
@@ -178,11 +196,14 @@ async function testChatCompletionsEndpoint() {
   const codebuffApiKey = process.env.CODEBUFF_API_KEY
   if (!codebuffApiKey) {
     console.error('❌ CODEBUFF_API_KEY is not set. Pass it as an env var.')
-    console.error('   Example: CODEBUFF_API_KEY=<key> bun scripts/test-fireworks.ts endpoint')
+    console.error(
+      '   Example: CODEBUFF_API_KEY=<key> bun scripts/test-fireworks.ts endpoint',
+    )
     process.exit(1)
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_CODEBUFF_APP_URL ?? 'http://localhost:3000'
+  const appUrl =
+    process.env.NEXT_PUBLIC_CODEBUFF_APP_URL ?? 'http://localhost:3000'
   const endpoint = `${appUrl}/api/v1/chat/completions`
 
   console.log('── Test 2: Chat Completions Endpoint (non-streaming) ──')
@@ -231,8 +252,10 @@ async function testChatCompletionsEndpoint() {
     console.log(`⚠️  Response ${response.status} (${elapsed}ms):`)
     console.log(`   ${JSON.stringify(data)}`)
     if (response.status === 400 && data.message?.includes('runId')) {
-      console.log('   ℹ️  This is expected if you don\'t have a valid run_id.')
-      console.log('   ℹ️  The request reached the endpoint successfully — routing is wired up.')
+      console.log("   ℹ️  This is expected if you don't have a valid run_id.")
+      console.log(
+        '   ℹ️  The request reached the endpoint successfully — routing is wired up.',
+      )
     } else if (response.status === 401) {
       console.log('   ℹ️  Auth failed. Make sure CODEBUFF_API_KEY is valid.')
     }
@@ -298,14 +321,18 @@ async function testChatCompletionsEndpoint() {
       }
     }
 
-    console.log(`✅ Stream response (${streamElapsed}ms, ${chunkCount} chunks):`)
+    console.log(
+      `✅ Stream response (${streamElapsed}ms, ${chunkCount} chunks):`,
+    )
     console.log(`   Content: ${streamContent}`)
   } else {
     const data = await streamResponse.json()
     console.log(`⚠️  Response ${streamResponse.status} (${streamElapsed}ms):`)
     console.log(`   ${JSON.stringify(data)}`)
     if (streamResponse.status === 400 && data.message?.includes('runId')) {
-      console.log('   ℹ️  Expected without a valid run_id. Endpoint is reachable and routing works.')
+      console.log(
+        '   ℹ️  Expected without a valid run_id. Endpoint is reachable and routing works.',
+      )
     }
   }
   console.log()
@@ -333,7 +360,9 @@ async function main() {
       break
     default:
       console.error(`Unknown mode: ${mode}`)
-      console.error('Usage: bun scripts/test-fireworks.ts [direct|endpoint|both]')
+      console.error(
+        'Usage: bun scripts/test-fireworks.ts [direct|endpoint|both]',
+      )
       process.exit(1)
   }
 

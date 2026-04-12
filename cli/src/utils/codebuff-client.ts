@@ -51,7 +51,9 @@ export async function getCodebuffClient(): Promise<CodebuffClient | null> {
     const isCodefluff = getCliEnv().CODEFLUFF_MODE === 'true'
 
     // In codefluff mode, use the first available BYOK key as the API key
-    const firstKeyValue = isCodefluff ? Object.values(getConfiguredKeys())[0] : undefined
+    const firstKeyValue = isCodefluff
+      ? Object.values(getConfiguredKeys())[0]
+      : undefined
     const effectiveApiKeyForCodefluff = firstKeyValue
       ? typeof firstKeyValue === 'string'
         ? firstKeyValue

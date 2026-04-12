@@ -54,7 +54,10 @@ export async function GET(req: NextRequest) {
   const fallbackToALaCarte = userPrefs?.fallback_to_a_la_carte ?? false
 
   if (!subscription || !subscription.tier) {
-    const response: NoSubscriptionResponse = { hasSubscription: false, fallbackToALaCarte }
+    const response: NoSubscriptionResponse = {
+      hasSubscription: false,
+      fallbackToALaCarte,
+    }
     return NextResponse.json(response)
   }
 

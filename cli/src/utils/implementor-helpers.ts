@@ -400,7 +400,9 @@ export function getFileChangeType(toolBlock: ToolContentBlock): FileChangeType {
  * Get aggregated file stats from all edit blocks.
  * Groups by file path and sums up the stats.
  */
-export function getFileStatsFromBlocks(blocks: ContentBlock[] | undefined): FileStats[] {
+export function getFileStatsFromBlocks(
+  blocks: ContentBlock[] | undefined,
+): FileStats[] {
   if (!blocks || blocks.length === 0) return []
 
   const fileMap = new Map<string, FileStats>()
@@ -408,7 +410,9 @@ export function getFileStatsFromBlocks(blocks: ContentBlock[] | undefined): File
   for (const block of blocks) {
     if (
       block.type === 'tool' &&
-      ALL_EDIT_TOOL_NAMES.includes(block.toolName as (typeof ALL_EDIT_TOOL_NAMES)[number])
+      ALL_EDIT_TOOL_NAMES.includes(
+        block.toolName as (typeof ALL_EDIT_TOOL_NAMES)[number],
+      )
     ) {
       const filePath = extractFilePath(block)
       if (!filePath) continue
@@ -456,7 +460,9 @@ export function buildActivityTimeline(
       }
     } else if (
       block.type === 'tool' &&
-      ALL_EDIT_TOOL_NAMES.includes(block.toolName as (typeof ALL_EDIT_TOOL_NAMES)[number])
+      ALL_EDIT_TOOL_NAMES.includes(
+        block.toolName as (typeof ALL_EDIT_TOOL_NAMES)[number],
+      )
     ) {
       const filePath = extractFilePath(block)
       const diff = extractDiff(block)
@@ -519,8 +525,7 @@ export function getMultiPromptProgress(
 
   const selectorAgent = blocks.find(
     (block): block is AgentContentBlock =>
-      block.type === 'agent' &&
-      block.agentType.includes('best-of-n-selector'),
+      block.type === 'agent' && block.agentType.includes('best-of-n-selector'),
   )
   const isSelecting = selectorAgent?.status === 'running'
 
@@ -562,7 +567,9 @@ function hasSetOutputData(input: unknown): input is SetOutputInput {
  * Extract the selection reason from multi-prompt agent's set_output block.
  * set_output wraps data in a 'data' property, so we need to access input.data.reason
  */
-function extractSelectionReason(blocks: ContentBlock[] | undefined): string | null {
+function extractSelectionReason(
+  blocks: ContentBlock[] | undefined,
+): string | null {
   if (!blocks || blocks.length === 0) return null
 
   const setOutputBlock = blocks.find(
@@ -604,7 +611,9 @@ export function getMultiPromptPreview(
       const formattedReason = reason.charAt(0).toUpperCase() + reason.slice(1)
       const lines = formattedReason.split('\n')
       const truncatedReason =
-        lines.length > 2 ? lines.slice(0, 2).join('\n').trimEnd() + '...' : formattedReason
+        lines.length > 2
+          ? lines.slice(0, 2).join('\n').trimEnd() + '...'
+          : formattedReason
       return `${total} proposals evaluated\n${truncatedReason}`
     }
     return `${total} proposals evaluated`

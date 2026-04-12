@@ -158,11 +158,11 @@ export async function postAds(params: {
   // Build device object for Gravity API
   const device = clientIp
     ? {
-      ip: clientIp,
-      ...(deviceInfo?.os ? { os: deviceInfo.os } : {}),
-      ...(deviceInfo?.timezone ? { timezone: deviceInfo.timezone } : {}),
-      ...(deviceInfo?.locale ? { locale: deviceInfo.locale } : {}),
-    }
+        ip: clientIp,
+        ...(deviceInfo?.os ? { os: deviceInfo.os } : {}),
+        ...(deviceInfo?.timezone ? { timezone: deviceInfo.timezone } : {}),
+        ...(deviceInfo?.locale ? { locale: deviceInfo.locale } : {}),
+      }
     : undefined
 
   // Determine A/B test variant for this user

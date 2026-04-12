@@ -44,13 +44,13 @@ interface ChatDirInfo {
 export function getAllChats(maxChats: number = 500): ChatHistoryEntry[] {
   try {
     const chatsDir = path.join(getProjectDataDir(), 'chats')
-    
+
     if (!fs.existsSync(chatsDir)) {
       return []
     }
 
     const chatDirs = fs.readdirSync(chatsDir)
-    
+
     // First pass: get mtime for all chat directories (fast, no file reading)
     const chatDirInfos: ChatDirInfo[] = []
     for (const chatId of chatDirs) {
@@ -58,7 +58,7 @@ export function getAllChats(maxChats: number = 500): ChatHistoryEntry[] {
       try {
         const stat = fs.statSync(chatPath)
         if (!stat.isDirectory()) continue
-        
+
         chatDirInfos.push({
           chatId,
           chatPath,
@@ -69,14 +69,14 @@ export function getAllChats(maxChats: number = 500): ChatHistoryEntry[] {
         // Skip directories we can't stat
       }
     }
-    
+
     // Sort by mtime first (most recent first)
     chatDirInfos.sort((a, b) => b.mtime.getTime() - a.mtime.getTime())
-    
+
     // Second pass: only read message content for the top N chats
     const chats: ChatHistoryEntry[] = []
     const chatsToLoad = chatDirInfos.slice(0, maxChats)
-    
+
     for (const info of chatsToLoad) {
       try {
         let messageCount = 0
@@ -100,8 +100,11 @@ export function getAllChats(maxChats: number = 500): ChatHistoryEntry[] {
         }
       } catch (error) {
         logger.debug(
-          { chatId: info.chatId, error: error instanceof Error ? error.message : String(error) },
-          'Failed to read chat messages'
+          {
+            chatId: info.chatId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          'Failed to read chat messages',
         )
       }
     }
@@ -110,7 +113,7 @@ export function getAllChats(maxChats: number = 500): ChatHistoryEntry[] {
   } catch (error) {
     logger.error(
       { error: error instanceof Error ? error.message : String(error) },
-      'Failed to list chats'
+      'Failed to list chats',
     )
     return []
   }

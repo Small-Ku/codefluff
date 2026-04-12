@@ -8,13 +8,9 @@ import {
   invalidateActivityQuery,
   removeActivityQuery,
 } from '../use-activity-query'
-import {
-  fetchUsageData,
-  usageQueryKeys,
-} from '../use-usage-query'
+import { fetchUsageData, usageQueryKeys } from '../use-usage-query'
 
 import type { ClientEnv } from '@codebuff/common/types/contracts/env'
-
 
 beforeEach(() => {
   resetActivityQueryCache()

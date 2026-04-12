@@ -13,7 +13,9 @@ import { logger } from '@/util/logger'
  * reliable regardless of webhook ordering (unlike `stripe_subscription_id`
  * which may not be populated yet when early invoice events arrive).
  */
-export async function isOrgCustomer(stripeCustomerId: string): Promise<boolean> {
+export async function isOrgCustomer(
+  stripeCustomerId: string,
+): Promise<boolean> {
   try {
     const orgs = await db
       .select({ id: schema.org.id })

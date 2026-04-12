@@ -2,7 +2,10 @@ import { getWebsiteUrl } from '@codebuff/sdk'
 
 import { getUserCredentials } from '../utils/auth'
 import { getApiClient, setApiClientAuthToken } from '../utils/codebuff-api'
-import { loadAgentDefinitions, getLoadedAgentsData } from '../utils/local-agent-registry'
+import {
+  loadAgentDefinitions,
+  getLoadedAgentsData,
+} from '../utils/local-agent-registry'
 
 import type {
   PublishAgentsErrorResponse,
@@ -92,7 +95,9 @@ async function publishAgentTemplates(
  * @param agentIds The ids or display names of the agents to publish
  * @returns PublishResult with success/error information
  */
-export async function handlePublish(agentIds: string[]): Promise<PublishResult> {
+export async function handlePublish(
+  agentIds: string[],
+): Promise<PublishResult> {
   const user = getUserCredentials()
 
   if (!user) {
@@ -183,7 +188,9 @@ export async function handlePublish(agentIds: string[]): Promise<PublishResult> 
     let hint = result.hint
     if (result.error?.includes('Publisher field required')) {
       hint = 'Add a "publisher" field to your agent templates.'
-    } else if (result.error?.includes('Publisher not found or not accessible')) {
+    } else if (
+      result.error?.includes('Publisher not found or not accessible')
+    ) {
       hint = `Check that the publisher ID is correct and you have access to it. Visit ${getWebsiteUrl()}/publishers to manage publishers.`
     }
 

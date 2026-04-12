@@ -70,7 +70,11 @@ describe('error-handling', () => {
 
   describe('isFreeModeUnavailableError', () => {
     test('returns true for error with statusCode 403 and error free_mode_unavailable', () => {
-      const error = { statusCode: 403, error: 'free_mode_unavailable', message: 'Free mode is not available in your country.' }
+      const error = {
+        statusCode: 403,
+        error: 'free_mode_unavailable',
+        message: 'Free mode is not available in your country.',
+      }
       expect(isFreeModeUnavailableError(error)).toBe(true)
     })
 
@@ -80,12 +84,20 @@ describe('error-handling', () => {
     })
 
     test('returns false for 403 with different error code', () => {
-      const error = { statusCode: 403, error: 'account_suspended', message: 'Suspended' }
+      const error = {
+        statusCode: 403,
+        error: 'account_suspended',
+        message: 'Suspended',
+      }
       expect(isFreeModeUnavailableError(error)).toBe(false)
     })
 
     test('returns false for non-403 status with free_mode_unavailable error', () => {
-      const error = { statusCode: 400, error: 'free_mode_unavailable', message: 'Bad request' }
+      const error = {
+        statusCode: 400,
+        error: 'free_mode_unavailable',
+        message: 'Bad request',
+      }
       expect(isFreeModeUnavailableError(error)).toBe(false)
     })
 
@@ -104,7 +116,9 @@ describe('error-handling', () => {
 
   describe('FREE_MODE_UNAVAILABLE_MESSAGE', () => {
     test('mentions unavailability in country', () => {
-      expect(FREE_MODE_UNAVAILABLE_MESSAGE.toLowerCase()).toContain('not available in your country')
+      expect(FREE_MODE_UNAVAILABLE_MESSAGE.toLowerCase()).toContain(
+        'not available in your country',
+      )
     })
   })
 

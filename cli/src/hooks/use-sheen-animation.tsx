@@ -1,10 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 
-import {
-  SHADOW_CHARS,
-  SHEEN_STEP,
-  SHEEN_INTERVAL_MS,
-} from '../login/constants'
+import { SHADOW_CHARS, SHEEN_STEP, SHEEN_INTERVAL_MS } from '../login/constants'
 import { getSheenColor } from '../login/utils'
 
 interface UseSheenAnimationParams {
@@ -39,13 +35,13 @@ export function useSheenAnimation({
     const interval = setInterval(() => {
       setSheenPosition((prev) => {
         const next = prev + step
-        
+
         if (next >= maxPosition) {
           // Reached the end, switch direction
           setIsReversing((wasReversing) => !wasReversing)
           return 0 // Reset position for next phase
         }
-        
+
         return next
       })
     }, SHEEN_INTERVAL_MS)

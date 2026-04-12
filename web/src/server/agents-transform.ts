@@ -283,7 +283,10 @@ export function buildAgentsData(params: {
       const version_stats = Object.fromEntries(
         Object.entries(rawVersionStats).map(([version, stats]) => {
           const typedStats = stats as { last_used?: string | null } | undefined
-          return [version, { ...stats, last_used: typedStats?.last_used ?? undefined }]
+          return [
+            version,
+            { ...stats, last_used: typedStats?.last_used ?? undefined },
+          ]
         }),
       )
 

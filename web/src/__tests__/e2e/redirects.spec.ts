@@ -19,7 +19,9 @@ if (isBun) {
 
   test.describe('Redirect Routes', { tag: '@redirects' }, () => {
     test.describe('/b/:hash redirect to go.trybeluga.ai', () => {
-      test('redirects to go.trybeluga.ai with the hash', async ({ request }) => {
+      test('redirects to go.trybeluga.ai with the hash', async ({
+        request,
+      }) => {
         const response = await request.get('/b/test123', {
           maxRedirects: 0,
         })
@@ -31,9 +33,12 @@ if (isBun) {
       })
 
       test('preserves query parameters in redirect', async ({ request }) => {
-        const response = await request.get('/b/abc-xyz?foo=bar&utm_source=test', {
-          maxRedirects: 0,
-        })
+        const response = await request.get(
+          '/b/abc-xyz?foo=bar&utm_source=test',
+          {
+            maxRedirects: 0,
+          },
+        )
 
         expect(response.status()).toBe(307)
         const location = response.headers()['location']

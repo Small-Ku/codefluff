@@ -80,7 +80,10 @@ function generateCodeChallenge(verifier: string): string {
 let pendingCodeVerifier: string | null = null
 let pendingState: string | null = null
 
-export function startChatGptOAuthFlow(): { codeVerifier: string; authUrl: string } {
+export function startChatGptOAuthFlow(): {
+  codeVerifier: string
+  authUrl: string
+} {
   const codeVerifier = generateCodeVerifier()
   const codeChallenge = generateCodeChallenge(codeVerifier)
   const state = codeVerifier
@@ -109,7 +112,11 @@ let callbackServer: http.Server | null = null
 
 export function stopChatGptOAuthServer(): void {
   if (callbackServer) {
-    try { callbackServer.close() } catch { /* ignore */ }
+    try {
+      callbackServer.close()
+    } catch {
+      /* ignore */
+    }
     callbackServer = null
   }
   pendingCodeVerifier = null
@@ -117,11 +124,18 @@ export function stopChatGptOAuthServer(): void {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 function callbackPageHtml(success: boolean, errorMessage?: string): string {
-  const title = success ? 'Connected — Codebuff' : 'Connection Failed — Codebuff'
+  const title = success
+    ? 'Connected — Codebuff'
+    : 'Connection Failed — Codebuff'
   const heading = success ? '✓ Connected to ChatGPT' : 'Connection Failed'
   const headingColor = success ? '#4ade80' : '#f87171'
   const body = success
@@ -136,7 +150,9 @@ function callbackPageHtml(success: boolean, errorMessage?: string): string {
 </div></body></html>`
 }
 
-function startCallbackServer(codeVerifier: string): Promise<ChatGptOAuthCredentials> {
+function startCallbackServer(
+  codeVerifier: string,
+): Promise<ChatGptOAuthCredentials> {
   const redirectUrl = new URL(CHATGPT_OAUTH_REDIRECT_URI)
   const port = parseInt(redirectUrl.port, 10)
   const callbackPath = redirectUrl.pathname
@@ -169,7 +185,9 @@ function startCallbackServer(codeVerifier: string): Promise<ChatGptOAuthCredenti
       const state = reqUrl.searchParams.get('state')
       if (pendingState && (!state || state !== pendingState)) {
         res.writeHead(400, { 'Content-Type': 'text/html' })
-        res.end(callbackPageHtml(false, 'OAuth state mismatch. Please try again.'))
+        res.end(
+          callbackPageHtml(false, 'OAuth state mismatch. Please try again.'),
+        )
         clearTimeout(timeout)
         stopChatGptOAuthServer()
         reject(new Error('OAuth state mismatch in callback'))
@@ -178,7 +196,10 @@ function startCallbackServer(codeVerifier: string): Promise<ChatGptOAuthCredenti
 
       try {
         const fullCallbackUrl = `${CHATGPT_OAUTH_REDIRECT_URI}${reqUrl.search}`
-        const credentials = await exchangeChatGptCodeForTokens(fullCallbackUrl, codeVerifier)
+        const credentials = await exchangeChatGptCodeForTokens(
+          fullCallbackUrl,
+          codeVerifier,
+        )
 
         res.writeHead(200, { 'Content-Type': 'text/html' })
         res.end(callbackPageHtml(true))
@@ -187,7 +208,8 @@ function startCallbackServer(codeVerifier: string): Promise<ChatGptOAuthCredenti
         stopChatGptOAuthServer()
         resolve(credentials)
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Token exchange failed'
+        const message =
+          err instanceof Error ? err.message : 'Token exchange failed'
         res.writeHead(500, { 'Content-Type': 'text/html' })
         res.end(callbackPageHtml(false, message))
 
@@ -247,7 +269,9 @@ export async function exchangeChatGptCodeForTokens(
 ): Promise<ChatGptOAuthCredentials> {
   const verifier = codeVerifier ?? pendingCodeVerifier
   if (!verifier) {
-    throw new Error('No PKCE verifier found. Please run /connect:chatgpt again.')
+    throw new Error(
+      'No PKCE verifier found. Please run /connect:chatgpt again.',
+    )
   }
 
   const { code, state } = parseAuthCodeInput(authCodeInput)

@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
   const rawTier = Number(body?.tier)
   if (!rawTier || !(rawTier in SUBSCRIPTION_TIERS)) {
     return NextResponse.json(
-      { error: `Invalid tier. Must be one of: ${Object.keys(SUBSCRIPTION_TIERS).join(', ')}.` },
+      {
+        error: `Invalid tier. Must be one of: ${Object.keys(SUBSCRIPTION_TIERS).join(', ')}.`,
+      },
       { status: 400 },
     )
   }
@@ -72,8 +74,8 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await stripeServer.checkout.sessions.create({
       customer: user.stripe_customer_id,
       mode: 'subscription',
-      tax_id_collection: { enabled: true },  // optional (EU B2B)
-      customer_update: { name: "auto", address: "auto" },
+      tax_id_collection: { enabled: true }, // optional (EU B2B)
+      customer_update: { name: 'auto', address: 'auto' },
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       success_url: `${env.NEXT_PUBLIC_CODEBUFF_APP_URL}/profile?tab=usage&subscription_success=true`,

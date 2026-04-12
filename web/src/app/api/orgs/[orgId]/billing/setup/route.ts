@@ -116,7 +116,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 export async function POST(req: NextRequest, { params }: RouteParams) {
   if (!ORG_BILLING_ENABLED) {
-    return NextResponse.json({ error: 'Organization billing is temporarily disabled' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'Organization billing is temporarily disabled' },
+      { status: 503 },
+    )
   }
 
   const session = await getServerSession(authOptions)

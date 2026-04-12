@@ -70,12 +70,22 @@ describe('thinker agent', () => {
 
     test('has message property', () => {
       const messageSchema = thinker.outputSchema?.properties?.message
-      expect(messageSchema && typeof messageSchema === 'object' && 'type' in messageSchema && messageSchema.type).toBe('string')
+      expect(
+        messageSchema &&
+          typeof messageSchema === 'object' &&
+          'type' in messageSchema &&
+          messageSchema.type,
+      ).toBe('string')
     })
 
     test('message has description', () => {
       const messageSchema = thinker.outputSchema?.properties?.message
-      expect(messageSchema && typeof messageSchema === 'object' && 'description' in messageSchema && messageSchema.description).toContain('response')
+      expect(
+        messageSchema &&
+          typeof messageSchema === 'object' &&
+          'description' in messageSchema &&
+          messageSchema.description,
+      ).toContain('response')
     })
   })
 
@@ -94,10 +104,10 @@ describe('thinker agent', () => {
     test('yields STEP to get agent state', () => {
       const mockAgentState = createMockAgentState()
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -125,10 +135,10 @@ describe('thinker agent', () => {
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -170,10 +180,10 @@ describe('thinker agent', () => {
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -220,10 +230,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -255,10 +265,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -298,10 +308,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -337,10 +347,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -389,10 +399,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -421,9 +431,7 @@ Actual response here`,
       expect(handleStepsString).toMatch(/^function\*\s*\(/)
 
       // Should be able to create a new function from it
-      const isolatedFunction = new Function(
-        `return (${handleStepsString})`,
-      )()
+      const isolatedFunction = new Function(`return (${handleStepsString})`)()
       expect(typeof isolatedFunction).toBe('function')
     })
 
@@ -442,10 +450,10 @@ Actual response here`,
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({
@@ -471,16 +479,18 @@ Actual response here`,
       const messages = [
         {
           role: 'assistant' as const,
-          content: 'Simple string response' as unknown as [{ type: 'text'; text: string }],
+          content: 'Simple string response' as unknown as [
+            { type: 'text'; text: string },
+          ],
         },
       ]
 
       const mockAgentState = createMockAgentState(messages)
       const mockLogger = {
-        debug: () => { },
-        info: () => { },
-        warn: () => { },
-        error: () => { },
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
       }
 
       const generator = thinker.handleSteps!({

@@ -1,5 +1,13 @@
 import { QueryClient } from '@tanstack/react-query'
-import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test'
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  mock,
+  spyOn,
+} from 'bun:test'
 
 import { usageQueryKeys } from '../../hooks/use-usage-query'
 import { useChatStore } from '../../state/chat-store'

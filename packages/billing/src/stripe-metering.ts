@@ -72,7 +72,10 @@ export async function reportPurchasedCreditsToStripe(params: {
     stripeCustomerId = user?.stripe_customer_id ?? null
   }
   if (!stripeCustomerId) {
-    logger.warn(logContext, 'Skipping Stripe metering (missing stripe_customer_id)')
+    logger.warn(
+      logContext,
+      'Skipping Stripe metering (missing stripe_customer_id)',
+    )
     return
   }
 
@@ -115,6 +118,9 @@ export async function reportPurchasedCreditsToStripe(params: {
       `Stripe metering timed out after ${STRIPE_METER_REQUEST_TIMEOUT_MS}ms`,
     )
   } catch (error) {
-    logger.error({ ...logContext, error }, 'Failed to report purchased credits to Stripe')
+    logger.error(
+      { ...logContext, error },
+      'Failed to report purchased credits to Stripe',
+    )
   }
 }

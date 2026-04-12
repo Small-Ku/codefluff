@@ -206,7 +206,9 @@ describe('router-utils', () => {
     })
 
     test('parseCommandInput matches all implicitCommand commands', () => {
-      const implicitCommands = SLASH_COMMANDS.filter((cmd) => cmd.implicitCommand)
+      const implicitCommands = SLASH_COMMANDS.filter(
+        (cmd) => cmd.implicitCommand,
+      )
       for (const cmd of implicitCommands) {
         expect(parseCommandInput(cmd.id)).toEqual({
           command: cmd.id.toLowerCase(),

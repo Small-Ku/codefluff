@@ -8,7 +8,6 @@ import { formatElapsedTime } from '../utils/format-elapsed-time'
 
 import type { StatusIndicatorState } from '../utils/status-indicator-state'
 
-
 const SHIMMER_INTERVAL_MS = 160
 
 interface StatusBarProps {
@@ -67,30 +66,26 @@ export const StatusBar = ({
     switch (statusIndicatorState.kind) {
       case 'ctrlC':
         return <span fg={theme.secondary}>Press Ctrl-C again to exit</span>
-      
+
       case 'clipboard':
         // Use green color for feedback success messages
-        const isFeedbackSuccess = statusIndicatorState.message.includes('Feedback sent')
+        const isFeedbackSuccess =
+          statusIndicatorState.message.includes('Feedback sent')
         return (
           <span fg={isFeedbackSuccess ? theme.success : theme.primary}>
             {statusIndicatorState.message}
           </span>
         )
-      
+
       case 'reconnected':
         return <span fg={theme.success}>Reconnected</span>
-      
+
       case 'retrying':
-        return (
-          <ShimmerText
-            text="retrying..."
-            primaryColor={theme.warning}
-          />
-        )
-      
+        return <ShimmerText text="retrying..." primaryColor={theme.warning} />
+
       case 'connecting':
         return <ShimmerText text="connecting..." />
-      
+
       case 'waiting':
         return (
           <ShimmerText
@@ -99,7 +94,7 @@ export const StatusBar = ({
             primaryColor={theme.secondary}
           />
         )
-      
+
       case 'streaming':
         return (
           <ShimmerText
@@ -108,10 +103,10 @@ export const StatusBar = ({
             primaryColor={theme.secondary}
           />
         )
-      
+
       case 'paused':
         return null
-      
+
       case 'idle':
         return null
     }
@@ -169,9 +164,11 @@ export const StatusBar = ({
         }}
       >
         <text style={{ wrapMode: 'none' }}>{elapsedTimeContent}</text>
-        {onStop && (statusIndicatorState.kind === 'waiting' || statusIndicatorState.kind === 'streaming') && (
-          <StopButton onClick={onStop} />
-        )}
+        {onStop &&
+          (statusIndicatorState.kind === 'waiting' ||
+            statusIndicatorState.kind === 'streaming') && (
+            <StopButton onClick={onStop} />
+          )}
       </box>
     </box>
   )

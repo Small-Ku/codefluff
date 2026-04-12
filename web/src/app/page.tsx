@@ -4,7 +4,6 @@ import HomeClient from './home-client'
 
 import type { Metadata } from 'next'
 
-
 import { siteConfig } from '@/lib/constant'
 
 export async function generateMetadata(): Promise<Metadata> {

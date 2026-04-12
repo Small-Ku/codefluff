@@ -11,18 +11,7 @@ import type { SubscriptionTierPrice } from '@codebuff/common/constants/subscript
 import db from '@codebuff/internal/db'
 import * as schema from '@codebuff/internal/db/schema'
 import { withAdvisoryLockTransaction } from '@codebuff/internal/db/transaction'
-import {
-  and,
-  desc,
-  eq,
-  gt,
-  gte,
-  isNull,
-  lt,
-  lte,
-  ne,
-  sql,
-} from 'drizzle-orm'
+import { and, desc, eq, gt, gte, isNull, lt, lte, ne, sql } from 'drizzle-orm'
 
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type Stripe from 'stripe'
@@ -70,7 +59,10 @@ export interface BlockExhaustedError {
   resetsAt: Date
 }
 
-export type BlockGrantResult = BlockGrant | WeeklyLimitError | BlockExhaustedError
+export type BlockGrantResult =
+  | BlockGrant
+  | WeeklyLimitError
+  | BlockExhaustedError
 
 export function isWeeklyLimitError(
   result: BlockGrantResult,
@@ -203,12 +195,7 @@ export async function getWeeklyUsage(params: {
   logger: Logger
   conn?: DbConn
 }): Promise<WeeklyUsage> {
-  const {
-    userId,
-    billingPeriodStart,
-    weeklyCreditsLimit,
-    conn = db,
-  } = params
+  const { userId, billingPeriodStart, weeklyCreditsLimit, conn = db } = params
 
   const now = new Date()
   const weekStart = getWeekStart(billingPeriodStart, now)
@@ -235,9 +222,10 @@ export async function getWeeklyUsage(params: {
     limit: weeklyCreditsLimit,
     remaining: Math.max(0, weeklyCreditsLimit - used),
     resetsAt: weekEnd,
-    percentUsed: weeklyCreditsLimit > 0
-      ? Math.round((used / weeklyCreditsLimit) * 100)
-      : 0,
+    percentUsed:
+      weeklyCreditsLimit > 0
+        ? Math.round((used / weeklyCreditsLimit) * 100)
+        : 0,
   }
 }
 
@@ -280,7 +268,7 @@ export async function ensureActiveBlockGrantCallback(params: {
 
   if (existingGrants.length > 0) {
     const g = existingGrants[0]
-    
+
     // Block exists with credits remaining - return it
     if (g.balance > 0) {
       return {
@@ -290,7 +278,7 @@ export async function ensureActiveBlockGrantCallback(params: {
         isNew: false,
       } satisfies BlockGrant
     }
-    
+
     // Block exists but is exhausted - don't create a new one until it expires
     return {
       error: 'block_exhausted',

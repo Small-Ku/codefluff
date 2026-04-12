@@ -214,7 +214,8 @@ export async function sendDisputeNotificationEmail(params: {
 }): Promise<SendEmailResult> {
   const { email, firstName, disputeAmount, logger } = params
 
-  const subject = "We noticed a dispute on your account - let's resolve this together"
+  const subject =
+    "We noticed a dispute on your account - let's resolve this together"
   const message = `Hi ${firstName},
 
 We noticed that a dispute was filed for a ${disputeAmount} charge on your Codebuff account. We're sorry to hear you had an issue and we'd love the opportunity to make things right.

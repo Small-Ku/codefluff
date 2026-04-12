@@ -100,7 +100,10 @@ export async function calculateTotalLegacyReferralBonus(params: {
       )
 
     const totalBonus = parseInt(result[0]?.totalCredits ?? '0')
-    logger.debug({ userId, totalBonus }, 'Calculated total legacy referral bonus.')
+    logger.debug(
+      { userId, totalBonus },
+      'Calculated total legacy referral bonus.',
+    )
     return totalBonus
   } catch (error) {
     logger.error(
@@ -351,9 +354,7 @@ export async function revokeGrantByOperationId(params: {
   }
 
   // Determine lock key based on whether this is a user or org grant
-  const lockKey = grant.org_id
-    ? `org:${grant.org_id}`
-    : `user:${grant.user_id}`
+  const lockKey = grant.org_id ? `org:${grant.org_id}` : `user:${grant.user_id}`
 
   const { result } = await withAdvisoryLockTransaction({
     callback: async (tx) => {

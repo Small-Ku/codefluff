@@ -31,8 +31,9 @@ export function useAutoTopup(): AutoTopupState {
   const queryClient = useQueryClient()
   const [isEnabled, setIsEnabled] = useState(false)
   const [threshold, setThreshold] = useState<number>(DEFAULT_THRESHOLD_CREDITS)
-  const [topUpAmountDollars, setTopUpAmountDollars] =
-    useState<number>(DEFAULT_TOPUP_DOLLARS)
+  const [topUpAmountDollars, setTopUpAmountDollars] = useState<number>(
+    DEFAULT_TOPUP_DOLLARS,
+  )
   const isInitialLoad = useRef(true)
   const pendingSettings = useRef<{
     threshold: number
@@ -88,7 +89,9 @@ export function useAutoTopup(): AutoTopupState {
   useEffect(() => {
     if (userProfile) {
       setIsEnabled(userProfile.auto_topup_enabled ?? false)
-      setThreshold(userProfile.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS)
+      setThreshold(
+        userProfile.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS,
+      )
       setTopUpAmountDollars(
         userProfile.initialTopUpDollars ?? DEFAULT_TOPUP_DOLLARS,
       )
@@ -208,7 +211,9 @@ export function useAutoTopup(): AutoTopupState {
         }
 
         setIsEnabled(updatedData.auto_topup_enabled ?? false)
-        setThreshold(updatedData.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS)
+        setThreshold(
+          updatedData.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS,
+        )
         setTopUpAmountDollars(
           updatedData.initialTopUpDollars ?? DEFAULT_TOPUP_DOLLARS,
         )
@@ -226,7 +231,9 @@ export function useAutoTopup(): AutoTopupState {
       })
       if (userProfile) {
         setIsEnabled(userProfile.auto_topup_enabled ?? false)
-        setThreshold(userProfile.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS)
+        setThreshold(
+          userProfile.auto_topup_threshold ?? DEFAULT_THRESHOLD_CREDITS,
+        )
         setTopUpAmountDollars(
           userProfile.initialTopUpDollars ?? DEFAULT_TOPUP_DOLLARS,
         )

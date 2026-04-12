@@ -72,7 +72,11 @@ const Onboard = async ({ searchParams }: PageProps) => {
     return (
       <StatusCard
         title="Welcome to Freebuff!"
-        description={referralCode ? "Once you've installed Freebuff, you can close this window." : ''}
+        description={
+          referralCode
+            ? "Once you've installed Freebuff, you can close this window."
+            : ''
+        }
         message="You're all set! Head back to your terminal to continue."
       />
     )

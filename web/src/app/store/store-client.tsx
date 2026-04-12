@@ -37,8 +37,6 @@ import {
 import { toast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 
-
-
 // Basic agent info from SSR (no metrics)
 interface AgentBasicInfo {
   id: string

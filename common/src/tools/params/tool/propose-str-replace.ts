@@ -1,6 +1,10 @@
 import z from 'zod/v4'
 
-import { $getNativeToolCallExampleString, coerceToArray, jsonToolResultSchema } from '../utils'
+import {
+  $getNativeToolCallExampleString,
+  coerceToArray,
+  jsonToolResultSchema,
+} from '../utils'
 
 import type { $ToolParams } from '../../constants'
 
@@ -56,7 +60,9 @@ const inputSchema = z
       )
       .describe('Array of replacements to make.'),
   })
-  .describe(`Propose string replacements in a file without actually applying them.`)
+  .describe(
+    `Propose string replacements in a file without actually applying them.`,
+  )
 const description = `
 Propose edits to a file without actually applying them. Use this tool when you want to draft changes that will be reviewed before being applied.
 

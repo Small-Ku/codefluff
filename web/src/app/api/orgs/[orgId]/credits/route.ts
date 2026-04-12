@@ -23,7 +23,10 @@ const ORG_MIN_PURCHASE_CREDITS = 5000 // $50 minimum for organizations
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   if (!ORG_BILLING_ENABLED) {
-    return NextResponse.json({ error: 'Organization billing is temporarily disabled' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'Organization billing is temporarily disabled' },
+      { status: 503 },
+    )
   }
 
   const session = await getServerSession(authOptions)

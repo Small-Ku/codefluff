@@ -42,7 +42,6 @@ export function generateFingerprintId(): string {
   return `codecane-cli-${Math.random().toString(36).substring(2, 15)}`
 }
 
-
 /**
  * Parses the logo string into individual lines
  */

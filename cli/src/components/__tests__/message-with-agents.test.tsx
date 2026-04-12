@@ -60,13 +60,17 @@ const createErrorMessage = (id: string, content: string): ChatMessage => ({
 })
 
 // Creates an agent message without the required agent info (for error testing)
-const createMalformedAgentMessage = (id: string, content: string): ChatMessage => ({
-  id,
-  variant: 'agent',
-  content,
-  timestamp: new Date().toISOString(),
-  // Intentionally missing agent property
-} as ChatMessage)
+const createMalformedAgentMessage = (
+  id: string,
+  content: string,
+): ChatMessage =>
+  ({
+    id,
+    variant: 'agent',
+    content,
+    timestamp: new Date().toISOString(),
+    // Intentionally missing agent property
+  }) as ChatMessage
 
 const createModeDividerMessage = (id: string, mode: string): ChatMessage => ({
   id,
@@ -90,12 +94,14 @@ const defaultCallbacks = {
   onCloseFeedback: () => {},
 }
 
-const initializeStore = (overrides: {
-  messageTree?: Map<string, ChatMessage[]>
-  isWaitingForResponse?: boolean
-  timerStartTime?: number | null
-  availableWidth?: number
-} = {}) => {
+const initializeStore = (
+  overrides: {
+    messageTree?: Map<string, ChatMessage[]>
+    isWaitingForResponse?: boolean
+    timerStartTime?: number | null
+    availableWidth?: number
+  } = {},
+) => {
   useMessageBlockStore.setState({
     context: {
       theme,
@@ -278,10 +284,7 @@ describe('MessageWithAgents', () => {
       const message = createUserMessage('user-1', 'Hello from user')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       expect(markup).toContain('Hello from user')
@@ -291,10 +294,7 @@ describe('MessageWithAgents', () => {
       const message = createAiMessage('ai-1', 'Hello from AI')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       expect(markup).toContain('Hello from AI')
@@ -304,23 +304,21 @@ describe('MessageWithAgents', () => {
       const message = createErrorMessage('error-1', 'An error occurred')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       expect(markup).toContain('An error occurred')
     })
 
     test('renders agent message with agent name displayed', () => {
-      const message = createAgentMessage('agent-1', 'Agent response', 'Code Searcher')
+      const message = createAgentMessage(
+        'agent-1',
+        'Agent response',
+        'Code Searcher',
+      )
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       expect(markup).toContain('Code Searcher')
@@ -331,10 +329,7 @@ describe('MessageWithAgents', () => {
       const message = createAiMessage('ai-md', '**Bold** and *italic*')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       // Content should be present (markdown rendering may transform it)
@@ -346,10 +341,7 @@ describe('MessageWithAgents', () => {
       const message = createAiMessage('ai-empty', '')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       expect(markup).toBeDefined()
@@ -361,10 +353,7 @@ describe('MessageWithAgents', () => {
       const message = createModeDividerMessage('mode-1', 'Edit Mode')
 
       const markup = renderToStaticMarkup(
-        <MessageWithAgents
-          {...baseMessageWithAgentsProps}
-          message={message}
-        />,
+        <MessageWithAgents {...baseMessageWithAgentsProps} message={message} />,
       )
 
       // Mode text should appear
@@ -462,8 +451,8 @@ describe('callback invocation', () => {
     })
 
     // Verify callback is stored and retrievable
-    const storedCallback = useMessageBlockStore.getState().callbacks
-      .onToggleCollapsed
+    const storedCallback =
+      useMessageBlockStore.getState().callbacks.onToggleCollapsed
     storedCallback('test-message-id')
 
     expect(toggleCalledWith).toBe('test-message-id')
@@ -499,7 +488,10 @@ describe('layout handling', () => {
     const widths = [20, 80, 120, 300]
 
     for (const width of widths) {
-      const message = createAiMessage(`width-${width}`, `Content at width ${width}`)
+      const message = createAiMessage(
+        `width-${width}`,
+        `Content at width ${width}`,
+      )
       const markup = renderToStaticMarkup(
         <MessageWithAgents
           message={message}

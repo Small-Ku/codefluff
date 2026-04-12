@@ -299,7 +299,9 @@ export function runTerminalCommand({
           if (!success) {
             childProcess.kill('SIGKILL')
           }
-          reject(new Error(`Command timed out after ${timeout_seconds} seconds`))
+          reject(
+            new Error(`Command timed out after ${timeout_seconds} seconds`),
+          )
         }
       }, timeout_seconds * 1000)
     }

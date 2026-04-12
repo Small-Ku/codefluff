@@ -35,7 +35,11 @@ export async function POST() {
       (error as { raw?: { message?: string } })?.raw?.message ||
       'Failed to cancel subscription in Stripe.'
     logger.error(
-      { error: message, userId, subscriptionId: subscription.stripe_subscription_id },
+      {
+        error: message,
+        userId,
+        subscriptionId: subscription.stripe_subscription_id,
+      },
       'Stripe subscription cancellation failed',
     )
     return NextResponse.json({ error: message }, { status: 500 })
@@ -54,11 +58,18 @@ export async function POST() {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
     logger.error(
-      { error: message, userId, subscriptionId: subscription.stripe_subscription_id },
+      {
+        error: message,
+        userId,
+        subscriptionId: subscription.stripe_subscription_id,
+      },
       'Stripe subscription set to cancel but failed to update local DB — data is inconsistent',
     )
     return NextResponse.json(
-      { error: 'Subscription canceled but failed to update records. Please contact support.' },
+      {
+        error:
+          'Subscription canceled but failed to update records. Please contact support.',
+      },
       { status: 500 },
     )
   }

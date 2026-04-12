@@ -136,7 +136,10 @@ describe('credentials', () => {
 
       const configDir = getConfigDir(env)
       fs.mkdirSync(configDir, { recursive: true })
-      fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+      fs.writeFileSync(
+        path.join(configDir, 'credentials.json'),
+        JSON.stringify(credentials),
+      )
 
       try {
         const creds = getClaudeOAuthCredentials(env)
@@ -160,7 +163,9 @@ describe('credentials', () => {
       ;(os as any).homedir = () => tmpDir
 
       try {
-        const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'chatgpt-nonexistent-env' } as any
+        const env = {
+          NEXT_PUBLIC_CB_ENVIRONMENT: 'chatgpt-nonexistent-env',
+        } as any
         const creds = getChatGptOAuthCredentials(env)
         expect(creds).toBeNull()
       } finally {
@@ -207,7 +212,10 @@ describe('credentials', () => {
         saveClaudeOAuthCredentials(newCreds, env)
 
         const configDir = getConfigDir(env)
-        const content = fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8')
+        const content = fs.readFileSync(
+          path.join(configDir, 'credentials.json'),
+          'utf8',
+        )
         const parsed = JSON.parse(content)
 
         expect(parsed.claudeOAuth.accessToken).toBe('new-access')
@@ -236,7 +244,10 @@ describe('credentials', () => {
             token: 'user-token',
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(initialContent))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(initialContent),
+        )
 
         // Then save OAuth credentials
         const newCreds: ClaudeOAuthCredentials = {
@@ -248,7 +259,10 @@ describe('credentials', () => {
 
         saveClaudeOAuthCredentials(newCreds, env)
 
-        const content = fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8')
+        const content = fs.readFileSync(
+          path.join(configDir, 'credentials.json'),
+          'utf8',
+        )
         const parsed = JSON.parse(content)
 
         expect(parsed.default.userId).toBe('user-789')
@@ -262,7 +276,9 @@ describe('credentials', () => {
 
   describe('save/clear ChatGPT OAuth credentials', () => {
     test('saves and clears ChatGPT OAuth credentials while preserving user credentials', () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'chatgpt-save-clear-test-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'chatgpt-save-clear-test-'),
+      )
       const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'test' } as any
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
@@ -278,7 +294,10 @@ describe('credentials', () => {
             token: 'token-chatgpt',
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(initial))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(initial),
+        )
 
         const newCreds: ChatGptOAuthCredentials = {
           accessToken: 'chatgpt-access',
@@ -329,11 +348,17 @@ describe('credentials', () => {
             connectedAt: Date.now(),
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         clearClaudeOAuthCredentials(env)
 
-        const content = fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8')
+        const content = fs.readFileSync(
+          path.join(configDir, 'credentials.json'),
+          'utf8',
+        )
         const parsed = JSON.parse(content)
 
         expect(parsed.claudeOAuth).toBeUndefined()
@@ -392,7 +417,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const valid = isClaudeOAuthValid(env)
         expect(valid).toBe(false)
@@ -420,7 +448,10 @@ describe('credentials', () => {
             connectedAt: Date.now(),
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const valid = isClaudeOAuthValid(env)
         expect(valid).toBe(false)
@@ -495,7 +526,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const mockFetch = mock(() =>
           Promise.resolve({
@@ -518,7 +552,9 @@ describe('credentials', () => {
         expect(mockFetch).toHaveBeenCalledTimes(1)
 
         // Verify the saved credentials
-        const saved = JSON.parse(fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8'))
+        const saved = JSON.parse(
+          fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8'),
+        )
         expect(saved.claudeOAuth.accessToken).toBe('new-access-token')
       } finally {
         ;(os as any).homedir = originalHomedir
@@ -528,7 +564,9 @@ describe('credentials', () => {
     })
 
     test('preserves credentials and returns null on refresh failure', async () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'refresh-fail-test-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'refresh-fail-test-'),
+      )
       const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'test' } as any
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
@@ -545,7 +583,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const mockFetch = mock(() =>
           Promise.resolve({
@@ -559,7 +600,9 @@ describe('credentials', () => {
 
         expect(result).toBeNull()
         // Credentials should be preserved (not cleared) so future retries can attempt refresh again
-        const saved = JSON.parse(fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8'))
+        const saved = JSON.parse(
+          fs.readFileSync(path.join(configDir, 'credentials.json'), 'utf8'),
+        )
         expect(saved.claudeOAuth).toBeDefined()
         expect(saved.claudeOAuth.refreshToken).toBe('invalid-refresh')
       } finally {
@@ -587,7 +630,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         let callCount = 0
         const mockFetch = mock(() => {
@@ -634,12 +680,16 @@ describe('credentials', () => {
     })
 
     test('returns null when no credentials exist', async () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'chatgpt-norefresh-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'chatgpt-norefresh-'),
+      )
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
 
       try {
-        const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'chatgpt-norefresh-env' } as any
+        const env = {
+          NEXT_PUBLIC_CB_ENVIRONMENT: 'chatgpt-norefresh-env',
+        } as any
         const result = await refreshChatGptOAuthToken(env)
         expect(result).toBeNull()
       } finally {
@@ -649,7 +699,9 @@ describe('credentials', () => {
     })
 
     test('successfully refreshes token', async () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'chatgpt-refresh-test-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'chatgpt-refresh-test-'),
+      )
       const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'test' } as any
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
@@ -666,7 +718,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7_200_000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const mockFetch = mock(() =>
           Promise.resolve({
@@ -740,7 +795,10 @@ describe('credentials', () => {
             connectedAt: Date.now(),
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const result = await getValidClaudeOAuthCredentials(env)
 
@@ -752,7 +810,9 @@ describe('credentials', () => {
     })
 
     test('refreshes expired credentials', async () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'refresh-expired-test-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'refresh-expired-test-'),
+      )
       const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'test' } as any
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
@@ -769,7 +829,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const mockFetch = mock(() =>
           Promise.resolve({
@@ -795,7 +858,9 @@ describe('credentials', () => {
     })
 
     test('returns null when refresh fails', async () => {
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'refresh-fail-valid-test-'))
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'refresh-fail-valid-test-'),
+      )
       const env = { NEXT_PUBLIC_CB_ENVIRONMENT: 'test' } as any
       const originalHomedir = os.homedir
       ;(os as any).homedir = () => tmpDir
@@ -812,7 +877,10 @@ describe('credentials', () => {
             connectedAt: Date.now() - 7200000,
           },
         }
-        fs.writeFileSync(path.join(configDir, 'credentials.json'), JSON.stringify(credentials))
+        fs.writeFileSync(
+          path.join(configDir, 'credentials.json'),
+          JSON.stringify(credentials),
+        )
 
         const mockFetch = mock(() =>
           Promise.resolve({

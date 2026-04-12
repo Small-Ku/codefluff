@@ -86,10 +86,7 @@ export async function getProjectFileTree(params: {
       projectRoot,
       fs,
     })
-    const mergedIgnore = ignore
-      .default()
-      .add(currentIgnore)
-      .add(parsedIgnore)
+    const mergedIgnore = ignore.default().add(currentIgnore).add(parsedIgnore)
 
     try {
       const files = await fs.readdir(fullPath)

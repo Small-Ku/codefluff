@@ -56,7 +56,10 @@ async function topFreebuffUsers() {
         AND ${schema.message.user_id} NOT IN (
           SELECT ${schema.message.user_id}
           FROM ${schema.message}
-          WHERE ${schema.message.agent_id} IN (${sql.join(excludeAgents.map(a => sql`${a}`), sql`, `)})
+          WHERE ${schema.message.agent_id} IN (${sql.join(
+            excludeAgents.map((a) => sql`${a}`),
+            sql`, `,
+          )})
             AND ${schema.message.finished_at} >= ${cutoff.toISOString()}
         )`,
     )
@@ -66,14 +69,20 @@ async function topFreebuffUsers() {
 
   if (results.length === 0) {
     console.log(`No ${agentId} messages found in this time range.`)
-    console.log('\nTip: Run with a different agent_id as the 4th argument, e.g.:')
-    console.log('  bun run scripts/top-freebuff-users.ts 168 50 claude-sonnet-4-20250514')
+    console.log(
+      '\nTip: Run with a different agent_id as the 4th argument, e.g.:',
+    )
+    console.log(
+      '  bun run scripts/top-freebuff-users.ts 168 50 claude-sonnet-4-20250514',
+    )
     return
   }
 
   // Now run detailed queries since we have users
-  const userIds = results.map(r => r.userId).filter((id): id is string => !!id)
-  
+  const userIds = results
+    .map((r) => r.userId)
+    .filter((id): id is string => !!id)
+
   const dailyStats = await db
     .select({
       userId: schema.message.user_id,
@@ -84,7 +93,10 @@ async function topFreebuffUsers() {
     .where(
       sql`${schema.message.finished_at} >= ${cutoff.toISOString()}
         AND ${schema.message.agent_id} = ${agentId}
-        AND ${schema.message.user_id} IN (${sql.join(userIds.map(id => sql`${id}`), sql`, `)})`,
+        AND ${schema.message.user_id} IN (${sql.join(
+          userIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
     )
     .groupBy(sql`DATE(${schema.message.finished_at})`, schema.message.user_id)
 
@@ -98,9 +110,15 @@ async function topFreebuffUsers() {
     .where(
       sql`${schema.message.finished_at} >= ${cutoff.toISOString()}
         AND ${schema.message.agent_id} = ${agentId}
-        AND ${schema.message.user_id} IN (${sql.join(userIds.map(id => sql`${id}`), sql`, `)})`,
+        AND ${schema.message.user_id} IN (${sql.join(
+          userIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
     )
-    .groupBy(sql`EXTRACT(HOUR FROM ${schema.message.finished_at})`, schema.message.user_id)
+    .groupBy(
+      sql`EXTRACT(HOUR FROM ${schema.message.finished_at})`,
+      schema.message.user_id,
+    )
 
   // Aggregate daily stats per user
   const dailyByUser = new Map<string, { date: string; count: number }[]>()
@@ -121,20 +139,27 @@ async function topFreebuffUsers() {
   }
 
   // Build user stats objects
-  const userStats: UserStats[] = results.map(r => {
+  const userStats: UserStats[] = results.map((r) => {
     const uid = r.userId ?? ''
     const daysData = dailyByUser.get(uid) || []
     const hourMap = hourlyByUser.get(uid) || new Map()
-    
+
     const daysActive = daysData.length
-    const maxMessagesInDay = daysData.reduce((max, d) => Math.max(max, d.count), 0)
-    const avgMessagesPerDay = daysData.length > 0 
-      ? Math.round(daysData.reduce((sum, d) => sum + d.count, 0) / daysData.length)
-      : 0
-    
+    const maxMessagesInDay = daysData.reduce(
+      (max, d) => Math.max(max, d.count),
+      0,
+    )
+    const avgMessagesPerDay =
+      daysData.length > 0
+        ? Math.round(
+            daysData.reduce((sum, d) => sum + d.count, 0) / daysData.length,
+          )
+        : 0
+
     const totalTokens = Number(r.totalInputTokens) + Number(r.totalOutputTokens)
     const cacheReadTokens = Number(r.totalCacheReadTokens)
-    const cacheHitRate = totalTokens > 0 ? (cacheReadTokens / totalTokens) * 100 : 0
+    const cacheHitRate =
+      totalTokens > 0 ? (cacheReadTokens / totalTokens) * 100 : 0
 
     return {
       userId: r.userId ?? 'unknown',
@@ -156,7 +181,9 @@ async function topFreebuffUsers() {
   })
 
   // Print summary table
-  console.log(`${'#'.padStart(3)}  ${'Email'.padEnd(35)} ${'Msgs'.padStart(7)} ${'Days'.padStart(5)} ${'Avg/Day'.padStart(8)} ${'Max/Day'.padStart(8)} ${'InTok'.padStart(9)} ${'OutTok'.padStart(9)} ${'Cache%'.padStart(7)} ${'Credits'.padStart(9)}`)
+  console.log(
+    `${'#'.padStart(3)}  ${'Email'.padEnd(35)} ${'Msgs'.padStart(7)} ${'Days'.padStart(5)} ${'Avg/Day'.padStart(8)} ${'Max/Day'.padStart(8)} ${'InTok'.padStart(9)} ${'OutTok'.padStart(9)} ${'Cache%'.padStart(7)} ${'Credits'.padStart(9)}`,
+  )
   console.log(`${'='.repeat(105)}`)
 
   let totalMessages = 0
@@ -173,8 +200,7 @@ async function topFreebuffUsers() {
     totalInputTokens += u.totalInputTokens
     totalOutputTokens += u.totalOutputTokens
 
-    const emailDisplay = (u.email ?? u.userId.slice(0, 8) + '...')
-      .slice(0, 33)
+    const emailDisplay = (u.email ?? u.userId.slice(0, 8) + '...').slice(0, 33)
 
     console.log(
       `${String(i + 1).padStart(3)}  ${emailDisplay.padEnd(35)} ${u.messageCount.toLocaleString().padStart(7)} ${u.daysActive.toString().padStart(5)} ${u.avgMessagesPerDay.toString().padStart(8)} ${u.maxMessagesInDay.toString().padStart(8)} ${u.totalInputTokens.toLocaleString().padStart(9)} ${u.totalOutputTokens.toLocaleString().padStart(9)} ${(u.cacheHitRate + '%').padStart(7)} ${u.totalCredits.toLocaleString().padStart(9)}`,
@@ -185,7 +211,9 @@ async function topFreebuffUsers() {
   console.log(
     `\nTotal: ${userStats.length} users, ${totalMessages.toLocaleString()} messages, ${totalCredits.toLocaleString()} credits, $${totalCost.toFixed(2)}`,
   )
-  console.log(`Tokens: ${totalInputTokens.toLocaleString()} in / ${totalOutputTokens.toLocaleString()} out\n`)
+  console.log(
+    `Tokens: ${totalInputTokens.toLocaleString()} in / ${totalOutputTokens.toLocaleString()} out\n`,
+  )
 
   // Time distribution analysis - top 10 users by message count
   console.log(`${'='.repeat(100)}`)
@@ -193,7 +221,7 @@ async function topFreebuffUsers() {
   console.log(`${'='.repeat(100)}\n`)
 
   const top10 = userStats.slice(0, 10)
-  
+
   // Aggregate hourly distribution across top users
   const overallHourly = new Map<number, number>()
   for (const u of top10) {
@@ -208,7 +236,7 @@ async function topFreebuffUsers() {
 
   console.log('Hourly activity distribution (all top 10 users combined):')
   console.log('')
-  
+
   for (const [hour, count] of sortedHours) {
     const bar = '='.repeat(Math.round((count / maxHourCount) * 40))
     const hourStr = hour.toString().padStart(2, '0') + ':00'
@@ -225,14 +253,19 @@ async function topFreebuffUsers() {
     .where(
       sql`${schema.message.finished_at} >= ${cutoff.toISOString()}
         AND ${schema.message.agent_id} = ${agentId}
-        AND ${schema.message.user_id} IN (${sql.join(userIds.map(id => sql`${id}`), sql`, `)})`,
+        AND ${schema.message.user_id} IN (${sql.join(
+          userIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
     )
     .groupBy(sql`EXTRACT(DOW FROM ${schema.message.finished_at})`)
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   console.log('\nDay of week distribution:')
-  const sortedDays = dayOfWeekStats.sort((a, b) => Number(a.dayOfWeek) - Number(b.dayOfWeek))
-  const maxDayCount = Math.max(...sortedDays.map(d => Number(d.count)))
+  const sortedDays = dayOfWeekStats.sort(
+    (a, b) => Number(a.dayOfWeek) - Number(b.dayOfWeek),
+  )
+  const maxDayCount = Math.max(...sortedDays.map((d) => Number(d.count)))
 
   for (const d of sortedDays) {
     const dayName = dayNames[Number(d.dayOfWeek)]
@@ -245,30 +278,38 @@ async function topFreebuffUsers() {
   console.log('\nDays active histogram:')
   const daysActiveCounts = new Map<number, number>()
   for (const u of userStats) {
-    daysActiveCounts.set(u.daysActive, (daysActiveCounts.get(u.daysActive) || 0) + 1)
+    daysActiveCounts.set(
+      u.daysActive,
+      (daysActiveCounts.get(u.daysActive) || 0) + 1,
+    )
   }
-  const sortedDaysActive = [...daysActiveCounts.entries()].sort((a, b) => a[0] - b[0])
+  const sortedDaysActive = [...daysActiveCounts.entries()].sort(
+    (a, b) => a[0] - b[0],
+  )
   const maxActiveUsers = Math.max(...sortedDaysActive.map(([_, c]) => c))
 
   for (const [days, count] of sortedDaysActive) {
     const bar = '='.repeat(Math.round((count / maxActiveUsers) * 40))
-    console.log(`  ${days.toString().padStart(2)} days  ${count.toString().padStart(3)} users ${bar}`)
+    console.log(
+      `  ${days.toString().padStart(2)} days  ${count.toString().padStart(3)} users ${bar}`,
+    )
   }
 
   // Session stats - users with highest avg messages per active day
   console.log('\nTop 10 users by avg messages per active day:')
-  console.log(`${'Email'.padEnd(40)} ${'Days Active'.padStart(12)} ${'Avg/Day'.padStart(10)} ${'Max/Day'.padStart(10)}`)
+  console.log(
+    `${'Email'.padEnd(40)} ${'Days Active'.padStart(12)} ${'Avg/Day'.padStart(10)} ${'Max/Day'.padStart(10)}`,
+  )
   console.log(`${'='.repeat(75)}`)
 
   const byAvgPerDay = [...userStats]
-    .filter(u => u.daysActive > 0)
+    .filter((u) => u.daysActive > 0)
     .sort((a, b) => b.avgMessagesPerDay - a.avgMessagesPerDay)
     .slice(0, 10)
 
   for (const u of byAvgPerDay) {
-    const emailDisplay = (u.email ?? u.userId.slice(0, 8) + '...')
-      .slice(0, 38)
-    
+    const emailDisplay = (u.email ?? u.userId.slice(0, 8) + '...').slice(0, 38)
+
     console.log(
       `${emailDisplay.padEnd(40)} ${u.daysActive.toString().padStart(12)} ${u.avgMessagesPerDay.toString().padStart(10)} ${u.maxMessagesInDay.toString().padStart(10)}`,
     )

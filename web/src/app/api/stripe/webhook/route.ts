@@ -227,7 +227,9 @@ async function handleCheckoutSessionCompleted(
   }
 }
 
-async function handleOrganizationSubscriptionEvent(subscription: Stripe.Subscription) {
+async function handleOrganizationSubscriptionEvent(
+  subscription: Stripe.Subscription,
+) {
   const organizationId = subscription.metadata?.organization_id
   if (!organizationId) {
     logger.warn(
@@ -409,7 +411,10 @@ const webhookHandler = async (req: NextRequest): Promise<NextResponse> => {
         const schedule = event.data.object as Stripe.SubscriptionSchedule
         // Skip organization schedules (if they have org metadata)
         if (!schedule.metadata?.organization_id) {
-          await handleSubscriptionScheduleReleasedOrCanceled({ schedule, logger })
+          await handleSubscriptionScheduleReleasedOrCanceled({
+            schedule,
+            logger,
+          })
         }
         break
       }

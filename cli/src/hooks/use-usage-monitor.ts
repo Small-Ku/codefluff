@@ -9,7 +9,7 @@ import { shouldAutoShowBanner } from '../utils/usage-banner-state'
 /**
  * Hook that monitors usage data and auto-shows the usage banner
  * when credit thresholds are crossed.
- * 
+ *
  * This should be placed in a component that's always mounted (like Chat)
  * so monitoring happens continuously, not just when the banner is visible.
  */

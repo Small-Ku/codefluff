@@ -8,19 +8,18 @@ import { has } from 'lodash'
 
 import { shouldHideAgent } from './constants'
 import { formatTimestamp } from './helpers'
-import { autoCollapseBlocks , createAgentBlock } from './message-block-helpers'
+import { autoCollapseBlocks, createAgentBlock } from './message-block-helpers'
 
 import type { AgentMode } from './constants'
-import type {
-  ChatMessage,
-  ContentBlock,
-} from '../types/chat'
+import type { ChatMessage, ContentBlock } from '../types/chat'
 
 // -----------------------------------------------------------------------------
 // Message Creation Helpers
 // -----------------------------------------------------------------------------
 
-export const createModeDividerMessage = (agentMode: AgentMode): ChatMessage => ({
+export const createModeDividerMessage = (
+  agentMode: AgentMode,
+): ChatMessage => ({
   id: `divider-${Date.now()}`,
   variant: 'ai',
   content: '',
@@ -132,7 +131,9 @@ export const markMessageComplete = (
   return {
     ...message,
     isComplete: true,
-    ...(options?.completionTime ? { completionTime: options.completionTime } : {}),
+    ...(options?.completionTime
+      ? { completionTime: options.completionTime }
+      : {}),
     ...(options?.credits !== undefined ? { credits: options.credits } : {}),
     metadata,
   }

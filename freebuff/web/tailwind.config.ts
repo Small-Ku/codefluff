@@ -5,9 +5,7 @@ import type { Config } from 'tailwindcss'
 
 const config = {
   darkMode: ['class'],
-  content: [
-    './src/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}'],
   prefix: '',
   theme: {
     fontFamily: {
@@ -83,20 +81,20 @@ const config = {
         },
         'glow-pulse': {
           '0%, 100%': {
-            textShadow: '0 0 20px rgba(124,255,63,0.4), 0 0 40px rgba(124,255,63,0.2), 0 0 80px rgba(124,255,63,0.1)',
+            textShadow:
+              '0 0 20px rgba(124,255,63,0.4), 0 0 40px rgba(124,255,63,0.2), 0 0 80px rgba(124,255,63,0.1)',
           },
           '50%': {
-            textShadow: '0 0 30px rgba(124,255,63,0.6), 0 0 60px rgba(124,255,63,0.3), 0 0 100px rgba(124,255,63,0.15)',
+            textShadow:
+              '0 0 30px rgba(124,255,63,0.6), 0 0 60px rgba(124,255,63,0.3), 0 0 100px rgba(124,255,63,0.15)',
           },
         },
-
       },
       animation: {
         shimmer: 'shimmer 2.5s infinite',
         'scan-line': 'scan-line 8s linear infinite',
         'terminal-cursor': 'terminal-cursor 1s steps(1) infinite',
         'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
-
       },
     },
   },

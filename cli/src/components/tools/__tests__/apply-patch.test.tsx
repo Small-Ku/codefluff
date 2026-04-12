@@ -37,7 +37,11 @@ describe('ApplyPatchComponent', () => {
       diff: '@@\n+export const value = 1\n',
     })
 
-    const result = renderToolComponent(toolBlock, chatThemes.dark, renderOptions)
+    const result = renderToolComponent(
+      toolBlock,
+      chatThemes.dark,
+      renderOptions,
+    )
 
     expect(result).toBeDefined()
     expect(result?.content).toBeDefined()
@@ -54,7 +58,11 @@ describe('ApplyPatchComponent', () => {
       diff: '@@\n-oldLine\n+newLine\n',
     })
 
-    const result = renderToolComponent(toolBlock, chatThemes.dark, renderOptions)
+    const result = renderToolComponent(
+      toolBlock,
+      chatThemes.dark,
+      renderOptions,
+    )
 
     expect(result).toBeDefined()
     expect(result?.content).toBeDefined()
@@ -72,7 +80,11 @@ describe('ApplyPatchComponent', () => {
       path: 'src/remove-me.ts',
     })
 
-    const result = renderToolComponent(toolBlock, chatThemes.dark, renderOptions)
+    const result = renderToolComponent(
+      toolBlock,
+      chatThemes.dark,
+      renderOptions,
+    )
 
     expect(result).toBeDefined()
     expect(result?.content).toBeDefined()

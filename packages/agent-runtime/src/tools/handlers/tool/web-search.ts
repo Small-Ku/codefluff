@@ -88,7 +88,10 @@ export const handleWebSearch = (async (params: {
 
       // Apply overall 60s timeout for the entire provider fallback chain
       const timeoutPromise = new Promise<SearchProviderResult>((resolve) =>
-        setTimeout(() => resolve({ error: 'All search providers timed out after 60s' }), 60_000),
+        setTimeout(
+          () => resolve({ error: 'All search providers timed out after 60s' }),
+          60_000,
+        ),
       )
 
       for (const provider of providers) {
@@ -103,8 +106,19 @@ export const handleWebSearch = (async (params: {
         ])
 
         // Check if we hit the timeout
-        if (providerResult.error === 'All search providers timed out after 60s') {
-          errors.push(`Timeout: exceeded 60s (attempted: ${errors.length > 0 ? providers.slice(0, errors.length).map(p => p.name).join(', ') : providers[0]?.name ?? 'unknown'})`)
+        if (
+          providerResult.error === 'All search providers timed out after 60s'
+        ) {
+          errors.push(
+            `Timeout: exceeded 60s (attempted: ${
+              errors.length > 0
+                ? providers
+                    .slice(0, errors.length)
+                    .map((p) => p.name)
+                    .join(', ')
+                : (providers[0]?.name ?? 'unknown')
+            })`,
+          )
           break
         }
 
@@ -145,7 +159,7 @@ export const handleWebSearch = (async (params: {
         {
           ...searchContext,
           searchDuration,
-          attemptedProviders: providers.map(p => p.name),
+          attemptedProviders: providers.map((p) => p.name),
           errors,
           success: false,
         },

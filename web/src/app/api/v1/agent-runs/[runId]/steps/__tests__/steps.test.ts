@@ -11,8 +11,6 @@ import type {
   LoggerWithContextFn,
 } from '@codebuff/common/types/contracts/logger'
 
-
-
 interface MockDbResult {
   user_id: string
 }

@@ -8,7 +8,6 @@ import type { VALID_USER_INFO_FIELDS } from '@/db/user'
 import type { AgentRuntimeDeps } from '@codebuff/common/types/contracts/agent-runtime'
 import type { GetUserInfoFromApiKeyOutput } from '@codebuff/common/types/contracts/database'
 
-
 describe('/api/v1/me route', () => {
   const mockUserData: Record<
     string,
@@ -46,8 +45,13 @@ describe('/api/v1/me route', () => {
           return null
         }
         return Object.fromEntries(
-          fields.map((field) => [field, userData[field as keyof typeof userData]]),
-        ) as Awaited<GetUserInfoFromApiKeyOutput<(typeof VALID_USER_INFO_FIELDS)[number]>>
+          fields.map((field) => [
+            field,
+            userData[field as keyof typeof userData],
+          ]),
+        ) as Awaited<
+          GetUserInfoFromApiKeyOutput<(typeof VALID_USER_INFO_FIELDS)[number]>
+        >
       },
     }
   })

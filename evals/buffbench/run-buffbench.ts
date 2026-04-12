@@ -187,7 +187,10 @@ async function runTask(options: {
         tracesDir,
         `${index + 1}-${safeTaskId}-${safeAgentId}-${safeCommitShort}-agent.json`,
       )
-      fs.writeFileSync(agentTracePath, JSON.stringify(agentResult.trace, null, 2))
+      fs.writeFileSync(
+        agentTracePath,
+        JSON.stringify(agentResult.trace, null, 2),
+      )
     }
 
     fs.writeFileSync(

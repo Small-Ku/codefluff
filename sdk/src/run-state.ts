@@ -53,9 +53,7 @@ export function selectHighestPriorityKnowledgeFile(
 ): string | undefined {
   // Loop through priorities and find the first match directly
   for (const priorityName of KNOWLEDGE_FILE_NAMES_LOWERCASE) {
-    const match = candidates.find((f) =>
-      f.toLowerCase().endsWith(priorityName),
-    )
+    const match = candidates.find((f) => f.toLowerCase().endsWith(priorityName))
     if (match) return match
   }
   return undefined
@@ -322,7 +320,10 @@ export async function loadUserKnowledgeFiles(params: {
   try {
     entries = await fs.readdir(homeDir)
   } catch (error) {
-    logger.debug?.({ homeDir, error: getErrorObject(error) }, 'Failed to read home directory')
+    logger.debug?.(
+      { homeDir, error: getErrorObject(error) },
+      'Failed to read home directory',
+    )
     return userKnowledgeFiles
   }
 
@@ -351,7 +352,10 @@ export async function loadUserKnowledgeFiles(params: {
         // Only use the first file found (highest priority)
         break
       } catch (error) {
-        logger.debug?.({ filePath, error: getErrorObject(error) }, 'Failed to read user knowledge file')
+        logger.debug?.(
+          { filePath, error: getErrorObject(error) },
+          'Failed to read user knowledge file',
+        )
       }
     }
   }
@@ -491,7 +495,11 @@ export async function initialSessionState(
   }
 
   // Load skills from project and home directories
-  const skills = await loadSkills({ cwd: cwd ?? process.cwd(), skillsPath: skillsDir, verbose: false })
+  const skills = await loadSkills({
+    cwd: cwd ?? process.cwd(),
+    skillsPath: skillsDir,
+    verbose: false,
+  })
 
   const initialState = getInitialSessionState({
     projectRoot: cwd ?? process.cwd(),

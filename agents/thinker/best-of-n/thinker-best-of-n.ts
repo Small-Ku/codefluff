@@ -42,7 +42,8 @@ export function createThinkerBestOfN(
     inputSchema: {
       prompt: {
         type: 'string',
-        description: 'The problem you are trying to solve, very briefly. No need to provide context, as the thinker agent can see the entire conversation history.',
+        description:
+          'The problem you are trying to solve, very briefly. No need to provide context, as the thinker agent can see the entire conversation history.',
       },
       params: {
         type: 'object',
@@ -138,9 +139,9 @@ function* handleStepsDefault({
       .filter((result) => result.type === 'json')
       .map((result) => result.value)
       .flat() as {
-        agentType: string
-        value: { value?: T; errorMessage?: string }
-      }[]
+      agentType: string
+      value: { value?: T; errorMessage?: string }
+    }[]
     return spawnedResults.map(
       (result) =>
         result.value.value ??
@@ -223,9 +224,9 @@ function* handleStepsOpus({
       .filter((result) => result.type === 'json')
       .map((result) => result.value)
       .flat() as {
-        agentType: string
-        value: { value?: T; errorMessage?: string }
-      }[]
+      agentType: string
+      value: { value?: T; errorMessage?: string }
+    }[]
     return spawnedResults.map(
       (result) =>
         result.value.value ??

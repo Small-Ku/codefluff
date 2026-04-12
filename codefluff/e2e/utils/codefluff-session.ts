@@ -2,7 +2,13 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-import { tmuxCapture, tmuxSend, tmuxSendKey, tmuxStart, tmuxStop } from './tmux-helpers'
+import {
+  tmuxCapture,
+  tmuxSend,
+  tmuxSendKey,
+  tmuxStart,
+  tmuxStop,
+} from './tmux-helpers'
 
 export class CodefluffSession {
   public readonly name: string
@@ -37,7 +43,9 @@ export class CodefluffSession {
 
     // Write any initial files before starting the binary
     if (options?.initialFiles) {
-      for (const [relativePath, content] of Object.entries(options.initialFiles)) {
+      for (const [relativePath, content] of Object.entries(
+        options.initialFiles,
+      )) {
         const filePath = path.join(tmpDir, relativePath)
         const dir = path.dirname(filePath)
         if (!fs.existsSync(dir)) {

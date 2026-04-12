@@ -10,7 +10,8 @@ export const ADVISORY_LOCK_IDS = {
   DISCORD_BOT: 741852963,
 } as const
 
-export type AdvisoryLockId = (typeof ADVISORY_LOCK_IDS)[keyof typeof ADVISORY_LOCK_IDS]
+export type AdvisoryLockId =
+  (typeof ADVISORY_LOCK_IDS)[keyof typeof ADVISORY_LOCK_IDS]
 
 const HEALTH_CHECK_INTERVAL_MS = 10_000 // 10 seconds
 
@@ -26,7 +27,11 @@ function coerceBool(value: unknown): boolean {
 }
 
 // Diagnostic logging helper with timestamp and process info
-function logLock(level: 'info' | 'error' | 'warn', message: string, data?: Record<string, unknown>): void {
+function logLock(
+  level: 'info' | 'error' | 'warn',
+  message: string,
+  data?: Record<string, unknown>,
+): void {
   const timestamp = new Date().toISOString()
   const pid = process.pid
   const prefix = `[${timestamp}] [PID:${pid}] [advisory-lock]`
@@ -60,7 +65,7 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
   handle: LockHandle | null
 }> {
   logLock('info', 'Attempting to acquire advisory lock', { lockId })
-  
+
   const connection = postgres(env.DATABASE_URL, {
     max: 1,
     idle_timeout: 0,
@@ -69,19 +74,28 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
   })
 
   try {
-    logLock('info', 'Database connection established, attempting pg_try_advisory_lock')
-    const result = await connection`SELECT pg_try_advisory_lock(${lockId}) as acquired`
+    logLock(
+      'info',
+      'Database connection established, attempting pg_try_advisory_lock',
+    )
+    const result =
+      await connection`SELECT pg_try_advisory_lock(${lockId}) as acquired`
     const acquired = coerceBool(result[0]?.acquired)
 
     logLock('info', 'Lock acquisition result', { acquired, lockId })
 
     if (!acquired) {
-      logLock('info', 'Lock not acquired (held by another process), closing connection')
+      logLock(
+        'info',
+        'Lock not acquired (held by another process), closing connection',
+      )
       await connection.end()
       return { acquired: false, handle: null }
     }
 
-    logLock('info', 'Lock acquired successfully, setting up lock handle', { lockId })
+    logLock('info', 'Lock acquired successfully, setting up lock handle', {
+      lockId,
+    })
 
     // Create the lock handle
     let lostCallback: (() => void) | null = null
@@ -94,7 +108,10 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
     const triggerLost = () => {
       if (isReleased || lostTriggered) return
       lostTriggered = true
-      logLock('warn', 'Lock lost detected, triggering lost callback', { lockId, healthCheckCount })
+      logLock('warn', 'Lock lost detected, triggering lost callback', {
+        lockId,
+        healthCheckCount,
+      })
       if (healthCheckTimer) {
         clearInterval(healthCheckTimer)
         healthCheckTimer = null
@@ -127,14 +144,26 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
         `
         const stillHeld = coerceBool(result[0]?.held)
         if (!stillHeld) {
-          logLock('error', 'Advisory lock health check failed - lock no longer held', { lockId, healthCheckCount })
+          logLock(
+            'error',
+            'Advisory lock health check failed - lock no longer held',
+            { lockId, healthCheckCount },
+          )
           triggerLost()
         } else if (healthCheckCount % 6 === 0) {
           // Log every minute (6 * 10s) to confirm we're still running
-          logLock('info', 'Advisory lock health check passed', { lockId, healthCheckCount, uptimeMinutes: healthCheckCount / 6 })
+          logLock('info', 'Advisory lock health check passed', {
+            lockId,
+            healthCheckCount,
+            uptimeMinutes: healthCheckCount / 6,
+          })
         }
       } catch (error) {
-        logLock('error', 'Advisory lock health check failed - connection lost', { lockId, healthCheckCount, error: String(error) })
+        logLock(
+          'error',
+          'Advisory lock health check failed - connection lost',
+          { lockId, healthCheckCount, error: String(error) },
+        )
         triggerLost()
       } finally {
         healthCheckInFlight = false
@@ -151,7 +180,9 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
       },
       async release() {
         if (isReleased) {
-          logLock('info', 'Lock release called but already released', { lockId })
+          logLock('info', 'Lock release called but already released', {
+            lockId,
+          })
           return
         }
         logLock('info', 'Releasing advisory lock', { lockId, healthCheckCount })
@@ -164,22 +195,34 @@ export async function tryAcquireAdvisoryLock(lockId: AdvisoryLockId): Promise<{
           // Explicitly release the advisory lock before closing connection
           logLock('info', 'Calling pg_advisory_unlock', { lockId })
           await connection`SELECT pg_advisory_unlock(${lockId})`
-          logLock('info', 'Advisory lock released via pg_advisory_unlock', { lockId })
+          logLock('info', 'Advisory lock released via pg_advisory_unlock', {
+            lockId,
+          })
         } catch (error) {
-          logLock('error', 'Error during pg_advisory_unlock (continuing to close connection)', { lockId, error: String(error) })
+          logLock(
+            'error',
+            'Error during pg_advisory_unlock (continuing to close connection)',
+            { lockId, error: String(error) },
+          )
         }
         try {
           await connection.end()
           logLock('info', 'Database connection closed', { lockId })
         } catch (error) {
-          logLock('error', 'Error closing database connection', { lockId, error: String(error) })
+          logLock('error', 'Error closing database connection', {
+            lockId,
+            error: String(error),
+          })
         }
       },
     }
 
     return { acquired: true, handle }
   } catch (error) {
-    logLock('error', 'Error during lock acquisition', { lockId, error: String(error) })
+    logLock('error', 'Error during lock acquisition', {
+      lockId,
+      error: String(error),
+    })
     await connection.end().catch(() => {})
     throw error
   }

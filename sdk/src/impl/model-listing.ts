@@ -3,7 +3,10 @@
  * Lists available models from each configured provider
  */
 
-import { loadCodefluffConfig, type ProviderKeyConfig } from '@codebuff/common/config/codefluff-config'
+import {
+  loadCodefluffConfig,
+  type ProviderKeyConfig,
+} from '@codebuff/common/config/codefluff-config'
 
 export interface ModelInfo {
   id: string
@@ -69,7 +72,10 @@ function getAPIKey(config?: ProviderKeyConfig): string {
 /**
  * Get headers for a provider request
  */
-function getHeaders(provider: string, config?: ProviderKeyConfig): Record<string, string> {
+function getHeaders(
+  provider: string,
+  config?: ProviderKeyConfig,
+): Record<string, string> {
   const apiKey = getAPIKey(config)
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -107,14 +113,16 @@ async function listOpenAICompatibleModels(
   const response = await fetch(url, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       ...headers,
     },
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to list models: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Failed to list models: ${response.status} ${response.statusText}`,
+    )
   }
 
   const data = (await response.json()) as { data?: Array<{ id: string }> }
@@ -128,8 +136,12 @@ async function listOpenAICompatibleModels(
 /**
  * List models from Google Gemini API
  */
-async function listGoogleModels(apiKey: string, baseURL?: string): Promise<ModelInfo[]> {
-  const resolvedBaseURL = baseURL || 'https://generativelanguage.googleapis.com/v1beta'
+async function listGoogleModels(
+  apiKey: string,
+  baseURL?: string,
+): Promise<ModelInfo[]> {
+  const resolvedBaseURL =
+    baseURL || 'https://generativelanguage.googleapis.com/v1beta'
   const url = `${resolvedBaseURL}/models?key=${apiKey}`
   const response = await fetch(url, {
     method: 'GET',
@@ -139,7 +151,9 @@ async function listGoogleModels(apiKey: string, baseURL?: string): Promise<Model
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to list models: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Failed to list models: ${response.status} ${response.statusText}`,
+    )
   }
 
   const data = (await response.json()) as {
@@ -156,7 +170,9 @@ async function listGoogleModels(apiKey: string, baseURL?: string): Promise<Model
 /**
  * List models from a specific provider
  */
-export async function listModelsForProvider(provider: string): Promise<ProviderModels> {
+export async function listModelsForProvider(
+  provider: string,
+): Promise<ProviderModels> {
   const config = loadCodefluffConfig()
   const keys = config.keys ?? {}
   const providerConfig = keys[provider]
@@ -203,17 +219,19 @@ export async function listModelsForProvider(provider: string): Promise<ProviderM
         const configBaseURL = getBaseURL(provider, providerConfig)
         // Fall back to PROVIDER_BASE_URLS defaults for known providers (same as model-provider.ts)
         const baseURL = configBaseURL || PROVIDER_BASE_URLS[provider]
-        
+
         // Only throw error for new-api which truly requires custom baseURL
         if (!baseURL) {
           throw new Error(
             `Provider "${provider}" requires a baseURL to be configured. ` +
-              `Add "baseURL" to the provider configuration in ~/.config/codefluff/config.json`
+              `Add "baseURL" to the provider configuration in ~/.config/codefluff/config.json`,
           )
         }
-        
+
         const headers =
-          typeof providerConfig === 'object' ? providerConfig.headers : undefined
+          typeof providerConfig === 'object'
+            ? providerConfig.headers
+            : undefined
         models = await listOpenAICompatibleModels(baseURL, apiKey, headers)
         break
       }

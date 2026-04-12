@@ -10,13 +10,11 @@
 
 Codebuff beats Claude Code at 61% vs 53% on [our evals](evals/README.md) across 175+ coding tasks over multiple open-source repos that simulate real-world tasks.
 
-
 # Codefluff
 
 **Codefluff** is a personal fork for local BYOK (Bring Your Own Key) — your API keys, your models, complete independence. No server dependency, no ads, no login.
 
 Instead of using one model for everything, Codebuff coordinates specialized agents that work together to understand your project and make precise changes.
-
 
 ## How it works
 
@@ -71,6 +69,7 @@ Then inside the CLI:
 ```
 
 This creates:
+
 ```
 knowledge.md               # Project context for Codebuff
 .agents/
@@ -232,7 +231,7 @@ wsl --install
 sudo apt-get install tmux
 ```
 
-See [cli/src/__tests__/README.md](cli/src/__tests__/README.md) for comprehensive testing documentation.
+See [cli/src/**tests**/README.md](cli/src/__tests__/README.md) for comprehensive testing documentation.
 
 Some ways you can help:
 

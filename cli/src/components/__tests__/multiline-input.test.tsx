@@ -13,23 +13,23 @@ import { describe, test, expect } from 'bun:test'
 /**
  * Check if a key event represents printable character input (not a special key).
  * This mirrors the function in multiline-input.tsx for testing.
- * 
+ *
  * Uses a positive heuristic based on key.name length rather than a brittle deny-list.
  * Special keys have descriptive multi-character names (like 'backspace', 'up', 'f1')
  * while regular printable characters either have no name or a single-character name.
  */
 function isPrintableCharacterKey(key: { name?: string }): boolean {
   const name = key.name
-  
+
   // No name = likely multi-byte input (Chinese, Japanese, Korean, etc.)
   if (!name) return true
-  
+
   // Single character name = regular ASCII printable (a, b, 1, $, etc.)
   if (name.length === 1) return true
-  
+
   // Special case: space key has name 'space' but is printable
   if (name === 'space') return true
-  
+
   // Multi-char name = special key (up, f1, backspace, etc.)
   return false
 }
@@ -600,9 +600,9 @@ describe('MultilineInput - newline keyboard shortcuts', () => {
     const ESC = '\x1b'
     return Boolean(
       key.option ||
-        (key.sequence?.length === 2 &&
-          key.sequence[0] === ESC &&
-          key.sequence[1] !== '['),
+      (key.sequence?.length === 2 &&
+        key.sequence[0] === ESC &&
+        key.sequence[1] !== '['),
     )
   }
 
@@ -630,10 +630,7 @@ describe('MultilineInput - newline keyboard shortcuts', () => {
     // So we detect it by checking for name === 'linefeed' rather than ctrl + j
     const isCtrlJ =
       lowerKeyName === 'linefeed' ||
-      (key.ctrl &&
-        !key.meta &&
-        !key.option &&
-        lowerKeyName === 'j')
+      (key.ctrl && !key.meta && !key.option && lowerKeyName === 'j')
 
     // Only handle Enter and Ctrl+J here
     if (!isEnterKey && !isCtrlJ) return 'ignore'
@@ -656,8 +653,7 @@ describe('MultilineInput - newline keyboard shortcuts', () => {
       !hasBackslashBeforeCursor
     const isShiftEnter =
       isEnterKey && (Boolean(key.shift) || key.sequence === '\n')
-    const isOptionEnter =
-      isEnterKey && (isAltLikeModifier || hasEscapePrefix)
+    const isOptionEnter = isEnterKey && (isAltLikeModifier || hasEscapePrefix)
     const isBackslashEnter = isEnterKey && hasBackslashBeforeCursor
 
     const shouldInsertNewline =

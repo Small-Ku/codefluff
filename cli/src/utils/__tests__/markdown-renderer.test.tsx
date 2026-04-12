@@ -330,7 +330,7 @@ codebuff "implement feature" --verbose
     const markdown = `| ID | This is a very long column header that should wrap |
 | -- | -------------------------------------------------- |
 | 1  | This cell has extremely long content that definitely exceeds the width |`
-    
+
     // Use a narrow codeBlockWidth to force wrapping
     const output = renderMarkdown(markdown, { codeBlockWidth: 50 })
     const nodes = flattenNodes(output)
@@ -365,7 +365,7 @@ codebuff "implement feature" --verbose
     const markdown = `| Name | Age |
 | ---- | --- |
 | John | 30  |`
-    
+
     // Use a wide codeBlockWidth so no wrapping is needed
     const output = renderMarkdown(markdown, { codeBlockWidth: 80 })
     const nodes = flattenNodes(output)
@@ -392,7 +392,7 @@ codebuff "implement feature" --verbose
     const markdown = `| Column One | Column Two | Column Three |
 | ---------- | ---------- | ------------ |
 | Value1     | Value2     | Value3       |`
-    
+
     // Very narrow width to force significant wrapping
     const output = renderMarkdown(markdown, { codeBlockWidth: 30 })
     const nodes = flattenNodes(output)

@@ -7,7 +7,6 @@ import { clearProposedContentForRun } from './tools/handlers/tool/proposed-conte
 import { executeToolCall } from './tools/tool-executor'
 import { parseTextWithToolCalls } from './util/parse-tool-calls-from-text'
 
-
 import type { FileProcessingState } from './tools/handlers/tool/write-file'
 import type { ExecuteToolCallParams } from './tools/tool-executor'
 import type { ParsedSegment } from './util/parse-tool-calls-from-text'
@@ -138,16 +137,16 @@ export async function runProgrammaticStep(
   if (!generator) {
     const createLogMethod =
       (level: 'debug' | 'info' | 'warn' | 'error') =>
-        (data: any, msg?: string) => {
-          logger[level](data, msg) // Log to backend
-          handleStepsLogChunk({
-            userInputId,
-            runId: agentState.runId ?? 'undefined',
-            level,
-            data,
-            message: msg,
-          })
-        }
+      (data: any, msg?: string) => {
+        logger[level](data, msg) // Log to backend
+        handleStepsLogChunk({
+          userInputId,
+          runId: agentState.runId ?? 'undefined',
+          level,
+          data,
+          message: msg,
+        })
+      }
 
     const streamingLogger = {
       debug: createLogMethod('debug'),
@@ -244,7 +243,7 @@ export async function runProgrammaticStep(
       if (!parseResult.success) {
         throw new Error(
           `Invalid yield value from handleSteps in agent ${template.id}: ${parseResult.error.message}. ` +
-          `Received: ${JSON.stringify(result.value)}`,
+            `Received: ${JSON.stringify(result.value)}`,
         )
       }
 
@@ -335,8 +334,9 @@ export async function runProgrammaticStep(
   } catch (error) {
     endTurn = true
 
-    const errorMessage = `Error executing handleSteps for agent ${template.id}: ${error instanceof Error ? error.message : 'Unknown error'
-      }`
+    const errorMessage = `Error executing handleSteps for agent ${template.id}: ${
+      error instanceof Error ? error.message : 'Unknown error'
+    }`
     logger.error(
       { error: getErrorObject(error), template: template.id },
       errorMessage,

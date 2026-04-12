@@ -8,12 +8,15 @@ import { TextAttributes } from '@opentui/core'
 import { useKeyboard } from '@opentui/react'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 
-
 import {
   AccordionQuestion,
   type AccordionAnswer,
 } from './components/accordion-question'
-import { getOptionLabel, KEYBOARD_HINTS, CUSTOM_OPTION_INDEX } from './constants'
+import {
+  getOptionLabel,
+  KEYBOARD_HINTS,
+  CUSTOM_OPTION_INDEX,
+} from './constants'
 import { useTheme } from '../../hooks/use-theme'
 import { useChatStore } from '../../state/chat-store'
 import { BORDER_CHARS } from '../../utils/ui-constants'
@@ -71,9 +74,9 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
   const [isTypingCustom, setIsTypingCustom] = useState<boolean>(false)
 
   // Track cursor position for "Custom" text input (per question)
-  const [customCursorPositions, setCustomCursorPositions] = useState<Map<number, number>>(
-    new Map(),
-  )
+  const [customCursorPositions, setCustomCursorPositions] = useState<
+    Map<number, number>
+  >(new Map())
 
   const setAnswerForQuestion = useCallback(
     (
@@ -90,13 +93,16 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
     [],
   )
 
-  const openQuestion = useCallback((questionIndex: number, optionIndex: number) => {
-    setExpandedIndex(questionIndex)
-    setFocusedQuestionIndex(questionIndex)
-    setFocusedOptionIndex(optionIndex)
-    setSubmitFocused(false)
-    setIsTypingCustom(false)
-  }, [])
+  const openQuestion = useCallback(
+    (questionIndex: number, optionIndex: number) => {
+      setExpandedIndex(questionIndex)
+      setFocusedQuestionIndex(questionIndex)
+      setFocusedOptionIndex(optionIndex)
+      setSubmitFocused(false)
+      setIsTypingCustom(false)
+    },
+    [],
+  )
 
   const focusSubmit = useCallback(
     (from?: { questionIndex: number; optionIndex: number }) => {
@@ -191,7 +197,7 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
               selectedIndex: optionIndex,
               selectedIndices: undefined,
               isCustom: false,
-              customText: currentAnswer?.customText,  // Preserve custom text when switching away
+              customText: currentAnswer?.customText, // Preserve custom text when switching away
             },
       )
 
@@ -212,7 +218,13 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
       setExpandedIndex(null)
       focusSubmit({ questionIndex, optionIndex })
     },
-    [questions, openQuestion, focusSubmit, setAnswerForQuestion, isTypingCustom],
+    [
+      questions,
+      openQuestion,
+      focusSubmit,
+      setAnswerForQuestion,
+      isTypingCustom,
+    ],
   )
 
   // Handle toggling an option (multi-select)
@@ -259,10 +271,7 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
   )
 
   const formatAnswer = useCallback(
-    (
-      question: AskUserQuestion,
-      answer: AccordionAnswer | undefined,
-    ) => {
+    (question: AskUserQuestion, answer: AccordionAnswer | undefined) => {
       if (!answer) {
         return { question: question.question, answer: 'Skipped' }
       }
@@ -280,7 +289,9 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
           ? (answer.customText ?? '').trim()
           : ''
 
-      const parts = customText ? [...selectedOptions, customText] : selectedOptions
+      const parts = customText
+        ? [...selectedOptions, customText]
+        : selectedOptions
       if (parts.length === 0) {
         return { question: question.question, answer: 'Skipped' }
       }
@@ -308,7 +319,10 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
       (key: KeyEvent) => {
         // Helper to prevent default behavior
         const preventDefault = () => {
-          if ('preventDefault' in key && typeof key.preventDefault === 'function') {
+          if (
+            'preventDefault' in key &&
+            typeof key.preventDefault === 'function'
+          ) {
             key.preventDefault()
           }
         }
@@ -332,13 +346,20 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
             setSubmitFocused(false)
             if (questions.length === 0) return
             if (lastFocusBeforeSubmit) {
-              openQuestion(lastFocusBeforeSubmit.questionIndex, lastFocusBeforeSubmit.optionIndex)
+              openQuestion(
+                lastFocusBeforeSubmit.questionIndex,
+                lastFocusBeforeSubmit.optionIndex,
+              )
             } else {
               openQuestion(questions.length - 1, 0)
             }
             return
           }
-          if (key.name === 'return' || key.name === 'enter' || key.name === 'space') {
+          if (
+            key.name === 'return' ||
+            key.name === 'enter' ||
+            key.name === 'space'
+          ) {
             preventDefault()
             handleSubmit()
             return
@@ -442,7 +463,11 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
           return
         }
 
-        if (key.name === 'return' || key.name === 'enter' || key.name === 'space') {
+        if (
+          key.name === 'return' ||
+          key.name === 'enter' ||
+          key.name === 'space'
+        ) {
           preventDefault()
 
           if (expandedIndex === null) {
@@ -497,7 +522,14 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
   return (
     <box style={{ flexDirection: 'column', padding: 0, width: '100%' }}>
       {/* Close button in top-right */}
-      <box style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 1, width: '100%' }}>
+      <box
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-end',
+          marginBottom: 1,
+          width: '100%',
+        }}
+      >
         <Button
           onClick={onSkip}
           style={{
@@ -532,7 +564,9 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
           onToggleOption={(optionIndex) =>
             handleToggleOption(index, optionIndex)
           }
-          onSetCustomText={(text, cursorPos) => handleSetCustomText(index, text, cursorPos)}
+          onSetCustomText={(text, cursorPos) =>
+            handleSetCustomText(index, text, cursorPos)
+          }
           onCustomSubmit={() => handleCustomSubmit(index)}
           customCursorPosition={customCursorPositions.get(index) ?? 0}
           focusedOptionIndex={
@@ -618,7 +652,10 @@ export const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({
             <text
               key={hint}
               wrapMode="none"
-              style={{ fg: theme.muted, marginRight: idx === KEYBOARD_HINTS.length - 1 ? 0 : 1 }}
+              style={{
+                fg: theme.muted,
+                marginRight: idx === KEYBOARD_HINTS.length - 1 ? 0 : 1,
+              }}
             >
               {hint}
             </text>

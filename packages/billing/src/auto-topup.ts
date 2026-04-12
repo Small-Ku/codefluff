@@ -117,7 +117,8 @@ export async function validateAutoTopupStatus(params: {
 
     // For non-validation errors (e.g. Stripe API issues), return blocked but don't disable the setting
     // The user's auto-topup will be retried on the next trigger
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
     return {
       blockedReason: `Unable to verify payment method status: ${errorMessage}`,
       validPaymentMethod: null,

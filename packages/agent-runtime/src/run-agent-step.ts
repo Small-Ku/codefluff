@@ -2,7 +2,12 @@ import { AnalyticsEvent } from '@codebuff/common/constants/analytics-events'
 import { supportsCacheControl } from '@codebuff/common/old-constants'
 import { TOOLS_WHICH_WONT_FORCE_NEXT_STEP } from '@codebuff/common/tools/constants'
 import { buildArray } from '@codebuff/common/util/array'
-import { AbortError, getErrorObject, isAbortError, parseApiErrorResponseBody } from '@codebuff/common/util/error'
+import {
+  AbortError,
+  getErrorObject,
+  isAbortError,
+  parseApiErrorResponseBody,
+} from '@codebuff/common/util/error'
 import { serializeCacheDebugCorrelation } from '@codebuff/common/util/cache-debug'
 import { systemMessage, userMessage } from '@codebuff/common/util/messages'
 import { APICallError, type ToolSet } from 'ai'
@@ -40,11 +45,12 @@ import type {
   FinishAgentRunFn,
   StartAgentRunFn,
 } from '@codebuff/common/types/contracts/database'
-import type { CacheDebugUsageData, PromptAiSdkFn } from '@codebuff/common/types/contracts/llm'
-import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type {
-  ParamsExcluding,
-} from '@codebuff/common/types/function-params'
+  CacheDebugUsageData,
+  PromptAiSdkFn,
+} from '@codebuff/common/types/contracts/llm'
+import type { Logger } from '@codebuff/common/types/contracts/logger'
+import type { ParamsExcluding } from '@codebuff/common/types/function-params'
 import type {
   Message,
   ToolMessage,
@@ -237,14 +243,14 @@ export const runAgentStep = async (
     ...expireMessages(agentState.messageHistory, 'agentStep'),
 
     stepPrompt &&
-    userMessage({
-      content: stepPrompt,
-      tags: ['STEP_PROMPT'],
+      userMessage({
+        content: stepPrompt,
+        tags: ['STEP_PROMPT'],
 
-      // James: Deprecate the below, only use tags, which are not prescriptive.
-      timeToLive: 'agentStep' as const,
-      keepDuringTruncation: true,
-    }),
+        // James: Deprecate the below, only use tags, which are not prescriptive.
+        timeToLive: 'agentStep' as const,
+        keepDuringTruncation: true,
+      }),
   )
 
   agentState.messageHistory = agentMessagesUntruncated
@@ -262,7 +268,9 @@ export const runAgentStep = async (
   const iterationNum = agentState.messageHistory.length
   const systemTokens = countTokensJson(system)
 
-  let cacheDebugCorrelation: ReturnType<typeof createCacheDebugSnapshot> | undefined
+  let cacheDebugCorrelation:
+    | ReturnType<typeof createCacheDebugSnapshot>
+    | undefined
   if (CACHE_DEBUG_FULL_LOGGING) {
     try {
       cacheDebugCorrelation = createCacheDebugSnapshot({
@@ -292,37 +300,35 @@ export const runAgentStep = async (
     }
   }
 
-  const onCacheDebugProviderRequestBuilt =
-    cacheDebugCorrelation
-      ? ({
+  const onCacheDebugProviderRequestBuilt = cacheDebugCorrelation
+    ? ({
+        provider,
+        rawBody,
+        normalizedBody,
+      }: {
+        provider: string
+        rawBody: unknown
+        normalizedBody?: unknown
+      }) => {
+        enrichCacheDebugSnapshotWithProviderRequest({
+          correlation: cacheDebugCorrelation,
           provider,
           rawBody,
-          normalizedBody,
-        }: {
-          provider: string
-          rawBody: unknown
-          normalizedBody?: unknown
-        }) => {
-          enrichCacheDebugSnapshotWithProviderRequest({
-            correlation: cacheDebugCorrelation,
-            provider,
-            rawBody,
-            normalized: normalizedBody ?? rawBody,
-            logger,
-          })
-        }
-      : undefined
+          normalized: normalizedBody ?? rawBody,
+          logger,
+        })
+      }
+    : undefined
 
-  const onCacheDebugUsageReceived =
-    cacheDebugCorrelation
-      ? (usage: CacheDebugUsageData) => {
-          enrichCacheDebugSnapshotWithUsage({
-            correlation: cacheDebugCorrelation,
-            usage,
-            logger,
-          })
-        }
-      : undefined
+  const onCacheDebugUsageReceived = cacheDebugCorrelation
+    ? (usage: CacheDebugUsageData) => {
+        enrichCacheDebugSnapshotWithUsage({
+          correlation: cacheDebugCorrelation,
+          usage,
+          logger,
+        })
+      }
+    : undefined
 
   logger.debug(
     {
@@ -519,7 +525,9 @@ export const runAgentStep = async (
       shouldEndTurn,
       duration: Date.now() - startTime,
       fullResponse,
-      finalMessageHistoryWithToolResults: agentState.messageHistory.concat().reverse(),
+      finalMessageHistoryWithToolResults: agentState.messageHistory
+        .concat()
+        .reverse(),
       toolCalls,
       toolResults,
       agentContext,
@@ -722,27 +730,27 @@ export async function loopAgentSteps(
   const agentTools = useParentTools
     ? {}
     : await buildAgentToolSet({
-      ...params,
-      spawnableAgents: agentTemplate.spawnableAgents,
-      agentTemplates: localAgentTemplates,
-    })
+        ...params,
+        spawnableAgents: agentTemplate.spawnableAgents,
+        agentTemplates: localAgentTemplates,
+      })
 
   const tools = useParentTools
     ? parentTools
     : await getToolSet({
-      toolNames: agentTemplate.toolNames,
-      additionalToolDefinitions: async () => {
-        if (!cachedAdditionalToolDefinitions) {
-          cachedAdditionalToolDefinitions = await additionalToolDefinitions({
-            ...params,
-            agentTemplate,
-          })
-        }
-        return cachedAdditionalToolDefinitions
-      },
-      agentTools,
-      skills: fileContext.skills ?? {},
-    })
+        toolNames: agentTemplate.toolNames,
+        additionalToolDefinitions: async () => {
+          if (!cachedAdditionalToolDefinitions) {
+            cachedAdditionalToolDefinitions = await additionalToolDefinitions({
+              ...params,
+              agentTemplate,
+            })
+          }
+          return cachedAdditionalToolDefinitions
+        },
+        agentTools,
+        skills: fileContext.skills ?? {},
+      })
 
   const hasUserMessage = Boolean(
     prompt ||
@@ -765,25 +773,25 @@ export async function loopAgentSteps(
         keepDuringTruncation: true,
       },
       prompt &&
-      prompt in additionalSystemPrompts &&
-      userMessage(
-        withSystemInstructionTags(
-          additionalSystemPrompts[
-          prompt as keyof typeof additionalSystemPrompts
-          ],
+        prompt in additionalSystemPrompts &&
+        userMessage(
+          withSystemInstructionTags(
+            additionalSystemPrompts[
+              prompt as keyof typeof additionalSystemPrompts
+            ],
+          ),
         ),
-      ),
       ,
     ],
 
     instructionsPrompt &&
-    userMessage({
-      content: instructionsPrompt,
-      tags: ['INSTRUCTIONS_PROMPT'],
+      userMessage({
+        content: instructionsPrompt,
+        tags: ['INSTRUCTIONS_PROMPT'],
 
-      // James: Deprecate the below, only use tags, which are not prescriptive.
-      keepLastTags: ['INSTRUCTIONS_PROMPT'],
-    }),
+        // James: Deprecate the below, only use tags, which are not prescriptive.
+        keepLastTags: ['INSTRUCTIONS_PROMPT'],
+      }),
   )
 
   // Convert tools to a serializable format for context-pruner token counting
@@ -837,9 +845,9 @@ export async function loopAgentSteps(
       const messagesWithStepPrompt = buildArray(
         ...currentAgentState.messageHistory,
         stepPrompt &&
-        userMessage({
-          content: stepPrompt,
-        }),
+          userMessage({
+            content: stepPrompt,
+          }),
       )
 
       // Check context token count via Anthropic API
@@ -1032,7 +1040,6 @@ export async function loopAgentSteps(
           runId,
           totalSteps,
           messageHistory: currentAgentState.messageHistory,
-
         },
         'Agent run cancelled by user (abort error)',
       )
@@ -1111,7 +1118,9 @@ export async function loopAgentSteps(
       agentState: currentAgentState,
       output: {
         type: 'error',
-        message: hasServerMessage ? errorMessage : 'Agent run error: ' + errorMessage,
+        message: hasServerMessage
+          ? errorMessage
+          : 'Agent run error: ' + errorMessage,
         ...(statusCode !== undefined && { statusCode }),
         ...(errorCode !== undefined && { error: errorCode }),
       },

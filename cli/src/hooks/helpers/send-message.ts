@@ -46,7 +46,9 @@ export type ResetEarlyReturnStateParams = {
   isQueuePausedRef?: MutableRefObject<boolean>
 }
 
-export const resetEarlyReturnState = (params: ResetEarlyReturnStateParams): void => {
+export const resetEarlyReturnState = (
+  params: ResetEarlyReturnStateParams,
+): void => {
   const {
     setCanProcessQueue,
     updateChainInProgress,
@@ -177,11 +179,12 @@ export const prepareUserMessage = async (params: {
     }
   }
 
-  const { attachments: imageAttachments, messageContent } = await processImagesForMessage({
-    content: finalContent,
-    pendingImages,
-    projectRoot: getProjectRoot(),
-  })
+  const { attachments: imageAttachments, messageContent } =
+    await processImagesForMessage({
+      content: finalContent,
+      pendingImages,
+      projectRoot: getProjectRoot(),
+    })
 
   const shouldInsertDivider =
     lastMessageMode === null || lastMessageMode !== agentMode
@@ -205,7 +208,12 @@ export const prepareUserMessage = async (params: {
     }))
 
   // Pass original content (not finalContent) for display, but finalContent goes to agent
-  const userMessage = getUserMessage(content, imageAttachments, textAttachmentsForMessage, fileAttachmentsForMessage)
+  const userMessage = getUserMessage(
+    content,
+    imageAttachments,
+    textAttachmentsForMessage,
+    fileAttachmentsForMessage,
+  )
   const userMessageId = userMessage.id
   if (imageAttachments.length > 0) {
     userMessage.attachments = imageAttachments
@@ -372,7 +380,6 @@ export const handleRunCompletion = (params: {
   }
 
   if (output.type === 'error') {
-
     if (isOutOfCreditsError(output)) {
       updater.setError(OUT_OF_CREDITS_MESSAGE)
       useChatStore.getState().setInputMode('outOfCredits')

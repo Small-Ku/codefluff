@@ -50,7 +50,9 @@ describe('runProgrammaticStep', () => {
   let mockTemplate: AgentTemplate
   let mockAgentState: AgentState
   let mockParams: ParamsOf<typeof runProgrammaticStep>
-  let executeToolCallSpy: ReturnType<typeof spyOn<typeof toolExecutor, 'executeToolCall'>>
+  let executeToolCallSpy: ReturnType<
+    typeof spyOn<typeof toolExecutor, 'executeToolCall'>
+  >
   let agentRuntimeImpl: AgentRuntimeDeps & AgentRuntimeScopedDeps
 
   beforeEach(() => {
@@ -814,7 +816,10 @@ describe('runProgrammaticStep', () => {
       expect(result.endTurn).toBe(true)
       expect(result.agentState.output?.error).toContain('Generator error')
       expect(
-        responseChunks.some((chunk) => typeof chunk === 'string' && chunk.includes('Generator error')),
+        responseChunks.some(
+          (chunk) =>
+            typeof chunk === 'string' && chunk.includes('Generator error'),
+        ),
       ).toBe(true)
     })
 
@@ -888,7 +893,9 @@ describe('runProgrammaticStep', () => {
       const result = await runProgrammaticStep({
         ...mockParams,
         template: schemaTemplate as unknown as AgentTemplate,
-        localAgentTemplates: { 'test-agent': schemaTemplate as unknown as AgentTemplate },
+        localAgentTemplates: {
+          'test-agent': schemaTemplate as unknown as AgentTemplate,
+        },
       })
 
       expect(result.endTurn).toBe(true)
@@ -938,7 +945,9 @@ describe('runProgrammaticStep', () => {
       const result = await runProgrammaticStep({
         ...mockParams,
         template: schemaTemplate as unknown as AgentTemplate,
-        localAgentTemplates: { 'test-agent': schemaTemplate as unknown as AgentTemplate },
+        localAgentTemplates: {
+          'test-agent': schemaTemplate as unknown as AgentTemplate,
+        },
       })
 
       // Should end turn (validation may fail but execution continues)

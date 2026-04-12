@@ -141,7 +141,10 @@ export async function redeemReferralCode(referralCode: string, userId: string) {
       // 2. Process and grant credits for both users (one-time, never expires)
       const grantPromises = []
 
-      const grantForUser = (user: { id: string; role: 'referrer' | 'referred' }) =>
+      const grantForUser = (user: {
+        id: string
+        role: 'referrer' | 'referred'
+      }) =>
         grantCreditOperation({
           userId: user.id,
           amount: CREDITS_REFERRAL_BONUS,

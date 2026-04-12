@@ -1,7 +1,11 @@
 import * as fs from 'fs'
 import path from 'path'
 
-import { getCurrentChatDir, getMostRecentChatDir, getProjectDataDir } from '../project-files'
+import {
+  getCurrentChatDir,
+  getMostRecentChatDir,
+  getProjectDataDir,
+} from '../project-files'
 import { logger } from './logger'
 
 import type { ChatMessage, ContentBlock } from '../types/chat'
@@ -21,9 +25,9 @@ type SavedChatState = {
  */
 function extractToggleIds(blocks: ContentBlock[] | undefined): string[] {
   if (!blocks) return []
-  
+
   const ids: string[] = []
-  
+
   for (const block of blocks) {
     if (block.type === 'agent') {
       ids.push(block.agentId)
@@ -33,7 +37,7 @@ function extractToggleIds(blocks: ContentBlock[] | undefined): string[] {
       ids.push(block.toolCallId)
     }
   }
-  
+
   return ids
 }
 
@@ -42,11 +46,11 @@ function extractToggleIds(blocks: ContentBlock[] | undefined): string[] {
  */
 export function getAllToggleIdsFromMessages(messages: ChatMessage[]): string[] {
   const ids: string[] = []
-  
+
   for (const message of messages) {
     ids.push(...extractToggleIds(message.blocks))
   }
-  
+
   return ids
 }
 
@@ -69,11 +73,14 @@ export function getChatMessagesPath(): string {
 /**
  * Save both the RunState and ChatMessage[] to disk
  */
-export function saveChatState(runState: RunState, messages: ChatMessage[]): void {
+export function saveChatState(
+  runState: RunState,
+  messages: ChatMessage[],
+): void {
   try {
     const runStatePath = getRunStatePath()
     const messagesPath = getChatMessagesPath()
-    
+
     fs.writeFileSync(runStatePath, JSON.stringify(runState, null, 2))
     fs.writeFileSync(messagesPath, JSON.stringify(messages, null, 2))
   } catch (error) {
@@ -92,14 +99,19 @@ export function saveChatState(runState: RunState, messages: ChatMessage[]): void
  * recently modified chat directory is used.
  * Returns null if no previous chat exists or files can't be parsed.
  */
-export function loadMostRecentChatState(chatId?: string): SavedChatState | null {
+export function loadMostRecentChatState(
+  chatId?: string,
+): SavedChatState | null {
   try {
     let chatDir: string | null = null
 
     if (chatId && chatId.trim().length > 0) {
       const baseDir = path.join(getProjectDataDir(), 'chats')
       const candidateDir = path.join(baseDir, chatId.trim())
-      if (fs.existsSync(candidateDir) && fs.statSync(candidateDir).isDirectory()) {
+      if (
+        fs.existsSync(candidateDir) &&
+        fs.statSync(candidateDir).isDirectory()
+      ) {
         chatDir = candidateDir
       } else {
         logger.debug(
@@ -138,7 +150,12 @@ export function loadMostRecentChatState(chatId?: string): SavedChatState | null 
     const resolvedChatId = path.basename(chatDir)
 
     logger.info(
-      { runStatePath, messagesPath, messageCount: messages.length, chatId: resolvedChatId },
+      {
+        runStatePath,
+        messagesPath,
+        messageCount: messages.length,
+        chatId: resolvedChatId,
+      },
       'Loaded chat state from chat directory',
     )
 
@@ -161,18 +178,15 @@ export function clearChatState(): void {
   try {
     const runStatePath = getRunStatePath()
     const messagesPath = getChatMessagesPath()
-    
+
     if (fs.existsSync(runStatePath)) {
       fs.unlinkSync(runStatePath)
     }
     if (fs.existsSync(messagesPath)) {
       fs.unlinkSync(messagesPath)
     }
-    
-    logger.debug(
-      { runStatePath, messagesPath },
-      'Cleared chat state files'
-    )
+
+    logger.debug({ runStatePath, messagesPath }, 'Cleared chat state files')
   } catch (error) {
     logger.error(
       {

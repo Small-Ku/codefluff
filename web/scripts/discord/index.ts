@@ -18,7 +18,11 @@ let discordClient: Client | null = null
 let isShuttingDown = false
 
 // Diagnostic logging helper with timestamp and process info
-function log(level: 'info' | 'error' | 'warn', message: string, data?: Record<string, unknown>): void {
+function log(
+  level: 'info' | 'error' | 'warn',
+  message: string,
+  data?: Record<string, unknown>,
+): void {
   const timestamp = new Date().toISOString()
   const pid = process.pid
   const hostname = os.hostname()
@@ -93,7 +97,10 @@ async function main() {
   while (!isShuttingDown) {
     attemptCount++
     const elapsedSec = Math.round((Date.now() - startTime) / 1000)
-    log('info', `Attempting to acquire Discord bot lock`, { attemptCount, elapsedSeconds: elapsedSec })
+    log('info', `Attempting to acquire Discord bot lock`, {
+      attemptCount,
+      elapsedSeconds: elapsedSec,
+    })
 
     let acquired = false
     let handle: LockHandle | null = null
@@ -103,7 +110,10 @@ async function main() {
       acquired = result.acquired
       handle = result.handle
       consecutiveErrors = 0 // Reset on successful DB connection
-      log('info', 'Lock acquisition attempt completed', { acquired, consecutiveErrors })
+      log('info', 'Lock acquisition attempt completed', {
+        acquired,
+        consecutiveErrors,
+      })
     } catch (error) {
       consecutiveErrors++
       log('error', `Error acquiring lock`, {
@@ -180,6 +190,9 @@ async function main() {
 }
 
 main().catch(async (error) => {
-  log('error', 'Fatal error in Discord bot script', { error: String(error), stack: (error as Error).stack })
+  log('error', 'Fatal error in Discord bot script', {
+    error: String(error),
+    stack: (error as Error).stack,
+  })
   await shutdown(1)
 })

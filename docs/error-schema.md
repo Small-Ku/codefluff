@@ -16,13 +16,13 @@ The server returns JSON error responses with an HTTP status code. There are two 
 
 Used for:
 
-| Status | Example message |
-|--------|----------------|
-| 400 | `"Invalid JSON in request body"` |
-| 400 | `"No runId found in request body"` |
-| 401 | `"Unauthorized"` |
-| 401 | `"Invalid Codebuff API key"` |
-| 402 | `"Out of credits. Please add credits at https://codebuff.com/usage. Your free credits reset in 3 hours."` |
+| Status | Example message                                                                                           |
+| ------ | --------------------------------------------------------------------------------------------------------- |
+| 400    | `"Invalid JSON in request body"`                                                                          |
+| 400    | `"No runId found in request body"`                                                                        |
+| 401    | `"Unauthorized"`                                                                                          |
+| 401    | `"Invalid Codebuff API key"`                                                                              |
+| 402    | `"Out of credits. Please add credits at https://codebuff.com/usage. Your free credits reset in 3 hours."` |
 
 ### Typed errors (error code + message)
 
@@ -32,11 +32,11 @@ Used for:
 
 Used for errors that the client needs to identify programmatically:
 
-| Status | `error` code | Example `message` |
-|--------|-------------|-------------------|
-| 403 | `account_suspended` | `"Your account has been suspended due to billing issues. Please contact support@codebuff.com to resolve this."` |
-| 403 | `free_mode_unavailable` | `"Free mode is not available in your country."` (Freebuff: `"Freebuff is not available in your country."`) |
-| 429 | `rate_limit_exceeded` | `"Subscription weekly limit reached. Your limit resets in 2 hours. Enable 'Continue with credits' in the CLI to use a-la-carte credits."` |
+| Status | `error` code            | Example `message`                                                                                                                         |
+| ------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 403    | `account_suspended`     | `"Your account has been suspended due to billing issues. Please contact support@codebuff.com to resolve this."`                           |
+| 403    | `free_mode_unavailable` | `"Free mode is not available in your country."` (Freebuff: `"Freebuff is not available in your country."`)                                |
+| 429    | `rate_limit_exceeded`   | `"Subscription weekly limit reached. Your limit resets in 2 hours. Enable 'Continue with credits' in the CLI to use a-la-carte credits."` |
 
 ### Catch-all server error
 
@@ -122,7 +122,7 @@ z.object({
   type: z.literal('error'),
   message: z.string(),
   statusCode: z.number().optional(),
-  error: z.string().optional(),       // machine-readable error code
+  error: z.string().optional(), // machine-readable error code
 })
 ```
 
@@ -177,6 +177,7 @@ For all other errors, the raw `output.message` is displayed in the `UserErrorBan
 To add a new error type that the CLI can identify and handle specially:
 
 1. **Server** (`web/src/app/api/v1/chat/completions/_post.ts`): Return a typed error:
+
    ```typescript
    return NextResponse.json(
      { error: 'your_error_code', message: 'User-friendly message.' },
@@ -185,6 +186,7 @@ To add a new error type that the CLI can identify and handle specially:
    ```
 
 2. **CLI error detection** (`cli/src/utils/error-handling.ts`): Add a checker:
+
    ```typescript
    export const isYourError = (error: unknown): boolean => {
      if (

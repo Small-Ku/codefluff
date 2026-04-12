@@ -305,7 +305,8 @@ export function OnboardingFlow({
 
           {/* What is Codebuff blurb */}
           <p className="text-muted-foreground">
-            Get free bonus credits for Codebuff, a powerful AI coding agent. Takes only seconds!
+            Get free bonus credits for Codebuff, a powerful AI coding agent.
+            Takes only seconds!
           </p>
         </motion.div>
 
@@ -360,7 +361,9 @@ export function OnboardingFlow({
             <div className="flex items-start gap-4">
               <StepBadge number={2} />
               <div className="flex-1 space-y-4">
-                <h3 className="text-lg font-semibold">Run Codebuff in your project</h3>
+                <h3 className="text-lg font-semibold">
+                  Run Codebuff in your project
+                </h3>
                 <p className="text-muted-foreground text-sm">
                   Navigate to your project folder and run codebuff.
                 </p>
@@ -393,7 +396,9 @@ export function OnboardingFlow({
                   </h3>
                   <p className="text-muted-foreground text-sm">
                     Finally, login to the CLI and paste in the code below.
-                    {referrerName ? ` ${referrerName} will earn credits too!` : '.'}
+                    {referrerName
+                      ? ` ${referrerName} will earn credits too!`
+                      : '.'}
                   </p>
                   <div className="bg-acid-matrix/20 rounded-lg p-6">
                     <div className="bg-zinc-800 rounded-md p-3 flex items-center justify-between">
@@ -406,7 +411,8 @@ export function OnboardingFlow({
                       <EnhancedCopyButton value={referralCode} />
                     </div>
                     <p className="text-green-200/80 text-sm mt-2">
-                      Paste this code in the input box and hit Enter to claim your bonus 🎁 
+                      Paste this code in the input box and hit Enter to claim
+                      your bonus 🎁
                     </p>
                   </div>
                 </div>

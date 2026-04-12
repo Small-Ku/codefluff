@@ -8,7 +8,11 @@ interface HighlightTextProps {
   icon?: string
 }
 
-export function HighlightText({ text, isLight, icon = '⚡' }: HighlightTextProps) {
+export function HighlightText({
+  text,
+  isLight,
+  icon = '⚡',
+}: HighlightTextProps) {
   return (
     <motion.div
       className={cn(

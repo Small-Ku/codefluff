@@ -8,8 +8,6 @@ import type { JudgingResult } from './judge'
 import type { FinalCheckOutput } from './types'
 import type { AgentDefinition, CodebuffClient } from '@codebuff/sdk'
 
-
-
 export interface AgentTraceData {
   agentId: string
   commitSha: string

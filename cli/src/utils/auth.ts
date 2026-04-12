@@ -8,7 +8,6 @@ import { getCliEnv } from '../env'
 import { getCiEnv } from '@codebuff/common/env-ci'
 import { z } from 'zod'
 
-
 import { getApiClient, setApiClientAuthToken } from './codebuff-api'
 import { logger } from './logger'
 

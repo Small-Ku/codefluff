@@ -2,10 +2,7 @@
 
 import { SUBSCRIPTION_DISPLAY_NAME } from '@codebuff/common/constants/subscription-plans'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  AlertTriangle,
-  Loader2,
-} from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 
@@ -26,11 +23,23 @@ import type {
 const formatDaysHours = (dateStr: string): string =>
   formatTimeUntil(dateStr, { fallback: '0h' })
 
-const clampPercent = (n: number): number => Math.min(100, Math.max(0, Math.round(n)))
+const clampPercent = (n: number): number =>
+  Math.min(100, Math.max(0, Math.round(n)))
 
-function ProgressBar({ percentAvailable, label }: { percentAvailable: number; label: string }) {
+function ProgressBar({
+  percentAvailable,
+  label,
+}: {
+  percentAvailable: number
+  label: string
+}) {
   const percent = Math.min(100, Math.max(0, Math.round(percentAvailable)))
-  const colorClass = percent <= 0 ? 'bg-red-500' : percent <= 25 ? 'bg-yellow-500' : 'bg-green-500'
+  const colorClass =
+    percent <= 0
+      ? 'bg-red-500'
+      : percent <= 25
+        ? 'bg-yellow-500'
+        : 'bg-green-500'
   return (
     <div
       role="progressbar"
@@ -42,7 +51,10 @@ function ProgressBar({ percentAvailable, label }: { percentAvailable: number; la
       className="h-3 w-full rounded-full bg-muted overflow-hidden"
     >
       <div
-        className={cn('h-full rounded-full transition-all duration-500', colorClass)}
+        className={cn(
+          'h-full rounded-full transition-all duration-500',
+          colorClass,
+        )}
         style={{ width: `${percent}%` }}
       />
     </div>
@@ -62,14 +74,18 @@ function SubscriptionActive({ data }: { data: ActiveSubscriptionResponse }) {
         body: JSON.stringify({ fallbackToALaCarte: newValue }),
       })
       if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: 'Failed to update preference' }))
+        const error = await res
+          .json()
+          .catch(() => ({ error: 'Failed to update preference' }))
         throw new Error(error.error || 'Failed to update preference')
       }
       return newValue
     },
     onSuccess: (newValue) => {
-      queryClient.setQueryData(['subscription'], (old: SubscriptionResponse | undefined) =>
-        old ? { ...old, fallbackToALaCarte: newValue } : old
+      queryClient.setQueryData(
+        ['subscription'],
+        (old: SubscriptionResponse | undefined) =>
+          old ? { ...old, fallbackToALaCarte: newValue } : old,
       )
     },
     onError: (err: Error) => {
@@ -86,7 +102,9 @@ function SubscriptionActive({ data }: { data: ActiveSubscriptionResponse }) {
   })
 
   const blockRemainingPercent =
-    rateLimit.blockLimit != null && rateLimit.blockUsed != null && rateLimit.blockLimit > 0
+    rateLimit.blockLimit != null &&
+    rateLimit.blockUsed != null &&
+    rateLimit.blockLimit > 0
       ? clampPercent(100 - (rateLimit.blockUsed / rateLimit.blockLimit) * 100)
       : 100
   const weeklyRemainingPercent = clampPercent(100 - rateLimit.weeklyPercentUsed)
@@ -136,7 +154,9 @@ function SubscriptionActive({ data }: { data: ActiveSubscriptionResponse }) {
               {rateLimit.blockResetsAt && (
                 <>
                   <span>·</span>
-                  <span>Resets in {formatDaysHours(rateLimit.blockResetsAt)}</span>
+                  <span>
+                    Resets in {formatDaysHours(rateLimit.blockResetsAt)}
+                  </span>
                 </>
               )}
             </div>
@@ -160,10 +180,15 @@ function SubscriptionActive({ data }: { data: ActiveSubscriptionResponse }) {
           <Switch
             id="always-use-credits"
             checked={fallbackToALaCarte}
-            onCheckedChange={(checked) => updatePreferenceMutation.mutate(checked)}
+            onCheckedChange={(checked) =>
+              updatePreferenceMutation.mutate(checked)
+            }
             disabled={updatePreferenceMutation.isPending}
           />
-          <Label htmlFor="always-use-credits" className="text-sm cursor-pointer">
+          <Label
+            htmlFor="always-use-credits"
+            className="text-sm cursor-pointer"
+          >
             Automatically use credits when limit is reached
           </Label>
         </div>
@@ -189,7 +214,10 @@ function SubscriptionCta() {
             </p>
           </div>
         </div>
-        <Button asChild className="bg-acid-green text-black hover:bg-acid-green/90 shadow-[0_0_20px_rgba(0,255,149,0.2)] hover:shadow-[0_0_30px_rgba(0,255,149,0.3)] transition-all duration-200">
+        <Button
+          asChild
+          className="bg-acid-green text-black hover:bg-acid-green/90 shadow-[0_0_20px_rgba(0,255,149,0.2)] hover:shadow-[0_0_30px_rgba(0,255,149,0.3)] transition-all duration-200"
+        >
           <Link href="/subscribe">Learn More</Link>
         </Button>
       </CardContent>

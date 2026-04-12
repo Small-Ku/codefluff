@@ -48,7 +48,9 @@ describe('referral helpers', () => {
           from: () => ({
             where: () => ({
               limit: () =>
-                Promise.resolve(alreadyUsedReferral ? [{ id: 'existing' }] : []),
+                Promise.resolve(
+                  alreadyUsedReferral ? [{ id: 'existing' }] : [],
+                ),
             }),
           }),
         }),

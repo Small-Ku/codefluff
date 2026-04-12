@@ -461,7 +461,11 @@ describe('convertToResponsesApiInput', () => {
       { role: 'tool', toolCallId: 'call-1', content: 'File contents here' },
     ])
     expect(result).toEqual([
-      { type: 'function_call_output', call_id: 'call-1', output: 'File contents here' },
+      {
+        type: 'function_call_output',
+        call_id: 'call-1',
+        output: 'File contents here',
+      },
     ])
   })
 
@@ -470,7 +474,11 @@ describe('convertToResponsesApiInput', () => {
       { role: 'tool', content: 'Some output' },
     ])
     expect(result).toEqual([
-      { type: 'function_call_output', call_id: 'unknown', output: 'Some output' },
+      {
+        type: 'function_call_output',
+        call_id: 'unknown',
+        output: 'Some output',
+      },
     ])
   })
 
@@ -616,7 +624,10 @@ describe('convertToResponsesApiInput', () => {
           role: 'user',
           content: [
             { type: 'input_text', text: 'Describe this' },
-            { type: 'input_image', image_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg' },
+            {
+              type: 'input_image',
+              image_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg',
+            },
           ],
         },
       ])
@@ -639,7 +650,10 @@ describe('convertToResponsesApiInput', () => {
           type: 'message',
           role: 'user',
           content: [
-            { type: 'input_image', image_url: 'data:image/png;base64,base64data' },
+            {
+              type: 'input_image',
+              image_url: 'data:image/png;base64,base64data',
+            },
           ],
         },
       ])
@@ -663,7 +677,10 @@ describe('convertToResponsesApiInput', () => {
           type: 'message',
           role: 'user',
           content: [
-            { type: 'input_image', image_url: 'data:image/jpeg;base64,/9j/4AAQ' },
+            {
+              type: 'input_image',
+              image_url: 'data:image/jpeg;base64,/9j/4AAQ',
+            },
           ],
         },
       ])
@@ -720,10 +737,7 @@ describe('convertToResponsesApiInput', () => {
       const result = convertToResponsesApiInput([
         {
           role: 'user',
-          content: [
-            { type: 'text', text: 'Hello' },
-            { type: 'image' },
-          ],
+          content: [{ type: 'text', text: 'Hello' }, { type: 'image' }],
         },
       ])
       expect(result).toEqual([
@@ -750,10 +764,7 @@ describe('convertToResponsesApiInput', () => {
       const result = convertToResponsesApiInput([
         {
           role: 'user',
-          content: [
-            { type: 'text', text: 'Just text' },
-            { type: 'image' },
-          ],
+          content: [{ type: 'text', text: 'Just text' }, { type: 'image' }],
         },
       ])
       expect(result).toEqual([
@@ -815,10 +826,16 @@ describe('countTokensViaOpenAI', () => {
 
   function createMockFetch(inputTokens: number) {
     return (async () =>
-      new Response(JSON.stringify({ object: 'response.input_tokens', input_tokens: inputTokens }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })) as unknown as typeof globalThis.fetch
+      new Response(
+        JSON.stringify({
+          object: 'response.input_tokens',
+          input_tokens: inputTokens,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )) as unknown as typeof globalThis.fetch
   }
 
   it('returns token count from OpenAI API', async () => {

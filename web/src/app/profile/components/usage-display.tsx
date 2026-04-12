@@ -271,8 +271,17 @@ export const UsageDisplay = ({
 
   // Group credits by expiration type (excluding organization)
   // referral_legacy and subscription renew monthly, referral (one-time) never expires
-  const expiringTypes: FilteredGrantType[] = ['free', 'referral_legacy', 'subscription']
-  const nonExpiringTypes: FilteredGrantType[] = ['referral', 'admin', 'purchase', 'ad']
+  const expiringTypes: FilteredGrantType[] = [
+    'free',
+    'referral_legacy',
+    'subscription',
+  ]
+  const nonExpiringTypes: FilteredGrantType[] = [
+    'referral',
+    'admin',
+    'purchase',
+    'ad',
+  ]
 
   const expiringTotal = expiringTypes.reduce(
     (acc, type) => acc + (principals?.[type] || breakdown[type] || 0),

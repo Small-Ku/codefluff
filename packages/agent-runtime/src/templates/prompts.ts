@@ -59,7 +59,6 @@ export function buildAgentToolInputSchema(
     )
 }
 
-
 /**
  * Builds AI SDK tool definitions for spawnable agents.
  * These tools allow the model to call agents directly as tool calls.

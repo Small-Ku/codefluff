@@ -3,14 +3,7 @@ import os from 'os'
 import path from 'path'
 
 import { validateAgents } from '@codebuff/sdk'
-import {
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-  mock,
-} from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 
 // Mock the logger to prevent analytics initialization errors in tests
 mock.module('../../utils/logger', () => ({
@@ -408,7 +401,9 @@ describe('Local Agent Integration', () => {
     expect(uiAgent!.id).toBe('test-ui-agent')
     // File path should be populated for "Open file" UI links
     // Use realpathSync to normalize paths (on macOS, /var is a symlink to /private/var)
-    expect(realpathSync(uiAgent!.filePath!)).toBe(realpathSync(path.join(agentsDir, 'ui-agent.ts')))
+    expect(realpathSync(uiAgent!.filePath!)).toBe(
+      realpathSync(path.join(agentsDir, 'ui-agent.ts')),
+    )
   })
 
   test('loadLocalAgents sorts agents alphabetically by displayName', async () => {
@@ -735,7 +730,9 @@ describe('Local Agent Integration', () => {
     const data = getLoadedAgentsData()
     expect(data).not.toBeNull()
     expect(data!.agents.some((a) => a.id === 'test-announce-agent')).toBe(true)
-    expect(data!.agents.some((a) => a.displayName === 'Announce Test Agent')).toBe(true)
+    expect(
+      data!.agents.some((a) => a.displayName === 'Announce Test Agent'),
+    ).toBe(true)
   })
 
   // ============================================================================

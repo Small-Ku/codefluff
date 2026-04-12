@@ -5,7 +5,6 @@ import { getInitialSessionState } from '@codebuff/common/types/session-state'
 import { promptSuccess, success } from '@codebuff/common/util/error'
 import {
   afterEach,
-
   beforeEach,
   describe,
   expect,

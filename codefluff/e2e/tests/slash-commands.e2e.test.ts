@@ -56,7 +56,10 @@ describe('Codefluff: Slash Commands', () => {
     'slash command menu does not show removed commands',
     async () => {
       const binary = requireCodefluffBinary()
-      session = await CodefluffSession.start(binary, { waitSeconds: 5, height: SESSION_HEIGHT })
+      session = await CodefluffSession.start(binary, {
+        waitSeconds: 5,
+        height: SESSION_HEIGHT,
+      })
 
       // Type "/" to trigger the slash command autocomplete menu
       await session.sendKey('/')
@@ -75,7 +78,10 @@ describe('Codefluff: Slash Commands', () => {
     'slash command menu shows kept commands',
     async () => {
       const binary = requireCodefluffBinary()
-      session = await CodefluffSession.start(binary, { waitSeconds: 5, height: SESSION_HEIGHT })
+      session = await CodefluffSession.start(binary, {
+        waitSeconds: 5,
+        height: SESSION_HEIGHT,
+      })
 
       // Type "/" to trigger the slash command autocomplete menu
       await session.sendKey('/')

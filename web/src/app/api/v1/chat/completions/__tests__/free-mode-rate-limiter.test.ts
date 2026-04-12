@@ -218,7 +218,8 @@ describe('free-mode-rate-limiter', () => {
     it('returns correct retryAfterMs for the violated window', () => {
       makeRequests('user-1', FREE_MODE_RATE_LIMITS.PER_MINUTE)
       // makeRequests advanced time by (PER_MINUTE - 1) * (SECOND_MS + 1)
-      const elapsedInMakeRequests = (FREE_MODE_RATE_LIMITS.PER_MINUTE - 1) * (1 * SECOND_MS + 1)
+      const elapsedInMakeRequests =
+        (FREE_MODE_RATE_LIMITS.PER_MINUTE - 1) * (1 * SECOND_MS + 1)
 
       // Advance past the 1-second window, then a bit more
       const additionalAdvance = 2 * SECOND_MS

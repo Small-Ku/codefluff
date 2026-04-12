@@ -5,10 +5,7 @@
  * Handles partial tags at chunk boundaries using a stateful approach.
  */
 
-import {
-  toolNameParam,
-  toolXmlName,
-} from '@codebuff/common/tools/constants'
+import { toolNameParam, toolXmlName } from '@codebuff/common/tools/constants'
 
 // Use flexible tag matching without requiring specific newlines
 const startToolTag = `<${toolXmlName}>`

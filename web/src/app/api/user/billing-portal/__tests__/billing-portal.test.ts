@@ -4,7 +4,11 @@ import type { Logger } from '@codebuff/common/types/contracts/logger'
 
 import { postBillingPortal } from '../_post'
 
-import type { CreateBillingPortalSessionFn, GetSessionFn, Session } from '../_post'
+import type {
+  CreateBillingPortalSessionFn,
+  GetSessionFn,
+  Session,
+} from '../_post'
 
 const createMockLogger = (errorFn = mock(() => {})): Logger => ({
   error: errorFn,
@@ -13,10 +17,13 @@ const createMockLogger = (errorFn = mock(() => {})): Logger => ({
   debug: mock(() => {}),
 })
 
-const createMockGetSession = (session: Session): GetSessionFn => mock(() => Promise.resolve(session))
+const createMockGetSession = (session: Session): GetSessionFn =>
+  mock(() => Promise.resolve(session))
 
 const createMockCreateBillingPortalSession = (
-  result: { url: string } | Error = { url: 'https://billing.stripe.com/session/test_123' }
+  result: { url: string } | Error = {
+    url: 'https://billing.stripe.com/session/test_123',
+  },
 ): CreateBillingPortalSessionFn => {
   if (result instanceof Error) {
     return mock(() => Promise.reject(result))
@@ -56,7 +63,9 @@ describe('/api/user/billing-portal POST endpoint', () => {
 
     test('returns 401 when session.user.id is missing', async () => {
       const response = await postBillingPortal({
-        getSession: createMockGetSession({ user: { stripe_customer_id: 'cus_123' } as any }),
+        getSession: createMockGetSession({
+          user: { stripe_customer_id: 'cus_123' } as any,
+        }),
         createBillingPortalSession: createMockCreateBillingPortalSession(),
         logger: createMockLogger(),
         returnUrl,
@@ -107,7 +116,9 @@ describe('/api/user/billing-portal POST endpoint', () => {
         getSession: createMockGetSession({
           user: { id: 'user-123', stripe_customer_id: 'cus_test_123' },
         }),
-        createBillingPortalSession: createMockCreateBillingPortalSession({ url: expectedUrl }),
+        createBillingPortalSession: createMockCreateBillingPortalSession({
+          url: expectedUrl,
+        }),
         logger: createMockLogger(),
         returnUrl,
       })
@@ -143,7 +154,7 @@ describe('/api/user/billing-portal POST endpoint', () => {
           user: { id: 'user-123', stripe_customer_id: 'cus_test_123' },
         }),
         createBillingPortalSession: createMockCreateBillingPortalSession(
-          new Error('Stripe API error')
+          new Error('Stripe API error'),
         ),
         logger: createMockLogger(),
         returnUrl,
@@ -162,7 +173,8 @@ describe('/api/user/billing-portal POST endpoint', () => {
         getSession: createMockGetSession({
           user: { id: 'user-123', stripe_customer_id: 'cus_test_123' },
         }),
-        createBillingPortalSession: createMockCreateBillingPortalSession(testError),
+        createBillingPortalSession:
+          createMockCreateBillingPortalSession(testError),
         logger: createMockLogger(mockLoggerError),
         returnUrl,
       })
@@ -170,7 +182,7 @@ describe('/api/user/billing-portal POST endpoint', () => {
       expect(mockLoggerError).toHaveBeenCalledTimes(1)
       expect(mockLoggerError).toHaveBeenCalledWith(
         { userId: 'user-123', error: testError },
-        'Failed to create billing portal session'
+        'Failed to create billing portal session',
       )
     })
   })

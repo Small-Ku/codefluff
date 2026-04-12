@@ -1,8 +1,6 @@
 import { getWebsiteUrl } from '@codebuff/sdk'
 
-import type {
-  PublishAgentsResponse,
-} from '@codebuff/common/types/api/agents/publish'
+import type { PublishAgentsResponse } from '@codebuff/common/types/api/agents/publish'
 import type { FeedbackRequest } from '@codebuff/common/schemas/feedback'
 
 /**
@@ -13,7 +11,12 @@ import type { FeedbackRequest } from '@codebuff/common/schemas/feedback'
  */
 export type ApiResponse<T> =
   | { ok: true; status: number; data?: T }
-  | { ok: false; status: number; error?: string; errorData?: Record<string, unknown> }
+  | {
+      ok: false
+      status: number
+      error?: string
+      errorData?: Record<string, unknown>
+    }
 
 // ============================================================================
 // Type-safe endpoint request/response types
@@ -380,7 +383,12 @@ export function createCodebuffApiClient(
           }
         }
 
-        return { ok: false, status: response.status, error: errorMessage, errorData: errorData as Record<string, unknown> | undefined }
+        return {
+          ok: false,
+          status: response.status,
+          error: errorMessage,
+          errorData: errorData as Record<string, unknown> | undefined,
+        }
       } catch (error) {
         clearTimeout(timeoutId)
         lastError = error
@@ -403,9 +411,7 @@ export function createCodebuffApiClient(
 
         // Don't retry, throw the error with URL context
         if (error instanceof Error) {
-          const enhancedError = new Error(
-            `${error.message} (${method} ${url})`,
-          )
+          const enhancedError = new Error(`${error.message} (${method} ${url})`)
           enhancedError.name = error.name
           enhancedError.cause = error
           throw enhancedError
@@ -486,14 +492,19 @@ export function createCodebuffApiClient(
     loginStatus(
       req: LoginStatusRequest,
     ): Promise<ApiResponse<LoginStatusResponse>> {
-      return request<LoginStatusResponse>('GET', '/api/auth/cli/status', undefined, {
-        query: {
-          fingerprintId: req.fingerprintId,
-          fingerprintHash: req.fingerprintHash,
-          expiresAt: req.expiresAt,
+      return request<LoginStatusResponse>(
+        'GET',
+        '/api/auth/cli/status',
+        undefined,
+        {
+          query: {
+            fingerprintId: req.fingerprintId,
+            fingerprintHash: req.fingerprintHash,
+            expiresAt: req.expiresAt,
+          },
+          includeAuth: false,
         },
-        includeAuth: false,
-      })
+      )
     },
 
     referral(req: ReferralRequest): Promise<ApiResponse<ReferralResponse>> {

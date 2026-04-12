@@ -98,7 +98,9 @@ async function queryUsageStats() {
   console.log(`Total requests (7d):     ${row.total_requests}`)
 }
 
-queryUsageStats().then(() => process.exit(0)).catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+queryUsageStats()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })

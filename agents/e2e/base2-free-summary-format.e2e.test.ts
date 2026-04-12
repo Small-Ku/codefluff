@@ -262,9 +262,7 @@ describe('Base2-Free Summary Format Compliance', () => {
         }
       }
 
-      console.log(
-        `Running ${NUM_PARALLEL_RUNS} parallel runs of base2-free...`,
-      )
+      console.log(`Running ${NUM_PARALLEL_RUNS} parallel runs of base2-free...`)
       const results = await Promise.all(
         Array.from({ length: NUM_PARALLEL_RUNS }, (_, i) => runOnce(i)),
       )
@@ -284,9 +282,7 @@ describe('Base2-Free Summary Format Compliance', () => {
         console.log(
           `Run ${result.runIndex}: ${hasImitation ? 'FAILED (imitated summary format)' : 'PASSED'}`,
         )
-        console.log(
-          `  Tool calls made: ${result.hadToolCalls ? 'YES' : 'NO'}`,
-        )
+        console.log(`  Tool calls made: ${result.hadToolCalls ? 'YES' : 'NO'}`)
         if (result.imitationMatches.length > 0) {
           console.log(`  Imitation matches:`)
           for (const match of result.imitationMatches) {
@@ -309,7 +305,9 @@ describe('Base2-Free Summary Format Compliance', () => {
 
       // Clean up temp directories
       for (const dir of tmpDirs) {
-        await fs.promises.rm(dir, { recursive: true, force: true }).catch(() => {})
+        await fs.promises
+          .rm(dir, { recursive: true, force: true })
+          .catch(() => {})
       }
 
       // Guard against vacuous pass (all runs errored)

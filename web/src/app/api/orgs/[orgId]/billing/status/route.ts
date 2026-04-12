@@ -19,7 +19,10 @@ interface RouteParams {
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   if (!ORG_BILLING_ENABLED) {
-    return NextResponse.json({ error: 'Organization billing is temporarily disabled' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'Organization billing is temporarily disabled' },
+      { status: 503 },
+    )
   }
 
   const session = await getServerSession(authOptions)
@@ -74,7 +77,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     // Get subscription details if it exists
     let subscriptionDetails = null
 
-    if (organization.stripe_customer_id && organization.stripe_subscription_id) {
+    if (
+      organization.stripe_customer_id &&
+      organization.stripe_subscription_id
+    ) {
       try {
         const subscription = await stripeServer.subscriptions.retrieve(
           organization.stripe_subscription_id,
@@ -87,7 +93,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           cancel_at_period_end: subscription.cancel_at_period_end,
         }
       } catch (error) {
-        logger.warn({ orgId, error }, 'Failed to get Stripe subscription details')
+        logger.warn(
+          { orgId, error },
+          'Failed to get Stripe subscription details',
+        )
       }
     }
 

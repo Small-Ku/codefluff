@@ -159,7 +159,7 @@ function discoverSkillsFromDirectory(
 /**
  * Gets the default skills directories to search.
  * Searches both .claude/skills and .agents/skills for Claude Code compatibility.
- * 
+ *
  * Order (later overrides earlier):
  * - ~/.claude/skills/ (global Claude-compatible)
  * - ~/.agents/skills/ (global Codebuff)
@@ -218,7 +218,9 @@ export type LoadSkillsOptions = {
  * console.log(gitReleaseSkill.description)
  * ```
  */
-export async function loadSkills(options: LoadSkillsOptions = {}): Promise<SkillsMap> {
+export async function loadSkills(
+  options: LoadSkillsOptions = {},
+): Promise<SkillsMap> {
   const { cwd = process.cwd(), skillsPath, verbose = false } = options
 
   const skills: SkillsMap = {}
@@ -233,5 +235,3 @@ export async function loadSkills(options: LoadSkillsOptions = {}): Promise<Skill
 
   return skills
 }
-
-

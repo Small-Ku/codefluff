@@ -3,7 +3,6 @@ import { INVALID_AUTH_TOKEN_MESSAGE } from '@codebuff/common/old-constants'
 import { NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 
-
 import type { TrackEventFn } from '@codebuff/common/types/contracts/analytics'
 import type {
   GetOrganizationUsageResponseFn,

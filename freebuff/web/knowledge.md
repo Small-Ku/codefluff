@@ -28,6 +28,7 @@ Runs on port 3002 by default (to avoid conflicts with Codebuff web on 3000).
 ## Environment
 
 Same env vars as the main Codebuff web app. In production, deploy with:
+
 - `NEXT_PUBLIC_CODEBUFF_APP_URL=https://freebuff.com`
 - `NEXTAUTH_URL=https://freebuff.com`
 - Same DB credentials as Codebuff

@@ -10,7 +10,6 @@ import {
 } from '@codebuff/sdk'
 import { describe, expect, it } from 'bun:test'
 
-
 import type { ToolCallPart } from '@codebuff/common/types/messages/content-part'
 
 /**

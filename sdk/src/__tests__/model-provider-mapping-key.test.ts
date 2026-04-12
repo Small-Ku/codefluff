@@ -31,11 +31,17 @@ describe('Codefluff model mapping prefers agentMappingKey', () => {
 
     const modelProvider = await import('../impl/model-provider')
 
-    const resolved = modelProvider.resolveCodefluffModelDebug('normal', 'basher')
+    const resolved = modelProvider.resolveCodefluffModelDebug(
+      'normal',
+      'basher',
+    )
     expect(resolved.decision).toBe('agent-specific')
     expect(resolved.resolvedModel).toBe('hachimi/gpt-5.1-codex-mini')
 
-    const baseResolved = modelProvider.resolveCodefluffModelDebug('normal', 'csBc6tqOAm0')
+    const baseResolved = modelProvider.resolveCodefluffModelDebug(
+      'normal',
+      'csBc6tqOAm0',
+    )
     expect(baseResolved.decision).toBe('base')
     expect(baseResolved.resolvedModel).toBe('google/gemma-4-26b-a4b-it')
   })

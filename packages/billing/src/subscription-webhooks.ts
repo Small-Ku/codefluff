@@ -16,22 +16,27 @@ import { expireActiveBlockGrants, handleSubscribe } from './subscription'
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 import type Stripe from 'stripe'
 
-type SubscriptionStatus = (typeof schema.subscriptionStatusEnum.enumValues)[number]
+type SubscriptionStatus =
+  (typeof schema.subscriptionStatusEnum.enumValues)[number]
 
 /**
  * Maps a Stripe subscription status to our local enum.
  */
-function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
-  const validStatuses: readonly string[] = schema.subscriptionStatusEnum.enumValues
+function mapStripeStatus(
+  status: Stripe.Subscription.Status,
+): SubscriptionStatus {
+  const validStatuses: readonly string[] =
+    schema.subscriptionStatusEnum.enumValues
   if (validStatuses.includes(status)) return status as SubscriptionStatus
   return 'incomplete'
 }
 
-export const { getTierFromPriceId, getPriceIdFromTier } = createSubscriptionPriceMappings({
-  100: env.STRIPE_SUBSCRIPTION_100_PRICE_ID,
-  200: env.STRIPE_SUBSCRIPTION_200_PRICE_ID,
-  500: env.STRIPE_SUBSCRIPTION_500_PRICE_ID,
-})
+export const { getTierFromPriceId, getPriceIdFromTier } =
+  createSubscriptionPriceMappings({
+    100: env.STRIPE_SUBSCRIPTION_100_PRICE_ID,
+    200: env.STRIPE_SUBSCRIPTION_200_PRICE_ID,
+    500: env.STRIPE_SUBSCRIPTION_500_PRICE_ID,
+  })
 
 // ---------------------------------------------------------------------------
 // invoice.paid
@@ -141,9 +146,7 @@ export async function handleSubscriptionInvoicePaid(params: {
         stripe_price_id: priceId,
         tier,
         scheduled_tier: null,
-        billing_period_start: new Date(
-          stripeSub.current_period_start * 1000,
-        ),
+        billing_period_start: new Date(stripeSub.current_period_start * 1000),
         billing_period_end: new Date(stripeSub.current_period_end * 1000),
         cancel_at_period_end: stripeSub.cancel_at_period_end,
       },
@@ -436,7 +439,11 @@ export async function handleSubscriptionScheduleCreatedOrUpdated(params: {
   // We need at least 2 phases to have a pending change; 1 phase means no scheduled change.
   if (!schedule.phases || schedule.phases.length < 2) {
     logger.debug(
-      { scheduleId: schedule.id, subscriptionId, phases: schedule.phases?.length },
+      {
+        scheduleId: schedule.id,
+        subscriptionId,
+        phases: schedule.phases?.length,
+      },
       'Subscription schedule has fewer than 2 phases — no scheduled change',
     )
     return
@@ -445,9 +452,10 @@ export async function handleSubscriptionScheduleCreatedOrUpdated(params: {
   // Extract the scheduled tier from phase 1 (the upcoming change)
   const nextPhase = schedule.phases[1]
   const scheduledPriceId = nextPhase?.items?.[0]?.price
-  const priceId = typeof scheduledPriceId === 'string'
-    ? scheduledPriceId
-    : scheduledPriceId?.id
+  const priceId =
+    typeof scheduledPriceId === 'string'
+      ? scheduledPriceId
+      : scheduledPriceId?.id
 
   if (!priceId) {
     logger.warn(

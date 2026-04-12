@@ -366,17 +366,25 @@ const updateSpawnAgentBlocks = (
       return block
     }
 
-    if (block.spawnToolCallId === toolCallId && block.spawnIndex !== undefined && block.blocks) {
+    if (
+      block.spawnToolCallId === toolCallId &&
+      block.spawnIndex !== undefined &&
+      block.blocks
+    ) {
       const result = results[block.spawnIndex]
 
       if (result?.value) {
-        const { content, hasError } = extractSpawnAgentResultContent(result.value)
+        const { content, hasError } = extractSpawnAgentResultContent(
+          result.value,
+        )
         // Preserve streamed content (agents like basher stream their output)
         const hasStreamedContent = block.blocks.length > 0
         if (hasError || content || hasStreamedContent) {
           return {
             ...block,
-            blocks: hasStreamedContent ? block.blocks : [{ type: 'text', content } as ContentBlock],
+            blocks: hasStreamedContent
+              ? block.blocks
+              : [{ type: 'text', content } as ContentBlock],
             status: hasError ? ('failed' as const) : ('complete' as const),
           }
         }
@@ -385,7 +393,11 @@ const updateSpawnAgentBlocks = (
 
     // Recursively process nested agent blocks
     if (block.blocks?.length) {
-      const updatedNestedBlocks = updateSpawnAgentBlocks(block.blocks, toolCallId, results)
+      const updatedNestedBlocks = updateSpawnAgentBlocks(
+        block.blocks,
+        toolCallId,
+        results,
+      )
       if (updatedNestedBlocks !== block.blocks) {
         return { ...block, blocks: updatedNestedBlocks }
       }
@@ -424,7 +436,8 @@ const handleToolResult = (
   )
 
   const firstOutput = event.output?.[0]
-  const firstOutputValue = firstOutput && 'value' in firstOutput ? firstOutput.value : undefined
+  const firstOutputValue =
+    firstOutput && 'value' in firstOutput ? firstOutput.value : undefined
   const isSpawnAgentsResult =
     Array.isArray(firstOutputValue) &&
     firstOutputValue.some((v: any) => v?.agentName || v?.agentType)

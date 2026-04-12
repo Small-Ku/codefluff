@@ -42,7 +42,9 @@ export const isCodefluffModelResolutionDebugEnabledFromEnv = (): boolean => {
   return raw === '1' || raw.toLowerCase() === 'true'
 }
 
-export const getCodefluffModelResolutionDebugFilePathFromEnv = (): string | null => {
+export const getCodefluffModelResolutionDebugFilePathFromEnv = ():
+  | string
+  | null => {
   const raw = process.env.CODEFLUFF_MODEL_RESOLUTION_DEBUG_FILE
   if (!raw) return null
   const trimmed = raw.trim()

@@ -11,12 +11,10 @@ import {
   spyOn,
 } from 'bun:test'
 
-
 import { getFiles } from '../tools/read-files'
 
 import type { CodebuffFileSystem } from '@codebuff/common/types/filesystem'
 import type { PathLike } from 'node:fs'
-
 
 // Helper to create a mock filesystem
 function createMockFs(config: {
@@ -75,9 +73,10 @@ describe('getFiles', () => {
 
   beforeEach(() => {
     // Default: no files are ignored
-    isFileIgnoredSpy = spyOn(projectFileTree, 'isFileIgnored').mockResolvedValue(
-      false,
-    )
+    isFileIgnoredSpy = spyOn(
+      projectFileTree,
+      'isFileIgnored',
+    ).mockResolvedValue(false)
   })
 
   afterEach(() => {
@@ -186,8 +185,8 @@ describe('getFiles', () => {
   })
 
   describe('file too large', () => {
-    test('should truncate files over 100k chars to 1k chars with message', async () => {
-      const largeContent = 'x'.repeat(101_000) // 101k chars - over limit
+    test('should truncate files over 100k chars to first 100k chars with message', async () => {
+      const largeContent = 'x'.repeat(100_001) + 'y'.repeat(1000) // over limit
       const mockFs = createMockFs({
         files: {
           '/project/large.bin': {
@@ -203,11 +202,13 @@ describe('getFiles', () => {
         fs: mockFs,
       })
 
-      // Should contain first 1k chars
-      expect(result['large.bin']).toContain('x'.repeat(1000))
+      // Should contain first 100k chars
+      expect(result['large.bin']).toContain('x'.repeat(100_000))
+      // Should NOT contain content beyond the limit
+      expect(result['large.bin']).not.toContain('y')
       // Should contain truncation message
       expect(result['large.bin']).toContain('FILE_TOO_LARGE')
-      expect(result['large.bin']).toContain('101,000 chars')
+      expect(result['large.bin']).toContain('101,001 chars')
     })
 
     test('should read files at exactly 100k chars', async () => {
@@ -318,9 +319,7 @@ describe('getFiles', () => {
 
     test('should handle mix of ignored and non-ignored files', async () => {
       // First call returns false (not ignored), second returns true (ignored)
-      isFileIgnoredSpy
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true)
+      isFileIgnoredSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
       const mockFs = createMockFs({
         files: {
@@ -391,7 +390,10 @@ describe('getFiles', () => {
       const mockFs = createMockFs({
         files: {},
         errors: {
-          '/project/broken.ts': { code: 'EACCES', message: 'Permission denied' },
+          '/project/broken.ts': {
+            code: 'EACCES',
+            message: 'Permission denied',
+          },
         },
       })
 

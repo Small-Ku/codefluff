@@ -36,17 +36,17 @@ const providerKeySchema = z.union([
 
 // Per-model configuration
 const modelConfigSchema = z.object({
- // Extra body parameters for this specific model (e.g., Nvidia NIM chat_template_kwargs)
- extraBody: z.record(z.string(), z.unknown()).optional(),
- // Maximum number of tokens to generate for this model
- max_tokens: z.number().int().positive().optional(),
- // Temperature (0-2 range, AI SDK default is 1)
- temperature: z.number().min(0).max(2).optional(),
- // Top P (0-1 range, AI SDK default is 1)
- top_p: z.number().min(0).max(1).optional(),
- // Top K (-1 to disable, or positive integer for active filtering)
- // -1 disables top_k ( Anthropic default), 0+ uses top_k tokens
- top_k: z.number().int().min(-1).optional(),
+  // Extra body parameters for this specific model (e.g., Nvidia NIM chat_template_kwargs)
+  extraBody: z.record(z.string(), z.unknown()).optional(),
+  // Maximum number of tokens to generate for this model
+  max_tokens: z.number().int().positive().optional(),
+  // Temperature (0-2 range, AI SDK default is 1)
+  temperature: z.number().min(0).max(2).optional(),
+  // Top P (0-1 range, AI SDK default is 1)
+  top_p: z.number().min(0).max(1).optional(),
+  // Top K (-1 to disable, or positive integer for active filtering)
+  // -1 disables top_k ( Anthropic default), 0+ uses top_k tokens
+  top_k: z.number().int().min(-1).optional(),
 })
 
 const modeMappingSchema = z
@@ -254,12 +254,12 @@ export function getModelTemperature(model: string): number | undefined {
 
 /** Returns top_p for a specific model */
 export function getModelTopP(model: string): number | undefined {
- const config = getModelConfig(model)
- return config?.top_p
+  const config = getModelConfig(model)
+  return config?.top_p
 }
 
 /** Returns top_k for a specific model */
 export function getModelTopK(model: string): number | undefined {
- const config = getModelConfig(model)
- return config?.top_k
+  const config = getModelConfig(model)
+  return config?.top_k
 }

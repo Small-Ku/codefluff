@@ -5,7 +5,6 @@ import path from 'path'
 import type { Runner, RunnerResult, AgentStep } from './runner'
 import type { CodebuffClient } from '@codebuff/sdk'
 
-
 const DEBUG_ERROR = true
 
 export class CodebuffRunner implements Runner {

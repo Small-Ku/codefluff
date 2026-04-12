@@ -103,15 +103,16 @@ export async function mainPrompt(
 
     agentType = agentId
   } else {
-    agentType = (
-      {
-        ask: AgentTemplateTypes.ask,
-        free: AgentTemplateTypes.base_free,
-        normal: AgentTemplateTypes.base,
-        max: AgentTemplateTypes.base_max,
-        experimental: 'base2',
-      } satisfies Record<CostMode, AgentTemplateType>
-    )[costMode ?? 'normal'] ?? 'base2'
+    agentType =
+      (
+        {
+          ask: AgentTemplateTypes.ask,
+          free: AgentTemplateTypes.base_free,
+          normal: AgentTemplateTypes.base,
+          max: AgentTemplateTypes.base_max,
+          experimental: 'base2',
+        } satisfies Record<CostMode, AgentTemplateType>
+      )[costMode ?? 'normal'] ?? 'base2'
   }
 
   mainAgentState.agentType = agentType

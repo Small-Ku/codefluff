@@ -36,7 +36,9 @@ export function startCodefluffMockServer(): Promise<MockServerHandle> {
 
       if (method === 'GET' && url.startsWith('/api/v1/me')) {
         res.writeHead(200)
-        res.end(JSON.stringify({ id: 'codefluff-local', email: 'local@codefluff' }))
+        res.end(
+          JSON.stringify({ id: 'codefluff-local', email: 'local@codefluff' }),
+        )
         return
       }
 
@@ -71,7 +73,7 @@ export function startCodefluffMockServer(): Promise<MockServerHandle> {
       // Needed to be 200 for the codefluff-cli to work with the mock server, like fetching LLM response.
       console.warn(
         `[codefluff-mock-server] Unhandled endpoint: ${method} ${url} — returning 200. ` +
-        `If codefluff behavior is incorrect, this endpoint may need a proper mock handler.`,
+          `If codefluff behavior is incorrect, this endpoint may need a proper mock handler.`,
       )
       res.writeHead(200)
       res.end(JSON.stringify({}))

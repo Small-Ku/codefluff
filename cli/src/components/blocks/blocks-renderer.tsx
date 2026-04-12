@@ -7,7 +7,10 @@ import { ImplementorGroup } from './implementor-row'
 import { SingleBlock } from './single-block'
 import { ThinkingBlock } from './thinking-block'
 import { ToolBlockGroup } from './tool-block-group'
-import { processBlocks, type BlockProcessorHandlers } from '../../utils/block-processor'
+import {
+  processBlocks,
+  type BlockProcessorHandlers,
+} from '../../utils/block-processor'
 
 import type { ContentBlock } from '../../types/chat'
 import type { MarkdownPalette } from '../../utils/markdown-renderer'
@@ -100,7 +103,10 @@ export const BlocksRenderer = memo(
           const p = propsRef.current
           return (
             <ThinkingBlock
-              key={reasoningBlocks[0]?.thinkingId ?? `${p.messageId}-thinking-${startIndex}`}
+              key={
+                reasoningBlocks[0]?.thinkingId ??
+                `${p.messageId}-thinking-${startIndex}`
+              }
               blocks={reasoningBlocks}
               onToggleCollapsed={p.onToggleCollapsed}
               availableWidth={p.availableWidth}
@@ -196,7 +202,9 @@ export const BlocksRenderer = memo(
               onBuildMax={p.onBuildMax}
               onBuildFree={p.onBuildFree}
               isLastMessage={p.isLastMessage}
-              contentToCopy={index === p.lastTextBlockIndex ? p.contentToCopy : undefined}
+              contentToCopy={
+                index === p.lastTextBlockIndex ? p.contentToCopy : undefined
+              }
             />
           )
         },

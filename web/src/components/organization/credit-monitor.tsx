@@ -288,7 +288,7 @@ export function CreditMonitor({
                     </p>
                   </div>
                 </div>
-{/* BILLING_DISABLED: Button removed while auto-topup banner is hidden */}
+                {/* BILLING_DISABLED: Button removed while auto-topup banner is hidden */}
               </div>
             </div>
           )}

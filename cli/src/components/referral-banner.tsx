@@ -45,7 +45,9 @@ export const ReferralBanner = () => {
   })
 
   const referralCode = referralData?.referralCode ?? null
-  const referralLink = referralCode ? `${getWebsiteUrl()}/referrals/${referralCode}` : null
+  const referralLink = referralCode
+    ? `${getWebsiteUrl()}/referrals/${referralCode}`
+    : null
   const referralCount = referralData?.referrals.length ?? null
   const referralLimit = referralData?.referralLimit ?? null
 
@@ -68,7 +70,9 @@ export const ReferralBanner = () => {
       border={['top', 'bottom', 'left', 'right']}
       onClose={() => setInputMode('default')}
     >
-      <box style={{ flexDirection: 'column', gap: 0, flexGrow: 1, marginRight: 3 }}>
+      <box
+        style={{ flexDirection: 'column', gap: 0, flexGrow: 1, marginRight: 3 }}
+      >
         <text style={{ fg: theme.foreground }}>
           {`Share this link with friends and you'll both earn ${CREDITS_REFERRAL_BONUS} credits`}
         </text>

@@ -2,7 +2,6 @@ import { API_KEY_ENV_VAR } from '@codebuff/common/old-constants'
 import { CodebuffClient } from '@codebuff/sdk'
 import { describe, expect, it } from 'bun:test'
 
-
 import type { PrintModeEvent } from '@codebuff/common/types/print-mode'
 
 /**
@@ -82,7 +81,7 @@ console.log(subtract(5, 3))
       // Check both output and sessionState since the agent output structure varies
       const sessionStr = JSON.stringify(run.sessionState)
       const allContent = (outputStr + sessionStr).toLowerCase()
-      
+
       const relevantTerms = [
         'multiply',
         'product',

@@ -6,12 +6,15 @@ import { RECONNECTION_MESSAGE_DURATION_MS } from '@codebuff/sdk'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 
-
 import { authQueryKeys } from './use-auth-query'
 import { useConnectionStatus } from './use-connection-status'
 import { useElapsedTime } from './use-elapsed-time'
 import { useExitHandler } from './use-exit-handler'
-import { useMessageQueue, type QueuedMessage, type StreamStatus } from './use-message-queue'
+import {
+  useMessageQueue,
+  type QueuedMessage,
+  type StreamStatus,
+} from './use-message-queue'
 import { useQueueControls } from './use-queue-controls'
 import { useQueueUi } from './use-queue-ui'
 import { useTimeout } from './use-timeout'
@@ -26,7 +29,11 @@ import type { MutableRefObject } from 'react'
 export interface UseChatStreamingOptions {
   agentMode: AgentMode
   inputValue: string
-  setInputValue: (value: { text: string; cursorPosition: number; lastEditDueToNav: boolean }) => void
+  setInputValue: (value: {
+    text: string
+    cursorPosition: number
+    lastEditDueToNav: boolean
+  }) => void
   terminalWidth: number
   separatorWidth: number
   isChainInProgressRef: MutableRefObject<boolean>

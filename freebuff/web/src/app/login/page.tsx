@@ -36,7 +36,9 @@ export default async function LoginPage({
             <div className="w-full sm:w-1/2 md:w-1/3">
               <Card className="border-zinc-800/80 bg-zinc-950/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-white">Auth code expired</CardTitle>
+                  <CardTitle className="text-white">
+                    Auth code expired
+                  </CardTitle>
                   <CardDescription>
                     Please try starting Freebuff in your terminal again.
                   </CardDescription>

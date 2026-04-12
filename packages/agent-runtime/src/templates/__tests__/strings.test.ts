@@ -123,8 +123,12 @@ describe('getAgentPrompt', () => {
 
       expect(result).toBeDefined()
       expect(result).toContain('You can spawn the following agents:')
-      expect(result).toContain('- file-picker: Spawn to find relevant files in a codebase')
-      expect(result).toContain('- code-searcher: Mechanically runs multiple code search queries')
+      expect(result).toContain(
+        '- file-picker: Spawn to find relevant files in a codebase',
+      )
+      expect(result).toContain(
+        '- code-searcher: Mechanically runs multiple code search queries',
+      )
     })
 
     test('includes only agent name when spawnerPrompt is not defined', async () => {

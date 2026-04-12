@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 
-
 import { shouldUnclaim } from './_helpers'
 
 import type { LogoutDb } from './_db'

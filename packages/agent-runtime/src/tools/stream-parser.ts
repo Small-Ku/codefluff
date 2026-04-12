@@ -2,10 +2,7 @@ import { toolNames } from '@codebuff/common/tools/constants'
 import { buildArray } from '@codebuff/common/util/array'
 import { AbortError } from '@codebuff/common/util/error'
 import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger'
-import {
-  assistantMessage,
-  userMessage,
-} from '@codebuff/common/util/messages'
+import { assistantMessage, userMessage } from '@codebuff/common/util/messages'
 import { generateCompactId } from '@codebuff/common/util/string'
 
 import { processStreamWithTools } from '../tool-stream-parser'
@@ -65,10 +62,7 @@ export async function processStream(
   > &
     ParamsExcluding<
       typeof processStreamWithTools,
-      | 'processors'
-      | 'defaultProcessor'
-      | 'loggerOptions'
-      | 'executeXmlToolCall'
+      'processors' | 'defaultProcessor' | 'loggerOptions' | 'executeXmlToolCall'
     >,
 ) {
   const {
@@ -89,7 +83,8 @@ export async function processStream(
   const toolResults: ToolMessage[] = []
   const toolResultsToAddToMessageHistory: ToolMessage[] = []
   const toolCalls: (CodebuffToolCall | CustomToolCall)[] = []
-  const toolCallsToAddToMessageHistory: (CodebuffToolCall | CustomToolCall)[] = []
+  const toolCallsToAddToMessageHistory: (CodebuffToolCall | CustomToolCall)[] =
+    []
   const assistantMessages: Message[] = []
   let hadToolCallError = false
   const errorMessages: Message[] = []
@@ -131,7 +126,7 @@ export async function processStream(
   function createToolExecutionCallback(toolName: string, isXmlMode: boolean) {
     const responseHandler = createResponseHandler()
     return {
-      onTagStart: () => { },
+      onTagStart: () => {},
       onTagEnd: async (_: string, input: Record<string, string>) => {
         if (signal.aborted) {
           return
@@ -142,10 +137,10 @@ export async function processStream(
         // Check if this is an agent tool call that should be transformed to spawn_agents
         const transformed = !isNativeTool
           ? tryTransformAgentToolCall({
-            toolName,
-            input,
-            spawnableAgents: agentTemplate.spawnableAgents,
-          })
+              toolName,
+              input,
+              spawnableAgents: agentTemplate.spawnableAgents,
+            })
           : null
 
         // Read previousToolCallFinished at execution time to ensure proper sequential chaining.
@@ -236,7 +231,7 @@ export async function processStream(
         const chunkType = typeof chunk === 'string' ? 'string' : chunk.type
         logDebug('DEBUG', `onResponseChunk received ${chunkType}`, {})
       }
-      
+
       if (typeof chunk !== 'string' && chunk.type === 'text') {
         if (chunk.text) {
           assistantMessages.push(assistantMessage(chunk.text))
@@ -379,15 +374,16 @@ export async function processStream(
     const completedToolCallIds = new Set(
       toolResultsToAddToMessageHistory.map((r) => r.toolCallId),
     )
-    const filteredToolCalls =
-      toolCallsToAddToMessageHistory.filter((tc) =>
-        completedToolCallIds.has(tc.toolCallId),
-      )
+    const filteredToolCalls = toolCallsToAddToMessageHistory.filter((tc) =>
+      completedToolCallIds.has(tc.toolCallId),
+    )
 
     agentState.messageHistory = buildArray<Message>([
       ...agentState.messageHistory,
       ...assistantMessages,
-      ...filteredToolCalls.map((toolCall) => assistantMessage({ ...toolCall, type: 'tool-call' })),
+      ...filteredToolCalls.map((toolCall) =>
+        assistantMessage({ ...toolCall, type: 'tool-call' }),
+      ),
       ...toolResultsToAddToMessageHistory,
       ...errorMessages,
     ])

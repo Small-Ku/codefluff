@@ -4,7 +4,6 @@ import { env } from '@codebuff/internal/env'
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
-
 import {
   checkFingerprintConflict,
   checkReplayAttack,
@@ -17,7 +16,6 @@ import { authOptions } from '../api/auth/[...nextauth]/auth-options'
 import CardWithBeams from '@/components/card-with-beams'
 import { OnboardClientWrapper } from '@/components/onboard/onboard-client-wrapper'
 import { logger } from '@/util/logger'
-
 
 interface PageProps {
   searchParams?: Promise<{

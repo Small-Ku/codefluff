@@ -55,8 +55,12 @@ export default function OrganizationPage() {
 
   // Use the custom hook for organization data
   // BILLING_DISABLED: billingStatus renamed to _billingStatus (unused while billing is disabled)
-  const { organization, billingStatus: _billingStatus, isLoading, error } =
-    useOrganizationData(orgSlug)
+  const {
+    organization,
+    billingStatus: _billingStatus,
+    isLoading,
+    error,
+  } = useOrganizationData(orgSlug)
 
   // BILLING_DISABLED: Removed low credit threshold check
   // const LOW_CREDIT_THRESHOLD = 2000

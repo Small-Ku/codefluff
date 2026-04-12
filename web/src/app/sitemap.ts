@@ -4,7 +4,6 @@ import type { MetadataRoute } from 'next'
 
 import { getCachedAgentsForSitemap } from '@/server/agents-data'
 
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const toUrl = (path: string) => `${env.NEXT_PUBLIC_CODEBUFF_APP_URL}${path}`
 

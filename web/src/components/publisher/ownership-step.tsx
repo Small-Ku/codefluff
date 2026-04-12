@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-
-
 interface Organization {
   id: string
   name: string

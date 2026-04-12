@@ -3,7 +3,10 @@ import { describe, test, expect, mock } from 'bun:test'
 import { convertJsonSchemaToZod } from 'zod-from-json-schema'
 import { z } from 'zod/v4'
 
-import { buildAgentToolInputSchema, buildAgentToolSet } from '../templates/prompts'
+import {
+  buildAgentToolInputSchema,
+  buildAgentToolSet,
+} from '../templates/prompts'
 import { handleLookupAgentInfo } from '../tools/handlers/tool/lookup-agent-info'
 import {
   ensureZodSchema,
@@ -35,7 +38,9 @@ describe('Schema handling error recovery', () => {
         model: 'gpt-4o-mini',
         inputSchema: {
           prompt: z.string().describe('A test prompt'),
-          params: problematicSchema as unknown as z.ZodType<Record<string, unknown> | undefined>,
+          params: problematicSchema as unknown as z.ZodType<
+            Record<string, unknown> | undefined
+          >,
         },
         outputMode: 'last_message',
         includeMessageHistory: false,
@@ -295,7 +300,10 @@ describe('Schema handling error recovery', () => {
       const outputValue = result.output[0]
       expect(outputValue.type).toBe('json')
       if (outputValue.type === 'json') {
-        const parsed = outputValue.value as { found: boolean; agent?: { outputSchema?: unknown } }
+        const parsed = outputValue.value as {
+          found: boolean
+          agent?: { outputSchema?: unknown }
+        }
         expect(parsed.found).toBe(true)
         // The outputSchema should be the fallback
         expect(parsed.agent?.outputSchema).toEqual({
@@ -356,7 +364,10 @@ describe('Schema handling error recovery', () => {
         const parsed = outputValue.value as {
           found: boolean
           agent?: {
-            outputSchema?: { type?: string; properties?: Record<string, unknown> }
+            outputSchema?: {
+              type?: string
+              properties?: Record<string, unknown>
+            }
             inputSchema?: { prompt?: unknown; params?: unknown }
           }
         }

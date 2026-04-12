@@ -100,9 +100,13 @@ describe('tool validation error handling', () => {
         typeof chunk !== 'string' && chunk.type === 'error',
     )
     expect(errorEvents.length).toBe(1)
-    expect(errorEvents[0].message).toContain('Invalid parameters for spawn_agents')
+    expect(errorEvents[0].message).toContain(
+      'Invalid parameters for spawn_agents',
+    )
     expect(errorEvents[0].message).toContain('Original tool call input:')
-    expect(errorEvents[0].message).toContain('this should be an array not a string')
+    expect(errorEvents[0].message).toContain(
+      'this should be an array not a string',
+    )
 
     // Verify hadToolCallError is true so the agent loop continues
     expect(result.hadToolCallError).toBe(true)
@@ -128,8 +132,7 @@ describe('tool validation error handling', () => {
     )
     const assistantToolCalls = agentState.messageHistory.filter(
       (m) =>
-        m.role === 'assistant' &&
-        m.content.some((c) => c.type === 'tool-call'),
+        m.role === 'assistant' && m.content.some((c) => c.type === 'tool-call'),
     )
 
     // There should be no tool messages at all (the key fix!)
@@ -144,8 +147,13 @@ describe('tool validation error handling', () => {
     const errorUserMessage = userMessages.find((m) => {
       const contentStr = Array.isArray(m.content)
         ? m.content.map((p) => ('text' in p ? p.text : '')).join('')
-        : typeof m.content === 'string' ? m.content : ''
-      return contentStr.includes('Error during tool call') && contentStr.includes('Invalid parameters for spawn_agents')
+        : typeof m.content === 'string'
+          ? m.content
+          : ''
+      return (
+        contentStr.includes('Error during tool call') &&
+        contentStr.includes('Invalid parameters for spawn_agents')
+      )
     })
     expect(errorUserMessage).toBeDefined()
   })
@@ -314,7 +322,9 @@ describe('tool validation error handling', () => {
     const assistantToolCallMessages = agentState.messageHistory.filter(
       (m): m is AssistantMessage =>
         m.role === 'assistant' &&
-        m.content.some((c) => c.type === 'tool-call' && c.toolName === toolName),
+        m.content.some(
+          (c) => c.type === 'tool-call' && c.toolName === toolName,
+        ),
     )
     const toolMessages = agentState.messageHistory.filter(
       (m): m is ToolMessage => m.role === 'tool' && m.toolName === toolName,
@@ -326,8 +336,10 @@ describe('tool validation error handling', () => {
     const assistantToolCallPart = assistantToolCallMessages[0].content.find(
       (
         c,
-      ): c is Extract<AssistantMessage['content'][number], { type: 'tool-call' }> =>
-        c.type === 'tool-call' && c.toolName === toolName,
+      ): c is Extract<
+        AssistantMessage['content'][number],
+        { type: 'tool-call' }
+      > => c.type === 'tool-call' && c.toolName === toolName,
     )
     expect(assistantToolCallPart).toBeDefined()
     expect(toolMessages[0].toolCallId).toBe(assistantToolCallPart!.toolCallId)
@@ -351,7 +363,8 @@ describe('tool validation error handling', () => {
     )
     const orphanToolResults = agentState.messageHistory.filter(
       (message): message is ToolMessage =>
-        message.role === 'tool' && !assistantToolCallIds.has(message.toolCallId),
+        message.role === 'tool' &&
+        !assistantToolCallIds.has(message.toolCallId),
     )
     expect(orphanToolResults.length).toBe(0)
   })

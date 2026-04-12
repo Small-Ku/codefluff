@@ -8,9 +8,7 @@ import type { PromptAiSdkFn } from '@codebuff/common/types/contracts/llm'
 describe('promptAiSdk (non-streaming) agentMappingKey type coverage', () => {
   it('PromptAiSdkFn params include agentMappingKey', () => {
     // If agentMappingKey is removed from the contract, this will fail to typecheck.
-    const _typecheckOnly = ((
-      _params: Parameters<PromptAiSdkFn>[0],
-    ): void => {})
+    const _typecheckOnly = (_params: Parameters<PromptAiSdkFn>[0]): void => {}
 
     _typecheckOnly({
       agentMappingKey: 'basher',

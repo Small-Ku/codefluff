@@ -5,7 +5,10 @@ import db from '@codebuff/internal/db'
 import * as schema from '@codebuff/internal/db/schema'
 import { eq } from 'drizzle-orm'
 
-function prompt(rl: ReturnType<typeof createInterface>, question: string): Promise<string> {
+function prompt(
+  rl: ReturnType<typeof createInterface>,
+  question: string,
+): Promise<string> {
   return new Promise((resolve) => {
     rl.question(question, (answer) => resolve(answer.trim()))
   })
@@ -13,7 +16,11 @@ function prompt(rl: ReturnType<typeof createInterface>, question: string): Promi
 
 async function lookupUserByEmail(email: string) {
   const [user] = await db
-    .select({ id: schema.user.id, email: schema.user.email, name: schema.user.name })
+    .select({
+      id: schema.user.id,
+      email: schema.user.email,
+      name: schema.user.name,
+    })
     .from(schema.user)
     .where(eq(schema.user.email, email.toLowerCase()))
     .limit(1)
@@ -22,7 +29,11 @@ async function lookupUserByEmail(email: string) {
 
 async function lookupUserById(userId: string) {
   const [user] = await db
-    .select({ id: schema.user.id, email: schema.user.email, name: schema.user.name })
+    .select({
+      id: schema.user.id,
+      email: schema.user.email,
+      name: schema.user.name,
+    })
     .from(schema.user)
     .where(eq(schema.user.id, userId))
     .limit(1)
@@ -50,7 +61,9 @@ async function main() {
       process.exit(1)
     }
 
-    console.log(`\nFound user: ${user.name ?? '(no name)'} <${user.email}> (${user.id})`)
+    console.log(
+      `\nFound user: ${user.name ?? '(no name)'} <${user.email}> (${user.id})`,
+    )
 
     // 2. Get credit amount
     const amountStr = await prompt(rl, 'Enter credit amount (integer): ')
@@ -100,7 +113,9 @@ async function main() {
       expires_at: null,
     })
 
-    console.log(`\n✅ Granted ${amount} credits to ${user.email} (${operationId})`)
+    console.log(
+      `\n✅ Granted ${amount} credits to ${user.email} (${operationId})`,
+    )
   } finally {
     rl.close()
   }

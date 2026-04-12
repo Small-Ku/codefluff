@@ -58,18 +58,21 @@ function createLangSearchProvider(apiKey: string): SearchProvider {
     name: 'langsearch',
     async search({ query, depth, logger, fetch }) {
       try {
-        const response = await fetch('https://api.langsearch.com/v1/web-search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
+        const response = await fetch(
+          'https://api.langsearch.com/v1/web-search',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              query,
+              count: depth === 'deep' ? 10 : 5,
+              summary: true,
+            }),
           },
-          body: JSON.stringify({
-            query,
-            count: depth === 'deep' ? 10 : 5,
-            summary: true,
-          }),
-        })
+        )
 
         if (!response.ok) {
           const body = await response.text().catch(() => '')
@@ -87,14 +90,24 @@ function createLangSearchProvider(apiKey: string): SearchProvider {
 
         const formatted = results
           .map(
-            (r: { name?: string; snippet?: string; url?: string; summary?: string }, i: number) =>
+            (
+              r: {
+                name?: string
+                snippet?: string
+                url?: string
+                summary?: string
+              },
+              i: number,
+            ) =>
               `[${i + 1}] ${r.name ?? 'Untitled'}\n${r.summary ?? r.snippet ?? ''}\nURL: ${r.url ?? ''}`,
           )
           .join('\n\n')
 
         return { result: formatted }
       } catch (error) {
-        return { error: `LangSearch request failed: ${error instanceof Error ? error.message : String(error)}` }
+        return {
+          error: `LangSearch request failed: ${error instanceof Error ? error.message : String(error)}`,
+        }
       }
     },
   }
@@ -138,14 +151,24 @@ function createOllamaProvider(apiKey: string): SearchProvider {
 
         const formatted = results
           .map(
-            (r: { title?: string; url?: string; content?: string; snippet?: string }, i: number) =>
+            (
+              r: {
+                title?: string
+                url?: string
+                content?: string
+                snippet?: string
+              },
+              i: number,
+            ) =>
               `[${i + 1}] ${r.title ?? 'Untitled'}\n${r.content ?? r.snippet ?? ''}\nURL: ${r.url ?? ''}`,
           )
           .join('\n\n')
 
         return { result: formatted }
       } catch (error) {
-        return { error: `Ollama request failed: ${error instanceof Error ? error.message : String(error)}` }
+        return {
+          error: `Ollama request failed: ${error instanceof Error ? error.message : String(error)}`,
+        }
       }
     },
   }
@@ -193,7 +216,10 @@ async function fetchHealthySearXInstances(
   fetchFn: typeof globalThis.fetch,
 ): Promise<string[]> {
   const now = Date.now()
-  if (_cachedHealthyInstances && now - _cachedInstancesAt < INSTANCE_CACHE_TTL_MS) {
+  if (
+    _cachedHealthyInstances &&
+    now - _cachedInstancesAt < INSTANCE_CACHE_TTL_MS
+  ) {
     return _cachedHealthyInstances
   }
 
@@ -243,10 +269,27 @@ async function fetchHealthySearXInstances(
 // SearXNG helpers — shared by SearXNG and SearX-Space providers
 // ============================================================================
 
-function formatSearXNGResults(results: Array<{ title?: string; url?: string; content?: string; snippet?: string; engine?: string }>): string {
+function formatSearXNGResults(
+  results: Array<{
+    title?: string
+    url?: string
+    content?: string
+    snippet?: string
+    engine?: string
+  }>,
+): string {
   return results
     .map(
-      (r: { title?: string; url?: string; content?: string; snippet?: string; engine?: string }, i: number) =>
+      (
+        r: {
+          title?: string
+          url?: string
+          content?: string
+          snippet?: string
+          engine?: string
+        },
+        i: number,
+      ) =>
         `[${i + 1}] ${r.title ?? 'Untitled'} (${r.engine ?? 'unknown'})\n${r.content ?? r.snippet ?? ''}\nURL: ${r.url ?? ''}`,
     )
     .join('\n\n')
@@ -278,7 +321,13 @@ async function searchSearXNGInstance(
     }
 
     const data = await response.json()
-    const results: Array<{ title?: string; url?: string; content?: string; snippet?: string; engine?: string }> = data?.results ?? []
+    const results: Array<{
+      title?: string
+      url?: string
+      content?: string
+      snippet?: string
+      engine?: string
+    }> = data?.results ?? []
 
     if (!Array.isArray(results) || results.length === 0) {
       return { error: `${baseUrl}: no results` }
@@ -286,7 +335,9 @@ async function searchSearXNGInstance(
 
     return { result: formatSearXNGResults(results) }
   } catch (error) {
-    return { error: `${baseUrl}: ${error instanceof Error ? error.message : 'request failed'}` }
+    return {
+      error: `${baseUrl}: ${error instanceof Error ? error.message : 'request failed'}`,
+    }
   }
 }
 
@@ -295,7 +346,9 @@ async function searchSearXNGInstance(
 // ============================================================================
 
 function createSearXNGProvider(instanceUrl: string): SearchProvider {
-  const normalizedUrl = instanceUrl.match(/^https?:\/\//) ? instanceUrl : `https://${instanceUrl}`
+  const normalizedUrl = instanceUrl.match(/^https?:\/\//)
+    ? instanceUrl
+    : `https://${instanceUrl}`
   const baseUrl = normalizedUrl.replace(/\/+$/, '')
   return {
     name: 'searxng',
@@ -318,19 +371,29 @@ function createSearXSpaceProvider(): SearchProvider {
     async search({ query, depth, logger, fetch }) {
       const instances = await fetchHealthySearXInstances(fetch)
       if (instances.length === 0) {
-        return { error: 'SearX-Space: unable to fetch healthy instances from searx.space' }
+        return {
+          error:
+            'SearX-Space: unable to fetch healthy instances from searx.space',
+        }
       }
 
       const maxAttempts = Math.min(instances.length, MAX_SEARX_SPACE_ATTEMPTS)
       const errors: string[] = []
       for (let i = 0; i < maxAttempts; i++) {
         const instanceUrl = instances[i]
-        const result = await searchSearXNGInstance(instanceUrl, query, depth, fetch)
+        const result = await searchSearXNGInstance(
+          instanceUrl,
+          query,
+          depth,
+          fetch,
+        )
         if (result.result) return result
         errors.push(result.error!)
       }
 
-      return { error: `SearX-Space: all ${maxAttempts}/${instances.length} attempted instances failed\n${errors.slice(0, 5).join('\n')}` }
+      return {
+        error: `SearX-Space: all ${maxAttempts}/${instances.length} attempted instances failed\n${errors.slice(0, 5).join('\n')}`,
+      }
     },
   }
 }
@@ -339,7 +402,13 @@ function createSearXSpaceProvider(): SearchProvider {
 // Provider Factory — creates a provider by name
 // ============================================================================
 
-const KNOWN_PROVIDER_KEYS = ['linkup', 'langsearch', 'ollama', 'searxng', 'searx-space'] as const
+const KNOWN_PROVIDER_KEYS = [
+  'linkup',
+  'langsearch',
+  'ollama',
+  'searxng',
+  'searx-space',
+] as const
 
 function tryCreateProvider(
   name: string,
@@ -382,7 +451,9 @@ export function getConfiguredSearchProviders(): SearchProvider[] {
   const providersConfig = getSearchProviders()
 
   // Order: known providers first (in defined order), then any custom ones
-  const order: string[] = [...KNOWN_PROVIDER_KEYS.filter(k => providersConfig[k])]
+  const order: string[] = [
+    ...KNOWN_PROVIDER_KEYS.filter((k) => providersConfig[k]),
+  ]
   for (const key of Object.keys(providersConfig)) {
     if (!order.includes(key)) {
       order.push(key)
@@ -402,5 +473,3 @@ export function getConfiguredSearchProviders(): SearchProvider[] {
 
   return providers
 }
-
-

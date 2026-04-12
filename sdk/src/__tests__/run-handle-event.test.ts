@@ -1,4 +1,3 @@
-
 import * as mainPromptModule from '@codebuff/agent-runtime/main-prompt'
 import { getInitialSessionState } from '@codebuff/common/types/session-state'
 import { getStubProjectFileContext } from '@codebuff/common/util/file'
@@ -30,13 +29,9 @@ describe('CodebuffClient handleEvent / handleStreamChunk', () => {
     spyOn(databaseModule, 'addAgentStep').mockResolvedValue('step-1')
 
     spyOn(mainPromptModule, 'callMainPrompt').mockImplementation(
-      async (
-        params: Parameters<typeof mainPromptModule.callMainPrompt>[0],
-      ) => {
+      async (params: Parameters<typeof mainPromptModule.callMainPrompt>[0]) => {
         const { sendAction, action: promptAction, promptId } = params
-        const sessionState = getInitialSessionState(
-          getStubProjectFileContext(),
-        )
+        const sessionState = getInitialSessionState(getStubProjectFileContext())
 
         await sendAction({
           action: {

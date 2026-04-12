@@ -21,26 +21,22 @@ This methodology enables nuanced evaluation across multiple dimensions: an agent
 ### System Components
 
 1. **Evaluation Orchestration** (`run-git-evals.ts`, `run-eval-set.ts`)
-
    - Manages the complete evaluation pipeline
    - Handles concurrency and process management
    - Coordinates between all system components
 
 2. **Agent Runners** (`runners/`)
-
    - **Codebuff Runner**: Integrates with local Codebuff installation
    - **Claude Runner**: Integrates with Anthropic's Claude Code
    - **Runner Interface**: Common abstraction for all coding agents
 
 3. **Prompting Agent** (`prompting-agent.ts`)
-
    - Acts as the "human developer" in the loop
    - Analyzes conversation history and decides next actions
    - Generates follow-up prompts to guide the coding agent
    - Makes decisions: `continue`, `complete`, or `halt`
 
 4. **Judging System** (`judge-git-eval.ts`)
-
    - Uses AI (Gemini 2.5 Pro) to score implementations
    - Compares agent output against ground truth git diffs
    - Provides detailed scoring across multiple dimensions
@@ -171,7 +167,6 @@ The evaluation system supports running multiple agents in parallel on the same e
 bun run evals/git-evals/run-eval-set.ts \
   --agents base,base2,base-lite
 ```
-
 
 ### Creating New Evaluations
 

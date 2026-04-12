@@ -53,7 +53,14 @@ export const SelectableList = forwardRef<
   SelectableListProps
 >(
   (
-    { items, focusedIndex, maxHeight, onSelect, onFocusChange, emptyMessage = 'No items' },
+    {
+      items,
+      focusedIndex,
+      maxHeight,
+      onSelect,
+      onFocusChange,
+      emptyMessage = 'No items',
+    },
     ref,
   ) => {
     const theme = useTheme()
@@ -141,7 +148,9 @@ export const SelectableList = forwardRef<
           const isHighlighted = isFocused || isHovered
 
           // Use subtle highlight that works in both light and dark themes
-          const backgroundColor = isHighlighted ? theme.surfaceHover : 'transparent'
+          const backgroundColor = isHighlighted
+            ? theme.surfaceHover
+            : 'transparent'
           const textColor = isHighlighted ? theme.foreground : theme.muted
 
           return (
@@ -170,22 +179,25 @@ export const SelectableList = forwardRef<
               }}
             >
               {item.icon && (
-                <text style={{ fg: isHighlighted ? theme.foreground : theme.muted }}>
+                <text
+                  style={{ fg: isHighlighted ? theme.foreground : theme.muted }}
+                >
                   {item.icon}
                 </text>
               )}
               <text
                 style={{
                   fg: item.accent && !isHighlighted ? theme.primary : textColor,
-                  attributes: item.accent || isHighlighted ? TextAttributes.BOLD : undefined,
+                  attributes:
+                    item.accent || isHighlighted
+                      ? TextAttributes.BOLD
+                      : undefined,
                 }}
               >
                 {item.label}
               </text>
               {item.secondary && !item.hideSecondary && (
-                <text style={{ fg: theme.muted }}>
-                  {item.secondary}
-                </text>
+                <text style={{ fg: theme.muted }}>{item.secondary}</text>
               )}
             </Button>
           )

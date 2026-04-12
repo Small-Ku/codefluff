@@ -98,14 +98,12 @@ Each test job:
 When running GitHub Actions locally using `act`:
 
 1. **Environment Setup**:
-
    - `.github/act/bootstrap-act-config.sh` generates:
      - `.actrc`: Docker and artifact settings
      - `.env.act`: Non-secret environment variables
      - `.secrets.act`: Secret environment variables (chmod 600)
 
 2. **File Handling**:
-
    - `run-local.sh` automatically:
      - Backs up existing `.env.local` before running
      - Restores the backup after completion
@@ -162,13 +160,11 @@ When running GitHub Actions locally using `act`:
 ### Troubleshooting
 
 1. If Docker container fails to start:
-
    - Check Docker memory allocation
    - Ensure Docker daemon is running
    - Use `bun act -v` for verbose output
 
 2. If tests fail with environment issues:
-
    - Verify `.secrets` file was created correctly
    - Check that `CODEBUFF_GITHUB_ACTIONS=true` is set
    - Ensure all required environment variables are present

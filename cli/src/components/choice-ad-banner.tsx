@@ -18,7 +18,11 @@ const CARD_HEIGHT = 5 // border-top + 2 lines description + spacer + cta row + b
 const MAX_DESC_LINES = 2
 const MIN_CARD_WIDTH = 60 // Minimum width per ad card to remain readable
 
-function truncateToLines(text: string, lineWidth: number, maxLines: number): string {
+function truncateToLines(
+  text: string,
+  lineWidth: number,
+  maxLines: number,
+): string {
   if (lineWidth <= 0) return text
   const maxChars = lineWidth * maxLines
   if (text.length <= maxChars) return text
@@ -44,7 +48,10 @@ function columnWidths(count: number, availableWidth: number): number[] {
   return Array.from({ length: count }, (_, i) => base + (i < remainder ? 1 : 0))
 }
 
-export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({ ads, onImpression }) => {
+export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({
+  ads,
+  onImpression,
+}) => {
   const theme = useTheme()
   const { terminalWidth } = useTerminalDimensions()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -59,7 +66,10 @@ export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({ ads, onImpressio
     [ads, maxVisible],
   )
 
-  const widths = useMemo(() => columnWidths(visibleAds.length, colAvail), [visibleAds.length, colAvail])
+  const widths = useMemo(
+    () => columnWidths(visibleAds.length, colAvail),
+    [visibleAds.length, colAvail],
+  )
 
   // Fire impressions only for visible ads
   useEffect(() => {
@@ -70,7 +80,7 @@ export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({ ads, onImpressio
     }
   }, [visibleAds, onImpression])
 
-  const hoverBorderColor = theme.link
+  const hoverBorderColor = theme.primary
 
   return (
     <box
@@ -109,10 +119,17 @@ export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({ ads, onImpressio
                 paddingLeft: 1,
                 paddingRight: 1,
                 flexDirection: 'column',
-
               }}
             >
-              <box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', height: MAX_DESC_LINES, overflow: 'hidden' }}>
+              <box
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  height: MAX_DESC_LINES,
+                  overflow: 'hidden',
+                }}
+              >
                 <text style={{ fg: theme.muted, flexShrink: 1 }}>
                   {truncateToLines(ad.adText, widths[i] - 8, MAX_DESC_LINES)}
                 </text>
@@ -120,27 +137,35 @@ export const ChoiceAdBanner: React.FC<ChoiceAdBannerProps> = ({ ads, onImpressio
               </box>
               <box style={{ flexGrow: 1 }} />
               {/* Bottom: CTA + domain */}
-              <box style={{ flexDirection: 'row', columnGap: 1, alignItems: 'center' }}>
+              <box
+                style={{
+                  flexDirection: 'row',
+                  columnGap: 1,
+                  alignItems: 'center',
+                }}
+              >
                 <text
                   style={{
                     fg: theme.name === 'light' ? '#ffffff' : theme.background,
-                    bg: isHovered ? theme.link : theme.muted,
+                    bg: isHovered ? theme.primary : theme.muted,
                     attributes: TextAttributes.BOLD,
                   }}
                 >
                   {` ${ctaText} `}
                 </text>
-                <text style={{ fg: theme.muted, attributes: TextAttributes.UNDERLINE }}>
+                <text
+                  style={{
+                    fg: theme.muted,
+                    attributes: TextAttributes.UNDERLINE,
+                  }}
+                >
                   {domain}
                 </text>
-
               </box>
             </Button>
           )
         })}
-
       </box>
-
     </box>
   )
 }

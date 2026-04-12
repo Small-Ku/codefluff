@@ -14,7 +14,12 @@ describe('resolveCodefluffModel', () => {
   const originalUserProfile = process.env.USERPROFILE
   const originalCodefluffMode = process.env.CODEFLUFF_MODE
   const testConfigDir = join(tmpdir(), 'sdk-resolver-test')
-  const testConfigPath = join(testConfigDir, '.config', 'codefluff', 'config.json')
+  const testConfigPath = join(
+    testConfigDir,
+    '.config',
+    'codefluff',
+    'config.json',
+  )
 
   function writeConfig(obj: unknown) {
     mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })

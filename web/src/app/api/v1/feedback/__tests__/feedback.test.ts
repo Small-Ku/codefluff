@@ -13,7 +13,10 @@ import type {
 } from '@codebuff/common/types/contracts/logger'
 
 describe('/api/v1/feedback POST endpoint', () => {
-  const mockUserData: Record<string, { id: string; email: string; discord_id: string | null }> = {
+  const mockUserData: Record<
+    string,
+    { id: string; email: string; discord_id: string | null }
+  > = {
     'test-api-key-123': {
       id: 'user-123',
       email: 'test@example.com',
@@ -391,7 +394,10 @@ describe('/api/v1/feedback POST endpoint', () => {
         headers: { Authorization: 'Bearer test-api-key-123' },
         body: JSON.stringify({
           ...validFeedbackBody,
-          recentMessages: Array.from({ length: MAX_RECENT_MESSAGES + 1 }, (_, i) => ({ type: 'user', id: `msg-${i}` })),
+          recentMessages: Array.from(
+            { length: MAX_RECENT_MESSAGES + 1 },
+            (_, i) => ({ type: 'user', id: `msg-${i}` }),
+          ),
         }),
       })
 
@@ -408,7 +414,10 @@ describe('/api/v1/feedback POST endpoint', () => {
         headers: { Authorization: 'Bearer test-api-key-123' },
         body: JSON.stringify({
           ...validFeedbackBody,
-          errors: Array.from({ length: 51 }, (_, i) => ({ id: `err-${i}`, message: 'error' })),
+          errors: Array.from({ length: 51 }, (_, i) => ({
+            id: `err-${i}`,
+            message: 'error',
+          })),
         }),
       })
 
@@ -639,7 +648,10 @@ describe('/api/v1/feedback POST endpoint', () => {
           agentMode: 'a'.repeat(100),
           sessionCreditsUsed: 0,
           clientFeedbackId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-          recentMessages: Array.from({ length: MAX_RECENT_MESSAGES }, (_, i) => ({ type: 'user', id: `msg-${i}` })),
+          recentMessages: Array.from(
+            { length: MAX_RECENT_MESSAGES },
+            (_, i) => ({ type: 'user', id: `msg-${i}` }),
+          ),
           errors: Array.from({ length: 50 }, (_, i) => ({
             id: 'a'.repeat(200),
             message: 'a'.repeat(2000),
@@ -699,7 +711,12 @@ describe('/api/v1/feedback POST endpoint', () => {
     })
 
     test('accepts all valid category values', async () => {
-      const categories = ['good_result', 'bad_result', 'app_bug', 'other'] as const
+      const categories = [
+        'good_result',
+        'bad_result',
+        'app_bug',
+        'other',
+      ] as const
       for (const category of categories) {
         const req = new NextRequest('http://localhost:3000/api/v1/feedback', {
           method: 'POST',
@@ -881,7 +898,8 @@ describe('/api/v1/feedback POST endpoint', () => {
       const response = await callPostFeedback(req)
 
       expect(response.status).toBe(200)
-      const trackCall = (mockTrackEvent as ReturnType<typeof mock>).mock.calls[0][0] as Record<string, unknown>
+      const trackCall = (mockTrackEvent as ReturnType<typeof mock>).mock
+        .calls[0][0] as Record<string, unknown>
       const properties = trackCall.properties as Record<string, unknown>
       expect(properties).not.toHaveProperty('unknownField')
       expect(properties).not.toHaveProperty('anotherUnknown')
@@ -965,9 +983,10 @@ describe('/api/v1/feedback POST endpoint', () => {
     })
 
     test('returns 500 when an unexpected error occurs', async () => {
-      const throwingGetUserInfo: typeof mockGetUserInfoFromApiKey = async () => {
-        throw new Error('Database connection failed')
-      }
+      const throwingGetUserInfo: typeof mockGetUserInfoFromApiKey =
+        async () => {
+          throw new Error('Database connection failed')
+        }
 
       const req = new NextRequest('http://localhost:3000/api/v1/feedback', {
         method: 'POST',

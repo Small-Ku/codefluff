@@ -214,7 +214,10 @@ export function ReferralsSection() {
                           <span>
                             {r.name} ({r.email}){r.is_legacy && ' (legacy)'}
                           </span>
-                          <CreditsBadge credits={r.credits} isLegacy={r.is_legacy} />
+                          <CreditsBadge
+                            credits={r.credits}
+                            isLegacy={r.is_legacy}
+                          />
                         </li>
                       ))}
                     </ul>

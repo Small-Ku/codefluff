@@ -40,13 +40,15 @@ interface WindowTracker {
   windowStart: number
 }
 
-export type RateLimitResult = {
-  limited: false
-} | {
-  limited: true
-  windowName: string
-  retryAfterMs: number
-}
+export type RateLimitResult =
+  | {
+      limited: false
+    }
+  | {
+      limited: true
+      windowName: string
+      retryAfterMs: number
+    }
 
 // ---------------------------------------------------------------------------
 // Window definitions (derived from the constants above)
@@ -58,11 +60,31 @@ const HOUR_MS = 60 * MINUTE_MS
 const DAY_MS = 24 * HOUR_MS
 
 const RATE_WINDOWS: RateWindow[] = [
-  { name: '1 second',    windowMs: 1 * SECOND_MS,  maxRequests: FREE_MODE_RATE_LIMITS.PER_SECOND },
-  { name: '1 minute',    windowMs: 1 * MINUTE_MS,  maxRequests: FREE_MODE_RATE_LIMITS.PER_MINUTE },
-  { name: '30 minutes',  windowMs: 30 * MINUTE_MS, maxRequests: FREE_MODE_RATE_LIMITS.PER_30_MINUTES },
-  { name: '5 hours',     windowMs: 5 * HOUR_MS,    maxRequests: FREE_MODE_RATE_LIMITS.PER_5_HOURS },
-  { name: '7 days',      windowMs: 7 * DAY_MS,     maxRequests: FREE_MODE_RATE_LIMITS.PER_7_DAYS },
+  {
+    name: '1 second',
+    windowMs: 1 * SECOND_MS,
+    maxRequests: FREE_MODE_RATE_LIMITS.PER_SECOND,
+  },
+  {
+    name: '1 minute',
+    windowMs: 1 * MINUTE_MS,
+    maxRequests: FREE_MODE_RATE_LIMITS.PER_MINUTE,
+  },
+  {
+    name: '30 minutes',
+    windowMs: 30 * MINUTE_MS,
+    maxRequests: FREE_MODE_RATE_LIMITS.PER_30_MINUTES,
+  },
+  {
+    name: '5 hours',
+    windowMs: 5 * HOUR_MS,
+    maxRequests: FREE_MODE_RATE_LIMITS.PER_5_HOURS,
+  },
+  {
+    name: '7 days',
+    windowMs: 7 * DAY_MS,
+    maxRequests: FREE_MODE_RATE_LIMITS.PER_7_DAYS,
+  },
 ]
 
 // ---------------------------------------------------------------------------

@@ -63,9 +63,19 @@ export async function postFeedback(params: {
 
     try {
       const {
-        clientFeedbackId, source, messageId, messageVariant,
-        completionTime, credits, agentMode, sessionCreditsUsed,
-        recentMessages, text, category, type, errors,
+        clientFeedbackId,
+        source,
+        messageId,
+        messageVariant,
+        completionTime,
+        credits,
+        agentMode,
+        sessionCreditsUsed,
+        recentMessages,
+        text,
+        category,
+        type,
+        errors,
       } = feedback
 
       trackEvent({

@@ -140,6 +140,7 @@ For most users, configuring `free`, `normal`, and `max` is sufficient.
 #### Environment Variable Interpolation
 
 Environment variables can be interpolated using `${ENV_VAR}` syntax in:
+
 - `keys` (both string and object values)
 - `models` (string values within the structure)
 - `searchProviders` (string values)
@@ -174,6 +175,7 @@ When resolving a model for an agent:
 3. If `base` is not defined, throw an error
 
 Example resolution for `editor` agent in `normal` mode:
+
 ```json
 {
   "mapping": {
@@ -184,6 +186,7 @@ Example resolution for `editor` agent in `normal` mode:
   }
 }
 ```
+
 - `editor` agent → uses `claude-opus-4` (explicit mapping)
 - `file-picker` agent → uses `claude-sonnet-4` (falls back to `base`)
 
@@ -191,12 +194,12 @@ Example resolution for `editor` agent in `normal` mode:
 
 When using object format for provider keys:
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `key` | string | **Required.** API key for the provider. |
-| `baseURL` | string | Custom base URL for the provider API. |
-| `style` | string | Provider style: `"openai"`, `"anthropic"`, or `"google"`. Defaults to `"openai"`. |
-| `headers` | object | Custom HTTP headers to send with each request. |
+| Option    | Type   | Description                                                                       |
+| --------- | ------ | --------------------------------------------------------------------------------- |
+| `key`     | string | **Required.** API key for the provider.                                           |
+| `baseURL` | string | Custom base URL for the provider API.                                             |
+| `style`   | string | Provider style: `"openai"`, `"anthropic"`, or `"google"`. Defaults to `"openai"`. |
+| `headers` | object | Custom HTTP headers to send with each request.                                    |
 
 ### Per-Model Configuration
 
@@ -225,10 +228,10 @@ The `models` section allows fine-grained control over individual models:
 
 Each model can have:
 
-| Option | Type | Description |
-|--------|------|-------------|
+| Option       | Type   | Description                                                                                                             |
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------- |
 | `max_tokens` | number | Maximum number of tokens to generate. Use this to prevent truncation on providers with low defaults (e.g., Nvidia NIM). |
-| `extraBody` | object | Extra request body parameters for provider-specific settings. |
+| `extraBody`  | object | Extra request body parameters for provider-specific settings.                                                           |
 
 **Note:** Some providers (like Nvidia NIM) have very low default `max_tokens` (256-512), which causes responses to be truncated mid-sentence. Always set `max_tokens` for these providers.
 
@@ -247,15 +250,16 @@ Config key: `searchProviders`
 }
 ```
 
-| Provider | Value Type | API |
-|----------|-----------|-----|
-| `linkup` | API key | `POST https://api.linkup.so/v1/search` |
-| `langsearch` | API key | `POST https://api.langsearch.com/v1/web-search` |
-| `ollama` | API key | `POST https://ollama.com/api/web_search` |
-| `searxng` | Instance URL | `GET {instanceUrl}/search?q=query&format=json` |
+| Provider      | Value Type                      | API                                                                                                                                                                                                 |
+| ------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linkup`      | API key                         | `POST https://api.linkup.so/v1/search`                                                                                                                                                              |
+| `langsearch`  | API key                         | `POST https://api.langsearch.com/v1/web-search`                                                                                                                                                     |
+| `ollama`      | API key                         | `POST https://ollama.com/api/web_search`                                                                                                                                                            |
+| `searxng`     | Instance URL                    | `GET {instanceUrl}/search?q=query&format=json`                                                                                                                                                      |
 | `searx-space` | Any value (presence enables it) | Fetches instances from `https://searx.space/data/instances.json`, filters healthy ones (HTTP 200, >80% search success, valid SearXNG), Fisher-Yates shuffles, tries up to 15 with 15s timeout each. |
 
 Fallback behavior:
+
 - Providers are tried in order: linkup → langsearch → ollama → searxng → searx-space → unknown custom providers
 - First successful result is returned immediately
 - If a provider fails, the next one in line is tried automatically
@@ -276,17 +280,17 @@ When `IS_CODEFLUFF`:
 
 ### Provider Routing
 
-| Prefix | Provider | Notes |
-|--------|----------|-------|
-| `anthropic/` | Anthropic API | Claude models. Native SDK. |
-| `openai/` | OpenAI API | GPT models. Native SDK. |
-| `google/` | Google Gemini API | Gemini models. Native SDK. |
-| `openrouter/` | OpenRouter | Unified API for multiple providers. |
-| `deepseek/` | DeepSeek API | OpenAI-compatible. Base URL: `https://api.deepseek.com/v1` |
-| `xai/` or `grok/` | XAI API | Grok models. OpenAI-compatible. Base URL: `https://api.x.ai/v1` |
-| `nvidia-nim/` | Nvidia NIM | OpenAI-compatible. Base URL: `https://integrate.api.nvidia.com/v1` |
-| `openrouter/` | OpenRouter | Unified API. Base URL: `https://openrouter.ai/api/v1` |
-| `new-api/` | New-API compatible | Generic OpenAI-compatible provider. Requires custom `baseURL`. |
+| Prefix            | Provider           | Notes                                                              |
+| ----------------- | ------------------ | ------------------------------------------------------------------ |
+| `anthropic/`      | Anthropic API      | Claude models. Native SDK.                                         |
+| `openai/`         | OpenAI API         | GPT models. Native SDK.                                            |
+| `google/`         | Google Gemini API  | Gemini models. Native SDK.                                         |
+| `openrouter/`     | OpenRouter         | Unified API for multiple providers.                                |
+| `deepseek/`       | DeepSeek API       | OpenAI-compatible. Base URL: `https://api.deepseek.com/v1`         |
+| `xai/` or `grok/` | XAI API            | Grok models. OpenAI-compatible. Base URL: `https://api.x.ai/v1`    |
+| `nvidia-nim/`     | Nvidia NIM         | OpenAI-compatible. Base URL: `https://integrate.api.nvidia.com/v1` |
+| `openrouter/`     | OpenRouter         | Unified API. Base URL: `https://openrouter.ai/api/v1`              |
+| `new-api/`        | New-API compatible | Generic OpenAI-compatible provider. Requires custom `baseURL`.     |
 
 All OpenAI-compatible providers support custom `baseURL` and `headers` configuration.
 
@@ -297,7 +301,11 @@ All OpenAI-compatible providers support custom `baseURL` and `headers` configura
 Codefluff supports listing available models from configured providers via the SDK:
 
 ```typescript
-import { listModelsForProvider, listAllModels, formatModelList } from '@codebuff/sdk'
+import {
+  listModelsForProvider,
+  listAllModels,
+  formatModelList,
+} from '@codebuff/sdk'
 
 // List models from a specific provider
 const result = await listModelsForProvider('nvidia-nim')
@@ -309,6 +317,7 @@ console.log(formatModelList(allModels))
 ```
 
 Supported providers for model listing:
+
 - OpenAI (`/v1/models` endpoint)
 - Google Gemini (`/v1beta/models` endpoint)
 - DeepSeek (`/v1/models` endpoint)
@@ -362,10 +371,10 @@ So, for most users, `free`, `normal`, and `max` are the only ones you need to se
 
 ### Intentionally Kept (Diverges from Original Strip List)
 
-| Command | Rationale |
-|---------|-----------|
-| `/history` | Local-only history browsing — no server dependency |
-| `/review` | Builds review prompts from local workspace — no server dependency |
+| Command    | Rationale                                                         |
+| ---------- | ----------------------------------------------------------------- |
+| `/history` | Local-only history browsing — no server dependency                |
+| `/review`  | Builds review prompts from local workspace — no server dependency |
 
 ---
 

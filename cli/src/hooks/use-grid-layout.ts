@@ -7,7 +7,7 @@ import { computeSmartColumns, MIN_COLUMN_WIDTH } from '../utils/layout-helpers'
  * These are character counts (not pixels) representing terminal width breakpoints:
  * - Below 100 cols: 1 column (narrow terminal)
  * - 100-149 cols: up to 2 columns (medium terminal)
- * - 150-199 cols: up to 3 columns (large terminal)  
+ * - 150-199 cols: up to 3 columns (large terminal)
  * - 200+ cols: up to 4 columns (extra large terminal)
  */
 export const WIDTH_MD_THRESHOLD = 100
@@ -15,7 +15,11 @@ export const WIDTH_LG_THRESHOLD = 150
 export const WIDTH_XL_THRESHOLD = 200
 
 /** Ordered thresholds for determining max columns based on terminal width */
-const WIDTH_THRESHOLDS = [WIDTH_MD_THRESHOLD, WIDTH_LG_THRESHOLD, WIDTH_XL_THRESHOLD] as const
+const WIDTH_THRESHOLDS = [
+  WIDTH_MD_THRESHOLD,
+  WIDTH_LG_THRESHOLD,
+  WIDTH_XL_THRESHOLD,
+] as const
 
 export interface GridLayoutResult<T> {
   columns: number
@@ -41,7 +45,8 @@ export function computeGridLayout<T>(
   }
 
   // Determine max columns from width thresholds
-  const maxColumns = WIDTH_THRESHOLDS.filter(t => availableWidth >= t).length + 1
+  const maxColumns =
+    WIDTH_THRESHOLDS.filter((t) => availableWidth >= t).length + 1
 
   const columns = computeSmartColumns(items.length, maxColumns)
 

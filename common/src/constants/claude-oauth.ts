@@ -16,8 +16,10 @@ export const CLAUDE_OAUTH_ENABLED = false
 export const CLAUDE_OAUTH_CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e'
 
 // Anthropic OAuth endpoints
-export const CLAUDE_OAUTH_AUTHORIZE_URL = 'https://console.anthropic.com/oauth/authorize'
-export const CLAUDE_OAUTH_TOKEN_URL = 'https://console.anthropic.com/oauth/token'
+export const CLAUDE_OAUTH_AUTHORIZE_URL =
+  'https://console.anthropic.com/oauth/authorize'
+export const CLAUDE_OAUTH_TOKEN_URL =
+  'https://console.anthropic.com/oauth/token'
 
 // Anthropic API endpoint for direct calls
 export const ANTHROPIC_API_BASE_URL = 'https://api.anthropic.com'
@@ -44,7 +46,8 @@ export const CLAUDE_OAUTH_BETA_HEADERS = [
  * This must be prepended to the system prompt when using Claude OAuth with Claude 4+ models.
  * Without this prefix, requests will fail with "This credential is only authorized for use with Claude Code".
  */
-export const CLAUDE_CODE_SYSTEM_PROMPT_PREFIX = "You are Claude Code, Anthropic's official CLI for Claude."
+export const CLAUDE_CODE_SYSTEM_PROMPT_PREFIX =
+  "You are Claude Code, Anthropic's official CLI for Claude."
 
 /**
  * Model ID mapping from OpenRouter format to Anthropic format.

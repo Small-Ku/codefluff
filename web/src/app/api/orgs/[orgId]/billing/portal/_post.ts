@@ -60,7 +60,7 @@ export async function postOrgBillingPortal(params: PostOrgBillingPortalParams) {
   if (!orgBillingEnabled) {
     return NextResponse.json(
       { error: 'Organization billing is temporarily disabled' },
-      { status: 503 }
+      { status: 503 },
     )
   }
 
@@ -76,7 +76,7 @@ export async function postOrgBillingPortal(params: PostOrgBillingPortalParams) {
   if (!membership) {
     return NextResponse.json(
       { error: 'Organization not found' },
-      { status: 404 }
+      { status: 404 },
     )
   }
 
@@ -85,14 +85,14 @@ export async function postOrgBillingPortal(params: PostOrgBillingPortalParams) {
   if (role !== 'owner' && role !== 'admin') {
     return NextResponse.json(
       { error: 'Insufficient permissions' },
-      { status: 403 }
+      { status: 403 },
     )
   }
 
   if (!organization.stripe_customer_id) {
     return NextResponse.json(
       { error: 'No Stripe customer ID found for organization' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -106,11 +106,11 @@ export async function postOrgBillingPortal(params: PostOrgBillingPortalParams) {
   } catch (error) {
     logger.error(
       { userId, orgId, error },
-      'Failed to create org billing portal session'
+      'Failed to create org billing portal session',
     )
     return NextResponse.json(
       { error: 'Failed to create billing portal session' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -27,12 +27,12 @@ import {
   getModelForRequest,
   markChatGptOAuthRateLimited,
   markClaudeOAuthRateLimited,
- getModelExtraBody,
- getModelMaxTokens,
- getModelTemperature,
- getModelTopP,
- getModelTopK,
- isCodefluffMode,
+  getModelExtraBody,
+  getModelMaxTokens,
+  getModelTemperature,
+  getModelTopP,
+  getModelTopK,
+  isCodefluffMode,
 } from './model-provider'
 import { logDebug, isDebugEnabled } from '@codebuff/common/util/debug-logger'
 import {
@@ -129,10 +129,10 @@ function getProviderOptions(params: {
     })
   }
 
- // Get temperature, top_p, and top_k from model config for codefluff mode
- const temperature = isCodefluffMode() ? getModelTemperature(model) : undefined
- const topP = isCodefluffMode() ? getModelTopP(model) : undefined
- const topK = isCodefluffMode() ? getModelTopK(model) : undefined
+  // Get temperature, top_p, and top_k from model config for codefluff mode
+  const temperature = isCodefluffMode() ? getModelTemperature(model) : undefined
+  const topP = isCodefluffMode() ? getModelTopP(model) : undefined
+  const topK = isCodefluffMode() ? getModelTopK(model) : undefined
 
   const result: Record<string, JSONObject> = {
     ...providerOptions,
@@ -147,30 +147,31 @@ function getProviderOptions(params: {
         ...(costMode && { cost_mode: costMode }),
         ...(cacheDebugCorrelation && {
           cache_debug_correlation: cacheDebugCorrelation,
-        }), },
- provider: providerConfig,
- },
- }
+        }),
+      },
+      provider: providerConfig,
+    },
+  }
 
- // Add extra body for OpenAI-compatible providers in codefluff mode
- // Also add max_tokens, temperature, top_p, and top_k if configured
- if (
- extraBody ||
- maxTokens ||
- temperature !== undefined ||
- topP !== undefined ||
- topK !== undefined
- ) {
- result.openai = {
- extraBody: {
- ...extraBody,
- ...(maxTokens && { max_tokens: maxTokens }),
- ...(temperature !== undefined && { temperature }),
- ...(topP !== undefined && { top_p: topP }),
- ...(topK !== undefined && { top_k: topK }),
- },
- } as JSONObject
- }
+  // Add extra body for OpenAI-compatible providers in codefluff mode
+  // Also add max_tokens, temperature, top_p, and top_k if configured
+  if (
+    extraBody ||
+    maxTokens ||
+    temperature !== undefined ||
+    topP !== undefined ||
+    topK !== undefined
+  ) {
+    result.openai = {
+      extraBody: {
+        ...extraBody,
+        ...(maxTokens && { max_tokens: maxTokens }),
+        ...(temperature !== undefined && { temperature }),
+        ...(topP !== undefined && { top_p: topP }),
+        ...(topK !== undefined && { top_k: topK }),
+      },
+    } as JSONObject
+  }
 
   return result
 }

@@ -22,7 +22,10 @@ import {
   processBlocks,
   type BlockProcessorHandlers,
 } from '../../utils/block-processor'
-import { shouldRenderAsSimpleText, isMultiPromptEditor } from '../../utils/constants'
+import {
+  shouldRenderAsSimpleText,
+  isMultiPromptEditor,
+} from '../../utils/constants'
 import {
   isImplementorAgent,
   getImplementorIndex,
@@ -355,8 +358,12 @@ export const AgentBranchWrapper = memo(
             b.type === 'tool' && b.toolName === 'set_output',
         )
         // set_output wraps data in a 'data' property, so we need to access input.data
-        const outputData = (setOutputBlock?.input as { data?: Record<string, unknown> })?.data
-        const implementationId = outputData?.implementationId as string | undefined
+        const outputData = (
+          setOutputBlock?.input as { data?: Record<string, unknown> }
+        )?.data
+        const implementationId = outputData?.implementationId as
+          | string
+          | undefined
         if (implementationId) {
           const letterIndex = implementationId.charCodeAt(0) - 65
           const implementors = siblingBlocks.filter(

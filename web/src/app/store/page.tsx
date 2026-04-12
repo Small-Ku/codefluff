@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 
 import { getCachedAgentsBasicInfo } from '@/server/agents-data'
 
-
 interface PublisherProfileResponse {
   id: string
   name: string

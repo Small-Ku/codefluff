@@ -113,4 +113,3 @@ describe('promptAiSdkStream agentMappingKey forwarding (contract test)', () => {
     expect(capturedModelRequestParams!.agentMappingKey).toBe('file-picker')
   })
 })
-

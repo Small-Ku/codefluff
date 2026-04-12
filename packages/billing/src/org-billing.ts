@@ -179,7 +179,13 @@ export async function calculateOrganizationUsageAndBalance(
     conn: db,
     ...params,
   }
-  const { organizationId, quotaResetDate, now, conn: _conn, logger } = withDefaults
+  const {
+    organizationId,
+    quotaResetDate,
+    now,
+    conn: _conn,
+    logger,
+  } = withDefaults
 
   // Get all relevant grants for the organization
   const grants = await getOrderedActiveOrganizationGrants(withDefaults)

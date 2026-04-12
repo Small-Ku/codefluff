@@ -148,7 +148,14 @@ export async function updateGrantBalance(params: {
   tx: DbConn
   logger: Logger
 }) {
-  const { userId: _userId, grant, consumed: _consumed, newBalance, tx, logger: _logger } = params
+  const {
+    userId: _userId,
+    grant,
+    consumed: _consumed,
+    newBalance,
+    tx,
+    logger: _logger,
+  } = params
   await tx
     .update(schema.creditLedger)
     .set({ balance: newBalance })
@@ -289,8 +296,14 @@ export async function calculateUsageAndBalance(
     includeSubscriptionCredits: false,
     ...params,
   }
-  const { userId, quotaResetDate, now, isPersonalContext, includeSubscriptionCredits, logger } =
-    withDefaults
+  const {
+    userId,
+    quotaResetDate,
+    now,
+    isPersonalContext,
+    includeSubscriptionCredits,
+    logger,
+  } = withDefaults
 
   // Get all relevant grants in one query, using the provided connection
   const grants = await getOrderedActiveGrants(withDefaults)
@@ -335,7 +348,11 @@ export async function calculateUsageAndBalance(
     // Skip subscription credits for personal context unless explicitly included
     // (subscription credits are shown separately in the CLI with progress bars,
     // but need to be included for credit gating after ensureSubscriberBlockGrant)
-    if (isPersonalContext && grantType === 'subscription' && !includeSubscriptionCredits) {
+    if (
+      isPersonalContext &&
+      grantType === 'subscription' &&
+      !includeSubscriptionCredits
+    ) {
       continue
     }
 
@@ -578,8 +595,11 @@ export async function consumeCreditsAndAddAgentStep(params: {
     priority: number
     expires_at: Date | null
   }> = []
-  let phase: 'fetch_grants' | 'consume_credits' | 'insert_message' | 'complete' =
-    'fetch_grants'
+  let phase:
+    | 'fetch_grants'
+    | 'consume_credits'
+    | 'insert_message'
+    | 'complete' = 'fetch_grants'
 
   try {
     const { result, lockWaitMs } = await withAdvisoryLockTransaction({

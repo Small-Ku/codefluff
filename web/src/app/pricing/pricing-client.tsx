@@ -34,7 +34,7 @@ const WEEKS_PER_MONTH = 4
 const CREDITS_PER_DOLLAR = Object.fromEntries(
   Object.entries(SUBSCRIPTION_TIERS).map(([key, tier]) => [
     Number(key),
-    Math.floor(tier.weeklyCreditsLimit * WEEKS_PER_MONTH / tier.monthlyPrice),
+    Math.floor((tier.weeklyCreditsLimit * WEEKS_PER_MONTH) / tier.monthlyPrice),
   ]),
 ) as Record<number, number>
 
@@ -46,7 +46,10 @@ const USAGE_MULTIPLIER: Record<number, string> = {
 
 type ButtonAction = 'subscribe' | 'current' | 'upgrade' | 'downgrade'
 
-function getButtonAction(tierPrice: number, currentTier: number | null): ButtonAction {
+function getButtonAction(
+  tierPrice: number,
+  currentTier: number | null,
+): ButtonAction {
   if (currentTier === null) return 'subscribe'
   if (tierPrice === currentTier) return 'current'
   if (tierPrice > currentTier) return 'upgrade'
@@ -216,7 +219,8 @@ function PricingCardsGrid() {
         {Object.entries(SUBSCRIPTION_TIERS).map(([key, tier]) => {
           const price = Number(key) as SubscriptionTierPrice
           const isCurrentPlan = currentTier === price
-          const isHighlighted = currentTier === null ? price === 200 : isCurrentPlan
+          const isHighlighted =
+            currentTier === null ? price === 200 : isCurrentPlan
 
           return (
             <div
@@ -242,9 +246,7 @@ function PricingCardsGrid() {
                 <span className="text-xl sm:text-5xl font-bold text-white tracking-tight">
                   ${tier.monthlyPrice}
                 </span>
-                <span className="text-xs sm:text-sm text-white/30">
-                  /mo
-                </span>
+                <span className="text-xs sm:text-sm text-white/30">/mo</span>
               </div>
 
               <p className="text-sm sm:text-base font-medium text-white/60 mb-3 sm:mb-6">
@@ -252,7 +254,10 @@ function PricingCardsGrid() {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span tabIndex={0} className="inline-flex items-center ml-1 cursor-help align-middle">
+                      <span
+                        tabIndex={0}
+                        className="inline-flex items-center ml-1 cursor-help align-middle"
+                      >
                         <HelpCircle className="h-3.5 w-3.5 text-white/30 hover:text-white/60 transition-colors" />
                       </span>
                     </TooltipTrigger>
@@ -375,7 +380,10 @@ export function StrongHeroSection({ compact }: { compact?: boolean }) {
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span tabIndex={0} className="inline-flex items-center ml-1.5 cursor-help align-middle">
+                  <span
+                    tabIndex={0}
+                    className="inline-flex items-center ml-1.5 cursor-help align-middle"
+                  >
                     <HelpCircle className="h-4 w-4 text-white/40 hover:text-white/70 transition-colors" />
                   </span>
                 </TooltipTrigger>
@@ -398,7 +406,8 @@ export function StrongHeroSection({ compact }: { compact?: boolean }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.6 }}
           >
-            Cancel anytime · Applicable taxes not shown · Usage subject to change
+            Cancel anytime · Applicable taxes not shown · Usage subject to
+            change
           </motion.p>
         </div>
       </div>

@@ -13,14 +13,17 @@ import * as schema from './schema'
 const databaseUrl = getE2EDatabaseUrl()
 
 // Safeguard: prevent accidentally running e2e migrations against non-local databases
-if (process.env.E2E_DATABASE_URL && process.env.ALLOW_REMOTE_E2E_DATABASE !== 'true') {
+if (
+  process.env.E2E_DATABASE_URL &&
+  process.env.ALLOW_REMOTE_E2E_DATABASE !== 'true'
+) {
   const parsedUrl = new URL(databaseUrl)
   const hostname = parsedUrl.hostname
 
   if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
     console.error(
       `Refusing to run e2e migrations against non-local database host "${hostname}". ` +
-        'Set ALLOW_REMOTE_E2E_DATABASE=true to override.'
+        'Set ALLOW_REMOTE_E2E_DATABASE=true to override.',
     )
     process.exit(1)
   }
@@ -38,7 +41,7 @@ const run = (command: string, args: string[]) => {
     const errno = result.error as NodeJS.ErrnoException
     if (errno.code === 'ENOENT') {
       console.error(
-        `Error: '${command}' command not found. Please ensure ${command} is installed and in your PATH.`
+        `Error: '${command}' command not found. Please ensure ${command} is installed and in your PATH.`,
       )
     } else {
       console.error(`Error executing '${command}':`, result.error.message)
@@ -53,7 +56,7 @@ const run = (command: string, args: string[]) => {
 const waitForPostgres = async (
   url: string,
   maxAttempts = 30,
-  delayMs = 1000
+  delayMs = 1000,
 ): Promise<void> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     let testClient: ReturnType<typeof postgres> | null = null
@@ -64,11 +67,11 @@ const waitForPostgres = async (
     } catch (error) {
       if (attempt === maxAttempts) {
         throw new Error(
-          `Failed to connect to Postgres after ${maxAttempts} attempts: ${error}`
+          `Failed to connect to Postgres after ${maxAttempts} attempts: ${error}`,
         )
       }
       console.log(
-        `Waiting for Postgres to be ready... (attempt ${attempt}/${maxAttempts})`
+        `Waiting for Postgres to be ready... (attempt ${attempt}/${maxAttempts})`,
       )
       await new Promise((resolve) => setTimeout(resolve, delayMs))
     } finally {

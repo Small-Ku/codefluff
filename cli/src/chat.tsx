@@ -169,7 +169,9 @@ export const Chat = ({
   })
   const hasSubscription = subscriptionData?.hasSubscription ?? false
 
-  const { ad, adData, recordImpression } = useGravityAd({ enabled: IS_FREEBUFF || !hasSubscription })
+  const { ad, adData, recordImpression } = useGravityAd({
+    enabled: IS_FREEBUFF || !hasSubscription,
+  })
   const [adsManuallyDisabled, setAdsManuallyDisabled] = useState(false)
 
   const handleDisableAds = useCallback(() => {
@@ -271,7 +273,12 @@ export const Chat = ({
       })
     }
     prevSlashActiveRef.current = slashContext.active
-  }, [slashContext.active, slashContext.query, slashMatches.length, inputValue.length])
+  }, [
+    slashContext.active,
+    slashContext.query,
+    slashMatches.length,
+    inputValue.length,
+  ])
 
   // Reset suggestion menu indexes when context changes
   useEffect(() => {
@@ -340,11 +347,8 @@ export const Chat = ({
     setForceFileOnlyMentions(true)
   }, [cursorPosition, inputValue, setInputValue])
 
-  const { saveToHistory, navigateUp, navigateDown, resetHistoryNavigation } = useInputHistory(
-    inputValue,
-    setInputValue,
-    { inputMode, setInputMode },
-  )
+  const { saveToHistory, navigateUp, navigateDown, resetHistoryNavigation } =
+    useInputHistory(inputValue, setInputValue, { inputMode, setInputMode })
 
   // Use extracted streaming hook for connection, timer, queue, and exit handling
   const {
@@ -514,7 +518,10 @@ export const Chat = ({
         }
 
         // Restore attachments if they were preserved and none have been added since
-        if (preservedAttachments && useChatStore.getState().pendingAttachments.length === 0) {
+        if (
+          preservedAttachments &&
+          useChatStore.getState().pendingAttachments.length === 0
+        ) {
           useChatStore.setState((state) => {
             state.pendingAttachments = preservedAttachments
           })
@@ -614,16 +621,17 @@ export const Chat = ({
     ],
   )
 
-  const { inputWidth, handleBuildFast, handleBuildMax, handleBuildFree } = useChatInput({
-    setInputValue,
-    agentMode,
-    setAgentMode,
-    separatorWidth,
-    initialPrompt,
-    onSubmitPrompt,
-    isCompactHeight,
-    isNarrowWidth,
-  })
+  const { inputWidth, handleBuildFast, handleBuildMax, handleBuildFree } =
+    useChatInput({
+      setInputValue,
+      agentMode,
+      setAgentMode,
+      separatorWidth,
+      initialPrompt,
+      onSubmitPrompt,
+      isCompactHeight,
+      isNarrowWidth,
+    })
 
   const {
     feedbackMode,
@@ -811,7 +819,12 @@ export const Chat = ({
     })
     setInputFocused(true)
     resetHistoryNavigation()
-  }, [restoreSavedInput, setInputValue, setInputFocused, resetHistoryNavigation])
+  }, [
+    restoreSavedInput,
+    setInputValue,
+    setInputFocused,
+    resetHistoryNavigation,
+  ])
 
   const handleCloseFeedback = useCallback(() => {
     closeFeedback()
@@ -832,10 +845,18 @@ export const Chat = ({
         .then((result) => handleCommandResult(result))
         .catch((error) => {
           logger.error({ error }, '[review] Failed to submit review prompt')
-          showClipboardMessage('Failed to send review request', { durationMs: 3000 })
+          showClipboardMessage('Failed to send review request', {
+            durationMs: 3000,
+          })
         })
     },
-    [closeReviewScreen, setInputFocused, onSubmitPrompt, agentMode, handleCommandResult],
+    [
+      closeReviewScreen,
+      setInputFocused,
+      onSubmitPrompt,
+      agentMode,
+      handleCommandResult,
+    ],
   )
 
   const handleCloseReviewScreen = useCallback(() => {
@@ -1057,12 +1078,18 @@ export const Chat = ({
         let replacement: string
         const index = agentSelectedIndex
         if (index < agentMatches.length) {
-          const selected = agentMatches.length > 0 ? (agentMatches[index] || agentMatches[0]) : undefined
+          const selected =
+            agentMatches.length > 0
+              ? agentMatches[index] || agentMatches[0]
+              : undefined
           if (!selected) return
           replacement = `@${selected.id} `
         } else {
           const fileIndex = index - agentMatches.length
-          const selectedFile = fileMatches.length > 0 ? (fileMatches[fileIndex] || fileMatches[0]) : undefined
+          const selectedFile =
+            fileMatches.length > 0
+              ? fileMatches[fileIndex] || fileMatches[0]
+              : undefined
           if (!selectedFile) return
           replacement = `@${selectedFile.filePath} `
         }
@@ -1124,7 +1151,7 @@ export const Chat = ({
             (error) => {
               logger.error({ error }, 'Failed to add pending image from file')
               showClipboardMessage('Failed to add image', { durationMs: 3000 })
-            }
+            },
           )
         }, 0)
       },
@@ -1303,7 +1330,9 @@ export const Chat = ({
 
   // Auto-show subscription limit banner when rate limit becomes active
   const subscriptionLimitShownRef = useRef(false)
-  const subscriptionRateLimit = subscriptionData?.hasSubscription ? subscriptionData.rateLimit : undefined
+  const subscriptionRateLimit = subscriptionData?.hasSubscription
+    ? subscriptionData.rateLimit
+    : undefined
   const fallbackToALaCarte = subscriptionData?.fallbackToALaCarte ?? false
   useEffect(() => {
     const isLimited = subscriptionRateLimit?.limited === true
@@ -1445,20 +1474,17 @@ export const Chat = ({
           />
         )}
 
-        {ad && (IS_FREEBUFF || (!adsManuallyDisabled && getAdsEnabled())) && (
-          adData?.variant === 'choice' ? (
-            <ChoiceAdBanner
-              ads={adData.ads}
-              onImpression={recordImpression}
-            />
+        {ad &&
+          (IS_FREEBUFF || (!adsManuallyDisabled && getAdsEnabled())) &&
+          (adData?.variant === 'choice' ? (
+            <ChoiceAdBanner ads={adData.ads} onImpression={recordImpression} />
           ) : (
             <AdBanner
               ad={ad}
               onDisableAds={handleDisableAds}
               isFreeMode={IS_FREEBUFF || agentMode === 'FREE'}
             />
-          )
-        )}
+          ))}
 
         {reviewMode ? (
           <ReviewScreen
@@ -1525,6 +1551,7 @@ export const Chat = ({
               },
               cwd: getProjectRoot() ?? process.cwd(),
             })}
+            onInterruptStream={chatKeyboardHandlers.onInterruptStream}
           />
         )}
       </box>

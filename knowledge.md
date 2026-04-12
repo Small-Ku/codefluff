@@ -7,17 +7,20 @@ Codefluff runs standalone: your prompts and code go directly from your machine t
 ## Quickstart (using Codefluff)
 
 ### Install + configure (end-user)
+
 - Install the published CLI:
+
 ```bash
 npm install -g codefluff
 ```
 
 - Create your config at:
-`~/.config/codefluff/config.json`
+  `~/.config/codefluff/config.json`
 
 Note (Windows): `~` depends on shell/WSL. If Codefluff isn’t picking up your config, see `WINDOWS.md`.
 
 Minimal example (use env vars so keys don’t end up in plaintext):
+
 ```json
 {
   "keys": {
@@ -44,6 +47,7 @@ Minimal example (use env vars so keys don’t end up in plaintext):
 ```
 
 Custom provider example (OpenAI-compatible):
+
 ```json
 {
   "keys": {
@@ -62,12 +66,14 @@ Custom provider example (OpenAI-compatible):
 ```
 
 Run:
+
 ```bash
 cd your-project
 codefluff
 ```
 
 ### CLI usage (common)
+
 ```bash
 codefluff                    # starts in defaultMode
 codefluff --mode max         # start in max mode
@@ -78,6 +84,7 @@ Valid `--mode` values are primarily: `free|normal|max|plan`.
 `experimental` and `ask` exist in config, but currently behave like `normal` unless the CLI is extended.
 
 ### Web search providers (optional)
+
 Codefluff can do web research via configurable providers. Providers are tried in order, first successful result wins (automatic fallback).
 
 ```json
@@ -94,26 +101,33 @@ Codefluff can do web research via configurable providers. Providers are tried in
 ## Repo dev (working on Codefluff itself)
 
 ### Prereqs
+
 - **Bun**: `bun@1.3.11` (repo package manager)
 - Windows: see `WINDOWS.md` for bash/Git Bash/WSL gotchas.
 
 ### Install
+
 ```bash
 bun install
 ```
 
 ### Run the CLI from source
+
 From repo root:
+
 ```bash
 bun run dev
 # runs: bun --cwd cli dev
 ```
+
 Directly:
+
 ```bash
 bun --cwd cli dev
 ```
 
 ### Common scripts (repo root)
+
 ```bash
 bun run typecheck
 bun run test
@@ -127,6 +141,7 @@ Note: root `typecheck` runs `bun scripts/check-env-architecture.ts` before works
 CLI tests live under `cli/src/__tests__/`.
 
 Run:
+
 ```bash
 bun --cwd cli test
 # or
@@ -134,6 +149,7 @@ cd cli && bun test
 ```
 
 Notes:
+
 - Integration/E2E tests may require **tmux** (on Windows, use WSL for tmux).
 - Integration/E2E suites auto-check for tmux and skip gracefully if it’s missing.
 - E2E tests require the SDK to be built first:
@@ -142,6 +158,7 @@ Notes:
 ## Architecture (where code lives)
 
 ### Workspaces
+
 - `codefluff/`: end-user docs for the BYOK fork
 - `cli/`: terminal UI + command routing (the Codefluff/Codebuff CLI implementation)
 - `sdk/`: provider integrations and model routing utilities
@@ -160,6 +177,7 @@ Notes:
   - `read_docs` is not available (server-backed).
 
 ## Where to look first
+
 - Codefluff docs: `codefluff/README.md`
 - CLI scripts: `cli/package.json`
 - CLI entry: `cli/src/index.tsx`

@@ -11,8 +11,8 @@ import {
 
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 
-const STANDARD_MODEL_ID = 'accounts/fireworks/models/minimax-m2p5'
-const DEPLOYMENT_MODEL_ID = 'accounts/james-65d217/deployments/lnfid5h9'
+const STANDARD_MODEL_ID = 'accounts/fireworks/models/glm-5p1'
+const DEPLOYMENT_MODEL_ID = 'accounts/james-65d217/deployments/mjb4i7ea'
 
 function createMockLogger(): Logger {
   return {
@@ -78,7 +78,7 @@ describe('Fireworks deployment routing', () => {
     })
 
     const minimalBody = {
-      model: 'minimax/minimax-m2.5',
+      model: 'z-ai/glm-5.1',
       messages: [{ role: 'user' as const, content: 'test' }],
     }
 
@@ -96,7 +96,10 @@ describe('Fireworks deployment routing', () => {
         ...args: Parameters<Date['toLocaleString']>
       ) {
         const options = args[1] as Intl.DateTimeFormatOptions | undefined
-        if (options?.timeZone === 'America/New_York' && options?.hour === 'numeric') {
+        if (
+          options?.timeZone === 'America/New_York' &&
+          options?.hour === 'numeric'
+        ) {
           return inHours ? '14' : '3'
         }
         return original.apply(this, args)
@@ -107,15 +110,17 @@ describe('Fireworks deployment routing', () => {
     it('uses standard API when custom deployment is disabled', async () => {
       const fetchCalls: string[] = []
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       const response = await createFireworksRequestWithFallback({
         body: minimalBody as never,
-        originalModel: 'minimax/minimax-m2.5',
+        originalModel: 'z-ai/glm-5.1',
         fetch: mockFetch,
         logger,
         useCustomDeployment: false,
@@ -131,16 +136,18 @@ describe('Fireworks deployment routing', () => {
       const spy = spyDeploymentHours(true)
       const fetchCalls: string[] = []
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -160,31 +167,34 @@ describe('Fireworks deployment routing', () => {
       const fetchCalls: string[] = []
       let callCount = 0
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        callCount++
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          callCount++
 
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({
-              error: {
-                message: 'Deployment is currently scaled to zero and is scaling up. Please retry your request in a few minutes.',
-                code: 'DEPLOYMENT_SCALING_UP',
-                type: 'error',
-              },
-            }),
-            { status: 503, statusText: 'Service Unavailable' },
-          )
-        }
+          if (callCount === 1) {
+            return new Response(
+              JSON.stringify({
+                error: {
+                  message:
+                    'Deployment is currently scaled to zero and is scaling up. Please retry your request in a few minutes.',
+                  code: 'DEPLOYMENT_SCALING_UP',
+                  type: 'error',
+                },
+              }),
+              { status: 503, statusText: 'Service Unavailable' },
+            )
+          }
 
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -207,31 +217,33 @@ describe('Fireworks deployment routing', () => {
       const fetchCalls: string[] = []
       let callCount = 0
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        callCount++
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          callCount++
 
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({
-              error: {
-                message: 'Service temporarily unavailable',
-                code: 'SERVICE_UNAVAILABLE',
-                type: 'error',
-              },
-            }),
-            { status: 503, statusText: 'Service Unavailable' },
-          )
-        }
+          if (callCount === 1) {
+            return new Response(
+              JSON.stringify({
+                error: {
+                  message: 'Service temporarily unavailable',
+                  code: 'SERVICE_UNAVAILABLE',
+                  type: 'error',
+                },
+              }),
+              { status: 503, statusText: 'Service Unavailable' },
+            )
+          }
 
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -254,25 +266,27 @@ describe('Fireworks deployment routing', () => {
       const fetchCalls: string[] = []
       let callCount = 0
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        callCount++
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          callCount++
 
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({ error: 'Internal error' }),
-            { status: 500, statusText: 'Internal Server Error' },
-          )
-        }
+          if (callCount === 1) {
+            return new Response(JSON.stringify({ error: 'Internal error' }), {
+              status: 500,
+              statusText: 'Internal Server Error',
+            })
+          }
 
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -294,16 +308,18 @@ describe('Fireworks deployment routing', () => {
       markDeploymentScalingUp()
 
       const fetchCalls: string[] = []
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -322,11 +338,13 @@ describe('Fireworks deployment routing', () => {
       const spy = spyDeploymentHours(true)
       const fetchCalls: string[] = []
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        return new Response(JSON.stringify({ ok: true }), { status: 200 })
-      }) as unknown as typeof globalThis.fetch
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
@@ -351,19 +369,21 @@ describe('Fireworks deployment routing', () => {
       const spy = spyDeploymentHours(true)
       const fetchCalls: string[] = []
 
-      const mockFetch = mock(async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = JSON.parse(init?.body as string)
-        fetchCalls.push(body.model)
-        return new Response(
-          JSON.stringify({ error: { message: 'Rate limited' } }),
-          { status: 429, statusText: 'Too Many Requests' },
-        )
-      }) as unknown as typeof globalThis.fetch
+      const mockFetch = mock(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const body = JSON.parse(init?.body as string)
+          fetchCalls.push(body.model)
+          return new Response(
+            JSON.stringify({ error: { message: 'Rate limited' } }),
+            { status: 429, statusText: 'Too Many Requests' },
+          )
+        },
+      ) as unknown as typeof globalThis.fetch
 
       try {
         const response = await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,
@@ -403,7 +423,7 @@ describe('Fireworks deployment routing', () => {
       try {
         await createFireworksRequestWithFallback({
           body: minimalBody as never,
-          originalModel: 'minimax/minimax-m2.5',
+          originalModel: 'z-ai/glm-5.1',
           fetch: mockFetch,
           logger,
           useCustomDeployment: true,

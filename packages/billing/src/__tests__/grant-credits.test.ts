@@ -4,7 +4,6 @@ import {
 } from '@codebuff/common/testing/mock-modules'
 import { afterEach, describe, expect, it } from 'bun:test'
 
-
 import type { Logger } from '@codebuff/common/types/contracts/logger'
 
 const logger: Logger = {
@@ -17,10 +16,12 @@ const logger: Logger = {
 const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
 const _pastDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
 
-const createTxMock = (user: {
-  next_quota_reset: Date | null
-  auto_topup_enabled: boolean | null
-} | null) => ({
+const createTxMock = (
+  user: {
+    next_quota_reset: Date | null
+    auto_topup_enabled: boolean | null
+  } | null,
+) => ({
   query: {
     user: {
       findFirst: async () => user,
@@ -47,7 +48,8 @@ const createTxMock = (user: {
             limit: () => [],
           }),
           // Make this thenable for the .where().then() pattern used in grant-credits.ts
-          then: (resolve: any, reject?: any) => Promise.resolve([]).then(resolve, reject),
+          then: (resolve: any, reject?: any) =>
+            Promise.resolve([]).then(resolve, reject),
         }
       },
     }),
@@ -76,10 +78,12 @@ const createDbMock = (options: {
   }
 }
 
-const createTransactionMock = (user: {
-  next_quota_reset: Date | null
-  auto_topup_enabled: boolean | null
-} | null) => ({
+const createTransactionMock = (
+  user: {
+    next_quota_reset: Date | null
+    auto_topup_enabled: boolean | null
+  } | null,
+) => ({
   withAdvisoryLockTransaction: async ({
     callback,
   }: {
@@ -114,7 +118,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('500'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-123',
@@ -129,7 +134,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('500'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'referred-user',
@@ -144,7 +150,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('750'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-with-both',
@@ -160,7 +167,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('0'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-with-only-new-referrals',
@@ -175,7 +183,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('0'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-with-no-referrals',
@@ -190,7 +199,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery(null),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-null-result',
@@ -211,7 +221,8 @@ describe('grant-credits', () => {
         },
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-empty-result',
@@ -235,7 +246,8 @@ describe('grant-credits', () => {
         },
       }
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'user-db-error',
@@ -255,7 +267,8 @@ describe('grant-credits', () => {
         default: createDbMockForReferralQuery('999999'),
       }))
 
-      const { calculateTotalLegacyReferralBonus } = await import('../grant-credits')
+      const { calculateTotalLegacyReferralBonus } =
+        await import('../grant-credits')
 
       const result = await calculateTotalLegacyReferralBonus({
         userId: 'power-referrer',
@@ -281,7 +294,8 @@ describe('grant-credits', () => {
         )
 
         // Need to re-import after mocking
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         const result = await fn({
           userId: 'user-123',
@@ -304,7 +318,8 @@ describe('grant-credits', () => {
           createTransactionMock(user),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         const result = await fn({
           userId: 'user-123',
@@ -326,7 +341,8 @@ describe('grant-credits', () => {
           createTransactionMock(user),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         const result = await fn({
           userId: 'user-123',
@@ -344,7 +360,8 @@ describe('grant-credits', () => {
           createTransactionMock(null),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         await expect(
           fn({
@@ -368,7 +385,8 @@ describe('grant-credits', () => {
           createTransactionMock(user),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         const result = await fn({
           userId: 'user-123',
@@ -383,10 +401,13 @@ describe('grant-credits', () => {
       // Track grant operations to verify type and expiration
       let grantCalls: any[] = []
 
-      const createTxMockWithGrants = (user: {
-        next_quota_reset: Date | null
-        auto_topup_enabled: boolean | null
-      } | null, legacyReferralBonus: number) => {
+      const createTxMockWithGrants = (
+        user: {
+          next_quota_reset: Date | null
+          auto_topup_enabled: boolean | null
+        } | null,
+        legacyReferralBonus: number,
+      ) => {
         grantCalls = []
         return {
           query: {
@@ -419,7 +440,8 @@ describe('grant-credits', () => {
                     limit: () => [],
                   }),
                   // Make this thenable for the .where().then() pattern used in grant-credits.ts
-                  then: (resolve: any, reject?: any) => Promise.resolve(result).then(resolve, reject),
+                  then: (resolve: any, reject?: any) =>
+                    Promise.resolve(result).then(resolve, reject),
                 }
               },
             }),
@@ -428,15 +450,23 @@ describe('grant-credits', () => {
         }
       }
 
-      const createTransactionMockWithGrants = (user: {
-        next_quota_reset: Date | null
-        auto_topup_enabled: boolean | null
-      } | null, legacyReferralBonus: number) => ({
+      const createTransactionMockWithGrants = (
+        user: {
+          next_quota_reset: Date | null
+          auto_topup_enabled: boolean | null
+        } | null,
+        legacyReferralBonus: number,
+      ) => ({
         withAdvisoryLockTransaction: async ({
           callback,
         }: {
           callback: (tx: any) => Promise<any>
-        }) => ({ result: await callback(createTxMockWithGrants(user, legacyReferralBonus)), lockWaitMs: 0 }),
+        }) => ({
+          result: await callback(
+            createTxMockWithGrants(user, legacyReferralBonus),
+          ),
+          lockWaitMs: 0,
+        }),
       })
 
       it('should grant referral_legacy type when user has legacy referrals and quota needs reset', async () => {
@@ -467,7 +497,9 @@ describe('grant-credits', () => {
                     }
                   }
                   // Return referral bonus for calculateTotalLegacyReferralBonus
-                  return Promise.resolve([{ totalCredits: String(legacyReferralBonus) }])
+                  return Promise.resolve([
+                    { totalCredits: String(legacyReferralBonus) },
+                  ])
                 },
               }),
             }),
@@ -477,7 +509,8 @@ describe('grant-credits', () => {
           createTransactionMockWithGrants(user, legacyReferralBonus),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         await fn({
           userId: 'user-with-legacy-referrals',
@@ -488,12 +521,16 @@ describe('grant-credits', () => {
         expect(grantCalls.length).toBe(2)
 
         // Find the referral grant
-        const referralGrant = grantCalls.find((call) => call.type === 'referral_legacy')
+        const referralGrant = grantCalls.find(
+          (call) => call.type === 'referral_legacy',
+        )
         expect(referralGrant).toBeDefined()
         expect(referralGrant.principal).toBe(legacyReferralBonus)
         expect(referralGrant.balance).toBe(legacyReferralBonus)
         expect(referralGrant.expires_at).toBeDefined() // Legacy referrals expire at next reset
-        expect(referralGrant.description).toBe('Monthly referral bonus (legacy)')
+        expect(referralGrant.description).toBe(
+          'Monthly referral bonus (legacy)',
+        )
       })
 
       it('should NOT grant referral credits when user has no legacy referrals', async () => {
@@ -522,7 +559,9 @@ describe('grant-credits', () => {
                     }
                   }
                   // Return 0 referral bonus for calculateTotalLegacyReferralBonus
-                  return Promise.resolve([{ totalCredits: String(legacyReferralBonus) }])
+                  return Promise.resolve([
+                    { totalCredits: String(legacyReferralBonus) },
+                  ])
                 },
               }),
             }),
@@ -532,7 +571,8 @@ describe('grant-credits', () => {
           createTransactionMockWithGrants(user, legacyReferralBonus),
         )
 
-        const { triggerMonthlyResetAndGrant: fn } = await import('../grant-credits')
+        const { triggerMonthlyResetAndGrant: fn } =
+          await import('../grant-credits')
 
         await fn({
           userId: 'user-without-legacy-referrals',

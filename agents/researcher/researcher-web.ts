@@ -38,9 +38,9 @@ Then, write up a concise report that includes key findings for the user's prompt
     const results = (toolResult
       ?.filter((r) => r.type === 'json')
       ?.map((r) => r.value)?.[0] ?? {}) as {
-        result: string | undefined
-        errorMessage: string | undefined
-      }
+      result: string | undefined
+      errorMessage: string | undefined
+    }
 
     yield {
       type: 'STEP_TEXT',

@@ -18,4 +18,3 @@ base-lite "fix this bug"
 ## Tools
 
 - Tool definitions live in `common/src/tools` and are executed via the SDK helpers + agent-runtime.
-

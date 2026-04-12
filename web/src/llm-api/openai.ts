@@ -30,7 +30,7 @@ const INPUT_TOKEN_COSTS: Record<string, number> = {
   'gpt-5.3-codex': 1.25,
   'gpt-5.4': 1.25,
   'gpt-5.4-codex': 1.25,
-  'gpt-4o-2024-11-20': 2.50,
+  'gpt-4o-2024-11-20': 2.5,
   'gpt-4o-mini-2024-07-18': 0.15,
 }
 const CACHED_INPUT_TOKEN_COSTS: Record<string, number> = {
@@ -57,7 +57,7 @@ const OUTPUT_TOKEN_COSTS: Record<string, number> = {
   'gpt-5.4': 10,
   'gpt-5.4-codex': 10,
   'gpt-4o-2024-11-20': 10,
-  'gpt-4o-mini-2024-07-18': 0.60,
+  'gpt-4o-mini-2024-07-18': 0.6,
 }
 
 // Extended timeout for deep-thinking models (e.g., gpt-5.x) that can take
@@ -95,8 +95,7 @@ function extractUsageAndCost(
   usage: OpenAIUsage,
   modelShortName: string,
 ): UsageData {
-  const inputTokenCost =
-    INPUT_TOKEN_COSTS[modelShortName] ?? DEFAULT_INPUT_COST
+  const inputTokenCost = INPUT_TOKEN_COSTS[modelShortName] ?? DEFAULT_INPUT_COST
   const cachedInputTokenCost =
     CACHED_INPUT_TOKEN_COSTS[modelShortName] ?? DEFAULT_CACHED_INPUT_COST
   const outputTokenCost =
@@ -138,7 +137,8 @@ function buildOpenAIBody(
   delete openaiBody.max_tokens
 
   // Transform reasoning to reasoning_effort (not supported with function tools)
-  const hasTools = Array.isArray(openaiBody.tools) && openaiBody.tools.length > 0
+  const hasTools =
+    Array.isArray(openaiBody.tools) && openaiBody.tools.length > 0
   if (openaiBody.reasoning && typeof openaiBody.reasoning === 'object') {
     const reasoning = openaiBody.reasoning as {
       enabled?: boolean
@@ -283,10 +283,7 @@ export async function handleOpenAINonStream({
       logger,
       insertMessageBigquery,
     }).catch((error) => {
-      logger.error(
-        { error },
-        'Failed to insert message into BigQuery (OpenAI)',
-      )
+      logger.error({ error }, 'Failed to insert message into BigQuery (OpenAI)')
     })
 
     const billedCredits = await consumeCreditsForMessage({
@@ -339,10 +336,7 @@ export async function handleOpenAINonStream({
     logger,
     insertMessageBigquery,
   }).catch((error) => {
-    logger.error(
-      { error },
-      'Failed to insert message into BigQuery (OpenAI)',
-    )
+    logger.error({ error }, 'Failed to insert message into BigQuery (OpenAI)')
   })
 
   const billedCredits = await consumeCreditsForMessage({
@@ -481,10 +475,16 @@ export async function handleOpenAIStream({
                   const delta = obj.choices?.[0]?.delta
 
                   // Track time to first token (TTFT) - set on first meaningful delta (content, reasoning, or tool_calls)
-                  const hasContentDelta = delta?.content && responseText.length === 0
-                  const hasReasoningDelta = delta?.reasoning && reasoningText.length === 0
-                  const hasToolCallsDelta = delta?.tool_calls && delta.tool_calls.length > 0
-                  if (ttftMs === null && (hasContentDelta || hasReasoningDelta || hasToolCallsDelta)) {
+                  const hasContentDelta =
+                    delta?.content && responseText.length === 0
+                  const hasReasoningDelta =
+                    delta?.reasoning && reasoningText.length === 0
+                  const hasToolCallsDelta =
+                    delta?.tool_calls && delta.tool_calls.length > 0
+                  if (
+                    ttftMs === null &&
+                    (hasContentDelta || hasReasoningDelta || hasToolCallsDelta)
+                  ) {
                     ttftMs = Date.now() - startTime.getTime()
                   }
 
@@ -601,7 +601,10 @@ export async function handleOpenAIStream({
                 if (delta?.content && responseText.length < MAX_BUFFER_SIZE) {
                   responseText += delta.content
                 }
-                if (delta?.reasoning && reasoningText.length < MAX_BUFFER_SIZE) {
+                if (
+                  delta?.reasoning &&
+                  reasoningText.length < MAX_BUFFER_SIZE
+                ) {
                   reasoningText += delta.reasoning
                 }
 

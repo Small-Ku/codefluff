@@ -47,9 +47,8 @@ describe('Freebuff: Agent-driven E2E', () => {
       cleanup = tmuxTools.cleanup
 
       // Dynamically import SDK to avoid build-time dependency issues
-      const { CodebuffClient } = (await import(
-        '@codebuff/sdk'
-      )) as typeof import('@codebuff/sdk')
+      const { CodebuffClient } =
+        (await import('@codebuff/sdk')) as typeof import('@codebuff/sdk')
 
       const client: CodebuffClientType = new CodebuffClient({ apiKey })
 
@@ -95,9 +94,8 @@ describe('Freebuff: Agent-driven E2E', () => {
       const tmuxTools = createFreebuffTmuxTools(binary)
       cleanup = tmuxTools.cleanup
 
-      const { CodebuffClient } = (await import(
-        '@codebuff/sdk'
-      )) as typeof import('@codebuff/sdk')
+      const { CodebuffClient } =
+        (await import('@codebuff/sdk')) as typeof import('@codebuff/sdk')
 
       const client: CodebuffClientType = new CodebuffClient({ apiKey })
 

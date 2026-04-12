@@ -707,43 +707,43 @@ function createCodefluffDirectModel(model: string): LanguageModel {
     )
   }
 
- const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
- const providerName = getProviderName(model)
+  const { key: apiKey, baseURL, style = 'openai', headers } = providerConfig
+  const providerName = getProviderName(model)
 
- // Get model-specific configuration (extraBody, max_tokens)
- // Note: temperature, top_p, top_k are handled in llm.ts via providerOptions for all providers
- const modelConfig = getModelConfig(model)
- const extraBody = modelConfig?.extraBody
- const maxTokens = modelConfig?.max_tokens
+  // Get model-specific configuration (extraBody, max_tokens)
+  // Note: temperature, top_p, top_k are handled in llm.ts via providerOptions for all providers
+  const modelConfig = getModelConfig(model)
+  const extraBody = modelConfig?.extraBody
+  const maxTokens = modelConfig?.max_tokens
 
- // Merge max_tokens into extraBody if configured
- // This ensures providers like Nvidia NIM get the correct max_tokens in the request
- const mergedExtraBody = maxTokens
- ? { ...extraBody, max_tokens: maxTokens }
- : extraBody
+  // Merge max_tokens into extraBody if configured
+  // This ensures providers like Nvidia NIM get the correct max_tokens in the request
+  const mergedExtraBody = maxTokens
+    ? { ...extraBody, max_tokens: maxTokens }
+    : extraBody
 
- if (style === 'anthropic') {
- const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
- const anthropic = createAnthropic({
- apiKey,
- ...(baseURL ? { baseURL } : {}),
- })
- // Note: Anthropic SDK doesn't support passing temperature/topP/topK at model creation time.
- // These settings are passed at request time via the model's second argument in streamText/generateText.
- // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
- return anthropic(anthropicModelId) as unknown as LanguageModel
- }
+  if (style === 'anthropic') {
+    const anthropicModelId = baseURL ? modelId : toAnthropicModelId(model)
+    const anthropic = createAnthropic({
+      apiKey,
+      ...(baseURL ? { baseURL } : {}),
+    })
+    // Note: Anthropic SDK doesn't support passing temperature/topP/topK at model creation time.
+    // These settings are passed at request time via the model's second argument in streamText/generateText.
+    // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
+    return anthropic(anthropicModelId) as unknown as LanguageModel
+  }
 
- if (style === 'google') {
- const google = createGoogleGenerativeAI({
- apiKey,
- ...(baseURL ? { baseURL } : {}),
- })
- // Note: Google SDK doesn't support passing temperature/topP/topK at model creation time.
- // These settings are passed at request time via the model's second argument in streamText/generateText.
- // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
- return google(modelId) as unknown as LanguageModel
- }
+  if (style === 'google') {
+    const google = createGoogleGenerativeAI({
+      apiKey,
+      ...(baseURL ? { baseURL } : {}),
+    })
+    // Note: Google SDK doesn't support passing temperature/topP/topK at model creation time.
+    // These settings are passed at request time via the model's second argument in streamText/generateText.
+    // For BYOK mode, we store these in modelConfig and apply them in llm.ts providerOptions.
+    return google(modelId) as unknown as LanguageModel
+  }
 
   // OpenAI-compatible style (works for OpenAI-compatible providers, OpenRouter, StepFun, DeepSeek, etc.)
   if (providerName === 'openai') {

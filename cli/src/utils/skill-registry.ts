@@ -14,7 +14,7 @@ let skillsCache: SkillsMap = {}
 /**
  * Initialize the skill registry by loading skills via the SDK.
  * This must be called at CLI startup.
- * 
+ *
  * Skills are loaded from:
  * - ~/.agents/skills/ (global)
  * - {projectRoot}/.agents/skills/ (project, overrides global)
@@ -76,7 +76,10 @@ export function getLoadedSkillsMessage(): string | null {
 
   const header = `Loaded ${skills.length} skill${skills.length === 1 ? '' : 's'}`
   const skillList = skills
-    .map((skill) => `  - ${skill.name}: ${skill.description.slice(0, 60)}${skill.description.length > 60 ? '...' : ''}`)
+    .map(
+      (skill) =>
+        `  - ${skill.name}: ${skill.description.slice(0, 60)}${skill.description.length > 60 ? '...' : ''}`,
+    )
     .join('\n')
 
   return `${header}\n${skillList}`

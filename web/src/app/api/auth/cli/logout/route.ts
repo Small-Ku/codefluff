@@ -1,6 +1,5 @@
 import db from '@codebuff/internal/db'
 
-
 import { createLogoutDb, postLogout } from './_post'
 
 import type { NextRequest } from 'next/server'

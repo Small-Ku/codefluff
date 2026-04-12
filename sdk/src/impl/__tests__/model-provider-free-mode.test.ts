@@ -5,12 +5,8 @@ import {
 } from '@codebuff/common/testing/mock-modules'
 
 describe('getModelForRequest free-mode guards', () => {
-  const mockGetValidChatGptOAuthCredentials = mock(() =>
-    Promise.resolve(null),
-  )
-  const mockGetValidClaudeOAuthCredentials = mock(() =>
-    Promise.resolve(null),
-  )
+  const mockGetValidChatGptOAuthCredentials = mock(() => Promise.resolve(null))
+  const mockGetValidClaudeOAuthCredentials = mock(() => Promise.resolve(null))
 
   beforeEach(async () => {
     // Mock CHATGPT_OAUTH_ENABLED to true so the ChatGPT OAuth path is entered.

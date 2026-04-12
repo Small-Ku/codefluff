@@ -12,14 +12,7 @@
  * 2. Set DATABASE_URL to point to your test database
  */
 import * as schema from '@codebuff/internal/db/schema'
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from 'bun:test'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'bun:test'
 import { eq, and, asc, desc, ne, or, gt, isNull, sql } from 'drizzle-orm'
 import { union } from 'drizzle-orm/pg-core'
 import { drizzle } from 'drizzle-orm/postgres-js'

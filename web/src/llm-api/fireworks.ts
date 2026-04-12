@@ -29,6 +29,7 @@ const fireworksAgent = new Agent({
 /** Map from OpenRouter model IDs to Fireworks standard API model IDs */
 const FIREWORKS_MODEL_MAP: Record<string, string> = {
   'minimax/minimax-m2.5': 'accounts/fireworks/models/minimax-m2p5',
+  'z-ai/glm-5.1': 'accounts/fireworks/models/glm-5p1',
 }
 
 /** Flag to enable custom Fireworks deployments (set to false to use global API only) */
@@ -36,7 +37,8 @@ const FIREWORKS_USE_CUSTOM_DEPLOYMENT = true
 
 /** Custom deployment IDs for models with dedicated Fireworks deployments */
 const FIREWORKS_DEPLOYMENT_MAP: Record<string, string> = {
-  'minimax/minimax-m2.5': 'accounts/james-65d217/deployments/lnfid5h9',
+  // 'minimax/minimax-m2.5': 'accounts/james-65d217/deployments/lnfid5h9',
+  'z-ai/glm-5.1': 'accounts/james-65d217/deployments/mjb4i7ea',
 }
 
 /** Check if current time is within deployment hours (10am–8pm ET) */
@@ -79,7 +81,11 @@ function getFireworksModelId(openrouterModel: string): string {
   return FIREWORKS_MODEL_MAP[openrouterModel] ?? openrouterModel
 }
 
-type StreamState = { responseText: string; reasoningText: string; ttftMs: number | null }
+type StreamState = {
+  responseText: string
+  reasoningText: string
+  ttftMs: number | null
+}
 
 type LineResult = {
   state: StreamState
@@ -108,11 +114,20 @@ function createFireworksRequest(params: {
 
   // Add strict: true to tool definitions to prevent hallucinated tool call formats
   if (Array.isArray(fireworksBody.tools)) {
-    fireworksBody.tools = (fireworksBody.tools as Array<Record<string, unknown>>).map((tool) => {
-      if (tool.type === 'function' && typeof tool.function === 'object' && tool.function !== null) {
+    fireworksBody.tools = (
+      fireworksBody.tools as Array<Record<string, unknown>>
+    ).map((tool) => {
+      if (
+        tool.type === 'function' &&
+        typeof tool.function === 'object' &&
+        tool.function !== null
+      ) {
         return {
           ...tool,
-          function: { ...(tool.function as Record<string, unknown>), strict: true },
+          function: {
+            ...(tool.function as Record<string, unknown>),
+            strict: true,
+          },
         }
       }
       return tool
@@ -129,7 +144,7 @@ function createFireworksRequest(params: {
     headers: {
       Authorization: `Bearer ${env.FIREWORKS_API_KEY}`,
       'Content-Type': 'application/json',
-      'x-session-affinity': sessionId
+      'x-session-affinity': sessionId,
     },
     body: JSON.stringify(fireworksBody),
     // @ts-expect-error - dispatcher is a valid undici option not in fetch types
@@ -137,29 +152,79 @@ function createFireworksRequest(params: {
   })
 }
 
-// Fireworks per-token pricing (dollars per token)
-const FIREWORKS_INPUT_COST_PER_TOKEN = 0.30 / 1_000_000
-const FIREWORKS_CACHED_INPUT_COST_PER_TOKEN = 0.03 / 1_000_000
-const FIREWORKS_OUTPUT_COST_PER_TOKEN = 1.20 / 1_000_000
+// Fireworks per-token pricing (dollars per token), keyed by OpenRouter model ID
+interface FireworksPricing {
+  inputCostPerToken: number
+  cachedInputCostPerToken: number
+  outputCostPerToken: number
+}
 
-function extractUsageAndCost(usage: Record<string, unknown> | undefined | null): UsageData {
-  if (!usage) return { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0, reasoningTokens: 0, cost: 0 }
-  const promptDetails = usage.prompt_tokens_details as Record<string, unknown> | undefined | null
-  const completionDetails = usage.completion_tokens_details as Record<string, unknown> | undefined | null
+const FIREWORKS_PRICING_MAP: Record<string, FireworksPricing> = {
+  'minimax/minimax-m2.5': {
+    inputCostPerToken: 0.3 / 1_000_000,
+    cachedInputCostPerToken: 0.03 / 1_000_000,
+    outputCostPerToken: 1.2 / 1_000_000,
+  },
+  'z-ai/glm-5.1': {
+    inputCostPerToken: 1.4 / 1_000_000,
+    cachedInputCostPerToken: 0.26 / 1_000_000,
+    outputCostPerToken: 4.4 / 1_000_000,
+  },
+}
 
-  const inputTokens = typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0
-  const outputTokens = typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0
-  const cacheReadInputTokens = typeof promptDetails?.cached_tokens === 'number' ? promptDetails.cached_tokens : 0
-  const reasoningTokens = typeof completionDetails?.reasoning_tokens === 'number' ? completionDetails.reasoning_tokens : 0
+function getFireworksPricing(model: string): FireworksPricing {
+  return FIREWORKS_PRICING_MAP[model] ?? FIREWORKS_MODEL_MAP['z-ai/glm-5.1']
+}
+
+function extractUsageAndCost(
+  usage: Record<string, unknown> | undefined | null,
+  model: string,
+): UsageData {
+  if (!usage)
+    return {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadInputTokens: 0,
+      reasoningTokens: 0,
+      cost: 0,
+    }
+  const promptDetails = usage.prompt_tokens_details as
+    | Record<string, unknown>
+    | undefined
+    | null
+  const completionDetails = usage.completion_tokens_details as
+    | Record<string, unknown>
+    | undefined
+    | null
+
+  const inputTokens =
+    typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0
+  const outputTokens =
+    typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0
+  const cacheReadInputTokens =
+    typeof promptDetails?.cached_tokens === 'number'
+      ? promptDetails.cached_tokens
+      : 0
+  const reasoningTokens =
+    typeof completionDetails?.reasoning_tokens === 'number'
+      ? completionDetails.reasoning_tokens
+      : 0
 
   // Fireworks doesn't return cost — compute from token counts and known pricing
+  const pricing = getFireworksPricing(model)
   const nonCachedInputTokens = Math.max(0, inputTokens - cacheReadInputTokens)
   const cost =
-    nonCachedInputTokens * FIREWORKS_INPUT_COST_PER_TOKEN +
-    cacheReadInputTokens * FIREWORKS_CACHED_INPUT_COST_PER_TOKEN +
-    outputTokens * FIREWORKS_OUTPUT_COST_PER_TOKEN
+    nonCachedInputTokens * pricing.inputCostPerToken +
+    cacheReadInputTokens * pricing.cachedInputCostPerToken +
+    outputTokens * pricing.outputCostPerToken
 
-  return { inputTokens, outputTokens, cacheReadInputTokens, reasoningTokens, cost }
+  return {
+    inputTokens,
+    outputTokens,
+    cacheReadInputTokens,
+    reasoningTokens,
+    cost,
+  }
 }
 
 export async function handleFireworksNonStream({
@@ -181,9 +246,18 @@ export async function handleFireworksNonStream({
 }) {
   const originalModel = body.model
   const startTime = new Date()
-  const { clientId, clientRequestId, costMode } = extractRequestMetadata({ body, logger })
+  const { clientId, clientRequestId, costMode } = extractRequestMetadata({
+    body,
+    logger,
+  })
 
-  const response = await createFireworksRequestWithFallback({ body, originalModel, fetch, logger, sessionId: userId })
+  const response = await createFireworksRequestWithFallback({
+    body,
+    originalModel,
+    fetch,
+    logger,
+    sessionId: userId,
+  })
 
   if (!response.ok) {
     throw await parseFireworksError(response)
@@ -191,8 +265,11 @@ export async function handleFireworksNonStream({
 
   const data = await response.json()
   const content = data.choices?.[0]?.message?.content ?? ''
-  const reasoningText = data.choices?.[0]?.message?.reasoning_content ?? data.choices?.[0]?.message?.reasoning ?? ''
-  const usageData = extractUsageAndCost(data.usage)
+  const reasoningText =
+    data.choices?.[0]?.message?.reasoning_content ??
+    data.choices?.[0]?.message?.reasoning ??
+    ''
+  const usageData = extractUsageAndCost(data.usage, originalModel)
 
   insertMessageToBigQuery({
     messageId: data.id,
@@ -258,9 +335,18 @@ export async function handleFireworksStream({
 }) {
   const originalModel = body.model
   const startTime = new Date()
-  const { clientId, clientRequestId, costMode } = extractRequestMetadata({ body, logger })
+  const { clientId, clientRequestId, costMode } = extractRequestMetadata({
+    body,
+    logger,
+  })
 
-  const response = await createFireworksRequestWithFallback({ body, originalModel, fetch, logger, sessionId: userId })
+  const response = await createFireworksRequestWithFallback({
+    body,
+    originalModel,
+    fetch,
+    logger,
+    sessionId: userId,
+  })
 
   if (!response.ok) {
     throw await parseFireworksError(response)
@@ -333,9 +419,13 @@ export async function handleFireworksStream({
 
             if (!clientDisconnected) {
               try {
-                controller.enqueue(new TextEncoder().encode(lineResult.patchedLine))
+                controller.enqueue(
+                  new TextEncoder().encode(lineResult.patchedLine),
+                )
               } catch {
-                logger.warn('Client disconnected during stream, continuing for billing')
+                logger.warn(
+                  'Client disconnected during stream, continuing for billing',
+                )
                 clientDisconnected = true
               }
             }
@@ -455,7 +545,11 @@ async function handleLine({
   }
 
   const patchedLine = `data: ${JSON.stringify(obj)}\n`
-  return { state: result.state, billedCredits: result.billedCredits, patchedLine }
+  return {
+    state: result.state,
+    billedCredits: result.billedCredits,
+    patchedLine,
+  }
 }
 
 async function handleResponse({
@@ -487,13 +581,24 @@ async function handleResponse({
   logger: Logger
   insertMessage: InsertMessageBigqueryFn
 }): Promise<{ state: StreamState; billedCredits?: number }> {
-  state = handleStreamChunk({ data, state, startTime, logger, userId, agentId, model: originalModel })
+  state = handleStreamChunk({
+    data,
+    state,
+    startTime,
+    logger,
+    userId,
+    agentId,
+    model: originalModel,
+  })
 
   if ('error' in data || !data.usage) {
     return { state }
   }
 
-  const usageData = extractUsageAndCost(data.usage as Record<string, unknown>)
+  const usageData = extractUsageAndCost(
+    data.usage as Record<string, unknown>,
+    originalModel,
+  )
   const messageId = typeof data.id === 'string' ? data.id : 'unknown'
 
   insertMessageToBigQuery({
@@ -579,17 +684,27 @@ function handleStreamChunk({
     if (state.responseText.length >= MAX_BUFFER_SIZE) {
       state.responseText =
         state.responseText.slice(0, MAX_BUFFER_SIZE) + '\n---[TRUNCATED]---'
-      logger.warn({ userId, agentId, model }, 'Response text buffer truncated at 1MB')
+      logger.warn(
+        { userId, agentId, model },
+        'Response text buffer truncated at 1MB',
+      )
     }
   }
 
-  const reasoningDelta = typeof delta?.reasoning_content === 'string' ? delta.reasoning_content
-    : typeof delta?.reasoning === 'string' ? delta.reasoning
-      : ''
+  const reasoningDelta =
+    typeof delta?.reasoning_content === 'string'
+      ? delta.reasoning_content
+      : typeof delta?.reasoning === 'string'
+        ? delta.reasoning
+        : ''
 
   // Track time to first token (TTFT) - set on first meaningful delta (content, reasoning, or tool_calls)
-  const hasToolCallsDelta = delta?.tool_calls != null && (delta.tool_calls as unknown[])?.length > 0
-  if (state.ttftMs === null && (contentDelta !== '' || reasoningDelta !== '' || hasToolCallsDelta)) {
+  const hasToolCallsDelta =
+    delta?.tool_calls != null && (delta.tool_calls as unknown[])?.length > 0
+  if (
+    state.ttftMs === null &&
+    (contentDelta !== '' || reasoningDelta !== '' || hasToolCallsDelta)
+  ) {
     state.ttftMs = Date.now() - startTime.getTime()
   }
 
@@ -598,7 +713,10 @@ function handleStreamChunk({
     if (state.reasoningText.length >= MAX_BUFFER_SIZE) {
       state.reasoningText =
         state.reasoningText.slice(0, MAX_BUFFER_SIZE) + '\n---[TRUNCATED]---'
-      logger.warn({ userId, agentId, model }, 'Reasoning text buffer truncated at 1MB')
+      logger.warn(
+        { userId, agentId, model },
+        'Reasoning text buffer truncated at 1MB',
+      )
     }
   }
 
@@ -667,9 +785,15 @@ function parseFireworksErrorFromText(
   return new FireworksError(statusCode, statusText, errorBody)
 }
 
-async function parseFireworksError(response: Response): Promise<FireworksError> {
+async function parseFireworksError(
+  response: Response,
+): Promise<FireworksError> {
   const errorText = await response.text()
-  return parseFireworksErrorFromText(response.status, response.statusText, errorText)
+  return parseFireworksErrorFromText(
+    response.status,
+    response.statusText,
+    errorText,
+  )
 }
 
 /**
@@ -686,7 +810,8 @@ export async function createFireworksRequestWithFallback(params: {
   sessionId: string
 }): Promise<Response> {
   const { body, originalModel, fetch, logger, sessionId } = params
-  const useCustomDeployment = params.useCustomDeployment ?? FIREWORKS_USE_CUSTOM_DEPLOYMENT
+  const useCustomDeployment =
+    params.useCustomDeployment ?? FIREWORKS_USE_CUSTOM_DEPLOYMENT
   const deploymentModelId = FIREWORKS_DEPLOYMENT_MAP[originalModel]
   const shouldTryDeployment =
     useCustomDeployment &&
@@ -710,7 +835,11 @@ export async function createFireworksRequestWithFallback(params: {
     if (response.status >= 500) {
       const errorText = await response.text()
       logger.info(
-        { model: originalModel, status: response.status, errorText: errorText.slice(0, 200) },
+        {
+          model: originalModel,
+          status: response.status,
+          errorText: errorText.slice(0, 200),
+        },
         'Fireworks custom deployment returned 5xx, falling back to standard API',
       )
       if (errorText.includes('DEPLOYMENT_SCALING_UP')) {

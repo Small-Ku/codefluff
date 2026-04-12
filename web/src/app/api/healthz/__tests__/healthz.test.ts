@@ -2,7 +2,6 @@ import { describe, test, expect } from 'bun:test'
 
 import { getHealthz } from '../_get'
 
-
 describe('/api/healthz route', () => {
   describe('Success cases', () => {
     test('returns 200 with status ok and agent count', async () => {

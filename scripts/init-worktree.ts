@@ -229,7 +229,9 @@ NEXT_PUBLIC_CODEBUFF_APP_URL=http://localhost:${args.webPort}
 `
 
   writeFileSync(join(worktreePath, '.env.development.local'), rootEnvContent)
-  console.log('Created .env.development.local with port and app URL configurations')
+  console.log(
+    'Created .env.development.local with port and app URL configurations',
+  )
 
   // Web-specific .env.development.local - keep an explicit copy for the web package
   // The root .env.development.local already ensures the CLI and other packages use the same app URL.
@@ -240,7 +242,10 @@ NEXT_PUBLIC_CODEBUFF_APP_URL=http://localhost:${args.webPort}
 NEXT_PUBLIC_CODEBUFF_APP_URL=http://localhost:${args.webPort}
 `
 
-  writeFileSync(join(worktreePath, 'web', '.env.development.local'), webEnvContent)
+  writeFileSync(
+    join(worktreePath, 'web', '.env.development.local'),
+    webEnvContent,
+  )
   console.log('Created web/.env.development.local with URL configuration')
 }
 
@@ -264,7 +269,9 @@ async function syncInfisicalSecrets(worktreePath: string): Promise<boolean> {
 
   // Check if .infisical.json exists in worktree
   if (!existsSync(infisicalJsonPath)) {
-    console.warn('Skipping Infisical sync: .infisical.json not found in worktree')
+    console.warn(
+      'Skipping Infisical sync: .infisical.json not found in worktree',
+    )
     return false
   }
 
@@ -308,7 +315,10 @@ async function syncInfisicalSecrets(worktreePath: string): Promise<boolean> {
         console.log('Synced secrets from Infisical to .env.local')
         resolve(true)
       } else {
-        if (stderr.includes('Select the environment') || stderr.includes('not logged in')) {
+        if (
+          stderr.includes('Select the environment') ||
+          stderr.includes('not logged in')
+        ) {
           console.warn('Warning: Infisical session expired or not logged in')
           console.warn('Please run `infisical login` in the worktree')
         } else if (code !== 0) {
@@ -325,7 +335,9 @@ async function syncInfisicalSecrets(worktreePath: string): Promise<boolean> {
       clearTimeout(timeout)
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         console.warn('Warning: infisical CLI not found, skipping secret sync')
-        console.warn('Install it with: brew install infisical/get-cli/infisical')
+        console.warn(
+          'Install it with: brew install infisical/get-cli/infisical',
+        )
       } else {
         console.warn(`Warning: Failed to run infisical: ${error.message}`)
       }
@@ -346,10 +358,14 @@ async function runDirenvAllow(worktreePath: string): Promise<void> {
     return new Promise((resolve) => {
       // Use bash -c with explicit cd to ensure direnv sees the correct directory context
       // Just using cwd option doesn't work reliably with direnv
-      const proc = spawn('bash', ['-c', `cd '${worktreePath}' && direnv allow`], {
-        stdio: 'inherit',
-        shell: false,
-      })
+      const proc = spawn(
+        'bash',
+        ['-c', `cd '${worktreePath}' && direnv allow`],
+        {
+          stdio: 'inherit',
+          shell: false,
+        },
+      )
 
       proc.on('close', (code) => {
         if (code === 0) {
@@ -431,10 +447,18 @@ async function main(): Promise<void> {
 
     // If branch already existed, merge in the base branch to get latest tooling
     if (branchExists) {
-      console.log(`Merging ${baseBranch} into ${args.name} to get latest tooling...`)
+      console.log(
+        `Merging ${baseBranch} into ${args.name} to get latest tooling...`,
+      )
       const mergeResult = await runCommand(
         'git',
-        ['merge', baseBranch, '--no-edit', '-m', `Merge ${baseBranch} to get latest tooling`],
+        [
+          'merge',
+          baseBranch,
+          '--no-edit',
+          '-m',
+          `Merge ${baseBranch} to get latest tooling`,
+        ],
         worktreePath,
       )
       if (mergeResult.exitCode !== 0) {
@@ -469,9 +493,13 @@ async function main(): Promise<void> {
     console.log(`🚀 You can now cd into the worktree and start working:`)
     console.log(`   cd ${worktreePath}`)
     console.log(``)
-    console.log(`⚠️  Note: NEXT_PUBLIC_CODEBUFF_APP_URL is set to http://localhost:${args.webPort}`)
+    console.log(
+      `⚠️  Note: NEXT_PUBLIC_CODEBUFF_APP_URL is set to http://localhost:${args.webPort}`,
+    )
     console.log(`   The CLI and SDK will hit your local web server.`)
-    console.log(`   To run SDK E2E tests, start the web server first: bun run --cwd web dev`)
+    console.log(
+      `   To run SDK E2E tests, start the web server first: bun run --cwd web dev`,
+    )
   } catch (error) {
     if (error instanceof WorktreeError) {
       console.error(`Error: ${error.message}`)

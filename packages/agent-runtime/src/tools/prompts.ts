@@ -55,7 +55,11 @@ function toJsonSchemaSafe(schema: z.ZodType): Record<string, unknown> {
 
 function hasMeaningfulJsonSchema(jsonSchema: Record<string, unknown>): boolean {
   const properties = jsonSchema.properties
-  if (properties && typeof properties === 'object' && Object.keys(properties).length > 0) {
+  if (
+    properties &&
+    typeof properties === 'object' &&
+    Object.keys(properties).length > 0
+  ) {
     return true
   }
 
@@ -79,12 +83,12 @@ function paramsSection(params: { schema: z.ZodType; endsAgentStep: boolean }) {
   const safeSchema = ensureJsonSchemaCompatible(schema)
   const schemaWithEndsAgentStepParam = endsAgentStep
     ? safeSchema.and(
-      z.object({
-        [endsAgentStepParam]: z
-          .literal(endsAgentStep)
-          .describe('Easp flag must be set to true'),
-      }),
-    )
+        z.object({
+          [endsAgentStepParam]: z
+            .literal(endsAgentStep)
+            .describe('Easp flag must be set to true'),
+        }),
+      )
     : safeSchema
   const jsonSchema = toJsonSchemaSafe(schemaWithEndsAgentStepParam)
   delete jsonSchema.description
@@ -179,13 +183,13 @@ You (Buffy) have access to the following tools. Call them when needed.
 Tool calls use a specific XML and JSON-like format. Adhere *precisely* to this nested element structure:
 
 ${getToolCallString(
-    'tool_name',
-    {
-      parameter1: 'value1',
-      parameter2: 123,
-    },
-    false,
-  )}
+  'tool_name',
+  {
+    parameter1: 'value1',
+    parameter2: 123,
+  },
+  false,
+)}
 
 ### Commentary
 
@@ -199,20 +203,20 @@ User: can you update the console logs in example/file.ts?
 Assistant: Sure thing! Let's update that file!
 
 ${getToolCallString(
-    'example_editing_tool',
-    {
-      example_file_path: 'path/to/example/file.ts',
-      example_array: [
-        {
-          old_content_with_newlines:
-            "// some context\nconsole.log('Hello world!');\n",
-          new_content_with_newlines:
-            "// some context\nconsole.log('Hello from Buffy!');\n",
-        },
-      ],
-    },
-    false,
-  )}
+  'example_editing_tool',
+  {
+    example_file_path: 'path/to/example/file.ts',
+    example_array: [
+      {
+        old_content_with_newlines:
+          "// some context\nconsole.log('Hello world!');\n",
+        new_content_with_newlines:
+          "// some context\nconsole.log('Hello from Buffy!');\n",
+      },
+    ],
+  },
+  false,
+)}
 
 All done with the update!
 User: thanks it worked! :)
@@ -283,7 +287,8 @@ export const fullToolList = (
         endsAgentStep: toolDef.endsAgentStep ?? true,
         exampleInputs: toolDef.exampleInputs,
       })
-    }),]
+    }),
+  ]
 
   return `## List of Tools
 
@@ -332,13 +337,13 @@ Use the tools below to complete the user request, if applicable.
 Tool calls use a specific XML and JSON-like format. Adhere *precisely* to this nested element structure:
 
 ${getToolCallString(
-    'tool_name',
-    {
-      parameter1: 'value1',
-      parameter2: 123,
-    },
-    false,
-  )}
+  'tool_name',
+  {
+    parameter1: 'value1',
+    parameter2: 123,
+  },
+  false,
+)}
 
 Important: You only have access to the tools below. Do not use any other tools -- they are not available to you, instead they may have been previously used by other agents.
 

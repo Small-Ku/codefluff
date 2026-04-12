@@ -15,7 +15,12 @@ describe('model-listing', () => {
   const originalHome = process.env.HOME
   const originalUserProfile = process.env.USERPROFILE
   const testConfigDir = join(tmpdir(), 'model-listing-test')
-  const testConfigPath = join(testConfigDir, '.config', 'codefluff', 'config.json')
+  const testConfigPath = join(
+    testConfigDir,
+    '.config',
+    'codefluff',
+    'config.json',
+  )
 
   function writeConfig(obj: unknown) {
     mkdirSync(join(testConfigDir, '.config', 'codefluff'), { recursive: true })
@@ -136,10 +141,7 @@ describe('model-listing', () => {
       const results = [
         {
           provider: 'openai',
-          models: [
-            { id: 'gpt-4', name: 'GPT-4' },
-            { id: 'gpt-3.5-turbo' },
-          ],
+          models: [{ id: 'gpt-4', name: 'GPT-4' }, { id: 'gpt-3.5-turbo' }],
         },
         {
           provider: 'anthropic',

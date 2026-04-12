@@ -17,7 +17,11 @@ import {
   migrateUnusedCredits,
 } from '../subscription'
 
-import type { BlockGrant, SubscriptionRow, WeeklyLimitError } from '../subscription'
+import type {
+  BlockGrant,
+  SubscriptionRow,
+  WeeklyLimitError,
+} from '../subscription'
 
 const logger: Logger = {
   debug: () => {},
@@ -33,11 +37,13 @@ function utcDate(year: number, month: number, day: number): Date {
   return d
 }
 
-function createMockSubscription(overrides?: Partial<{
-  stripe_subscription_id: string
-  tier: number
-  billing_period_start: Date
-}>) {
+function createMockSubscription(
+  overrides?: Partial<{
+    stripe_subscription_id: string
+    tier: number
+    billing_period_start: Date
+  }>,
+) {
   return {
     stripe_subscription_id: 'sub-test-123',
     tier: 200,
@@ -63,9 +69,19 @@ function createSequentialMock(options: {
   let insertIdx = 0
   const captures: MockCaptures = { insertValues: [], updateSets: [] }
 
-  function makeChain(result: unknown, type?: 'insert' | 'update'): Record<string, unknown> {
+  function makeChain(
+    result: unknown,
+    type?: 'insert' | 'update',
+  ): Record<string, unknown> {
     const chain: Record<string, unknown> = {}
-    for (const m of ['from', 'where', 'orderBy', 'limit', 'returning', 'onConflictDoNothing']) {
+    for (const m of [
+      'from',
+      'where',
+      'orderBy',
+      'limit',
+      'returning',
+      'onConflictDoNothing',
+    ]) {
       chain[m] = () => chain
     }
     chain.values = (data: Record<string, unknown>) => {
@@ -76,8 +92,10 @@ function createSequentialMock(options: {
       if (type === 'update') captures.updateSets.push(data)
       return chain
     }
-    chain.then = (resolve: (v: unknown) => void, reject?: (e: unknown) => void) =>
-      Promise.resolve(result).then(resolve, reject)
+    chain.then = (
+      resolve: (v: unknown) => void,
+      reject?: (e: unknown) => void,
+    ) => Promise.resolve(result).then(resolve, reject)
     return chain
   }
 
@@ -228,11 +246,13 @@ describe('subscription', () => {
   })
 
   describe('getSubscriptionLimits', () => {
-    function createConnMock(overrides: Array<{
-      credits_per_block: number
-      block_duration_hours: number
-      weekly_credit_limit: number
-    }>) {
+    function createConnMock(
+      overrides: Array<{
+        credits_per_block: number
+        block_duration_hours: number
+        weekly_credit_limit: number
+      }>,
+    ) {
       return {
         select: () => ({
           from: () => ({
@@ -247,11 +267,13 @@ describe('subscription', () => {
     }
 
     it('should use limit override when one exists', async () => {
-      const conn = createConnMock([{
-        credits_per_block: 9999,
-        block_duration_hours: 10,
-        weekly_credit_limit: 50000,
-      }])
+      const conn = createConnMock([
+        {
+          credits_per_block: 9999,
+          block_duration_hours: 10,
+          weekly_credit_limit: 50000,
+        },
+      ])
 
       const result = await getSubscriptionLimits({
         userId: 'user-123',
@@ -317,7 +339,6 @@ describe('subscription', () => {
         weeklyCreditsLimit: DEFAULT_TIER.weeklyCreditsLimit,
       })
     })
-
   })
 
   describe('migrateUnusedCredits', () => {
@@ -337,17 +358,21 @@ describe('subscription', () => {
       })
 
       expect(captures.insertValues).toHaveLength(1)
-      expect(captures.insertValues[0].operation_id).toBe('subscribe-migrate-sub-123')
+      expect(captures.insertValues[0].operation_id).toBe(
+        'subscribe-migrate-sub-123',
+      )
       expect(captures.insertValues[0].principal).toBe(0)
       expect(captures.insertValues[0].balance).toBe(0)
     })
 
     it('should zero old grants and create migration grant with correct total', async () => {
       const { conn, captures } = createSequentialMock({
-        selectResults: [[
-          { operation_id: 'g1', balance: 300 },
-          { operation_id: 'g2', balance: 200 },
-        ]],
+        selectResults: [
+          [
+            { operation_id: 'g1', balance: 300 },
+            { operation_id: 'g2', balance: 200 },
+          ],
+        ],
       })
 
       await migrateUnusedCredits({
@@ -371,7 +396,9 @@ describe('subscription', () => {
       expect(captures.insertValues).toHaveLength(1)
       expect(captures.insertValues[0].principal).toBe(500)
       expect(captures.insertValues[0].balance).toBe(500)
-      expect(captures.insertValues[0].operation_id).toBe('subscribe-migrate-sub-123')
+      expect(captures.insertValues[0].operation_id).toBe(
+        'subscribe-migrate-sub-123',
+      )
       expect(captures.insertValues[0].type).toBe('free')
     })
   })
@@ -415,7 +442,7 @@ describe('subscription', () => {
       const weeklyLimit = SUBSCRIPTION_TIERS[200].weeklyCreditsLimit
       const { conn } = createSequentialMock({
         selectResults: [
-          [],                      // no limit overrides
+          [], // no limit overrides
           [{ total: weeklyLimit }], // weekly usage at limit
         ],
       })
@@ -437,9 +464,9 @@ describe('subscription', () => {
     it('should allow new block when no active block exists', async () => {
       const { conn } = createSequentialMock({
         selectResults: [
-          [],                 // no limit overrides
+          [], // no limit overrides
           [{ total: 5000 }], // under weekly limit
-          [],                 // no active blocks
+          [], // no active blocks
         ],
       })
 
@@ -459,7 +486,7 @@ describe('subscription', () => {
       const futureExpiry = new Date(Date.now() + 3 * 60 * 60 * 1000)
       const { conn } = createSequentialMock({
         selectResults: [
-          [],                 // no limit overrides
+          [], // no limit overrides
           [{ total: 5000 }], // under weekly limit
           [{ balance: 0, principal: 1200, expires_at: futureExpiry }],
         ],
@@ -482,7 +509,7 @@ describe('subscription', () => {
       const futureExpiry = new Date(Date.now() + 3 * 60 * 60 * 1000)
       const { conn } = createSequentialMock({
         selectResults: [
-          [],                 // no limit overrides
+          [], // no limit overrides
           [{ total: 5000 }], // under weekly limit
           [{ balance: 800, principal: 1200, expires_at: futureExpiry }],
         ],
@@ -509,7 +536,13 @@ describe('subscription', () => {
       const futureExpiry = new Date(Date.now() + 3 * 60 * 60 * 1000)
       const { conn } = createSequentialMock({
         selectResults: [
-          [{ operation_id: 'existing-grant', balance: 500, expires_at: futureExpiry }],
+          [
+            {
+              operation_id: 'existing-grant',
+              balance: 500,
+              expires_at: futureExpiry,
+            },
+          ],
         ],
       })
 
@@ -531,8 +564,8 @@ describe('subscription', () => {
       const weeklyLimit = SUBSCRIPTION_TIERS[200].weeklyCreditsLimit
       const { conn } = createSequentialMock({
         selectResults: [
-          [],                      // no existing grants
-          [],                      // no limit overrides
+          [], // no existing grants
+          [], // no limit overrides
           [{ total: weeklyLimit }], // weekly limit reached
         ],
       })
@@ -555,13 +588,11 @@ describe('subscription', () => {
       const now = new Date('2025-01-15T10:00:00Z')
       const { conn } = createSequentialMock({
         selectResults: [
-          [],               // no existing grants
-          [],               // no limit overrides
-          [{ total: 0 }],  // no weekly usage
+          [], // no existing grants
+          [], // no limit overrides
+          [{ total: 0 }], // no weekly usage
         ],
-        insertResults: [
-          [{ operation_id: 'new-block-grant' }],
-        ],
+        insertResults: [[{ operation_id: 'new-block-grant' }]],
       })
 
       const result = await ensureActiveBlockGrantCallback({
@@ -578,7 +609,8 @@ describe('subscription', () => {
       expect(grant.grantId).toBe('new-block-grant')
       expect(grant.credits).toBe(SUBSCRIPTION_TIERS[200].creditsPerBlock)
       expect(grant.expiresAt.getTime()).toBe(
-        now.getTime() + SUBSCRIPTION_TIERS[200].blockDurationHours * 60 * 60 * 1000,
+        now.getTime() +
+          SUBSCRIPTION_TIERS[200].blockDurationHours * 60 * 60 * 1000,
       )
     })
 
@@ -589,13 +621,11 @@ describe('subscription', () => {
       const now = new Date('2025-01-15T10:00:00Z')
       const { conn, captures } = createSequentialMock({
         selectResults: [
-          [],                    // no existing grants
-          [],                    // no limit overrides
+          [], // no existing grants
+          [], // no limit overrides
           [{ total: weeklyUsed }], // expectedRemaining credits remaining
         ],
-        insertResults: [
-          [{ operation_id: 'capped-block' }],
-        ],
+        insertResults: [[{ operation_id: 'capped-block' }]],
       })
 
       const result = await ensureActiveBlockGrantCallback({
@@ -617,12 +647,12 @@ describe('subscription', () => {
       const now = new Date('2025-01-15T10:00:00Z')
       const { conn } = createSequentialMock({
         selectResults: [
-          [],               // no existing grants
-          [],               // no limit overrides
-          [{ total: 0 }],  // no weekly usage
+          [], // no existing grants
+          [], // no limit overrides
+          [{ total: 0 }], // no weekly usage
         ],
         insertResults: [
-          [],               // empty — simulates onConflictDoNothing
+          [], // empty — simulates onConflictDoNothing
         ],
       })
 

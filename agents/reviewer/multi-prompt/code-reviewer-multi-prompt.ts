@@ -73,7 +73,10 @@ function* handleStepsMultiPrompt({
 
   const { messageHistory } = agentState
   // Remove last user messages (prompt, subagent spawn message, instructions prompt)
-  while (messageHistory.length > 0 && messageHistory[messageHistory.length - 1].role === 'user') {
+  while (
+    messageHistory.length > 0 &&
+    messageHistory[messageHistory.length - 1].role === 'user'
+  ) {
     messageHistory.pop()
   }
 
@@ -131,7 +134,11 @@ function* handleStepsMultiPrompt({
   } satisfies ToolCall<'set_output'>
 
   type ContentBlock = { type: string; text?: string }
-  type ReviewMessage = { role: string; content: ContentBlock[]; sentAt?: number }
+  type ReviewMessage = {
+    role: string
+    content: ContentBlock[]
+    sentAt?: number
+  }
   type ReviewResult = ReviewMessage[]
 
   /**
