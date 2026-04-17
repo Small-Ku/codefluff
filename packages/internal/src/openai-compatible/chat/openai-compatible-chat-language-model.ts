@@ -162,59 +162,64 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       toolChoice,
     })
 
-    return {
-      args: {
-        // model id:
-        model: this.modelId,
+    // Build args object, conditionally including max_tokens to avoid sending undefined
+    // This is important for providers like Nvidia NIM that have low default max_tokens
+    const args: Record<string, unknown> = {
+      // model id:
+      model: this.modelId,
 
-        // model specific settings:
-        user: compatibleOptions.user,
+      // model specific settings:
+      user: compatibleOptions.user,
 
-        // standardized settings:
-        max_tokens: maxOutputTokens,
-        temperature,
-        top_p: topP,
-        frequency_penalty: frequencyPenalty,
-        presence_penalty: presencePenalty,
-        response_format:
-          responseFormat?.type === 'json'
-            ? this.supportsStructuredOutputs === true &&
-              responseFormat.schema != null
-              ? {
-                  type: 'json_schema',
-                  json_schema: {
-                    schema: responseFormat.schema,
-                    name: responseFormat.name ?? 'response',
-                    description: responseFormat.description,
-                  },
-                }
-              : { type: 'json_object' }
-            : undefined,
-
-        stop: stopSequences,
-        seed,
-        ...Object.fromEntries(
-          Object.entries(
-            providerOptions?.[this.providerOptionsName] ?? {},
-          ).filter(
-            ([key]) =>
-              !Object.keys(openaiCompatibleProviderOptions.shape).includes(key),
-          ),
+      // standardized settings (only include if defined):
+      ...(maxOutputTokens !== undefined && { max_tokens: maxOutputTokens }),
+      ...(temperature !== undefined && { temperature }),
+      ...(topP !== undefined && { top_p: topP }),
+      ...(frequencyPenalty !== undefined && { frequency_penalty: frequencyPenalty }),
+      ...(presencePenalty !== undefined && { presence_penalty: presencePenalty }),
+      ...(responseFormat?.type === 'json'
+        ? this.supportsStructuredOutputs === true && responseFormat.schema != null
+          ? {
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                schema: responseFormat.schema,
+                name: responseFormat.name ?? 'response',
+                description: responseFormat.description,
+              },
+            },
+          }
+          : { response_format: { type: 'json_object' } }
+        : {}),
+      ...(stopSequences !== undefined && stopSequences.length > 0 && { stop: stopSequences }),
+      ...(seed !== undefined && { seed }),
+      ...Object.fromEntries(
+        Object.entries(
+          providerOptions?.[this.providerOptionsName] ?? {},
+        ).filter(
+          ([key]) =>
+            !Object.keys(openaiCompatibleProviderOptions.shape).includes(key),
         ),
+      ),
+      ...(compatibleOptions.reasoningEffort !== undefined && { reasoning_effort: compatibleOptions.reasoningEffort }),
+      ...(compatibleOptions.textVerbosity !== undefined && { verbosity: compatibleOptions.textVerbosity }),
 
-        reasoning_effort: compatibleOptions.reasoningEffort,
-        verbosity: compatibleOptions.textVerbosity,
+      // messages:
+      messages: convertToOpenAICompatibleChatMessages(prompt),
 
-        // messages:
-        messages: convertToOpenAICompatibleChatMessages(prompt),
+      // tools:
+      ...(openaiTools !== undefined && openaiTools.length > 0 && { tools: openaiTools }),
+      ...(openaiToolChoice !== undefined && { tool_choice: openaiToolChoice }),
+    }
 
-        // tools:
-        tools: openaiTools,
-        tool_choice: openaiToolChoice,
+    // extra body parameters from provider config (e.g., max_tokens from model config):
+    // These are applied last so they can override defaults
+    if (this.config.extraBody) {
+      Object.assign(args, this.config.extraBody)
+    }
 
-        // extra body parameters from provider config:
-        ...this.config.extraBody,
-      },
+    return {
+      args,
       warnings: [...warnings, ...toolWarnings],
     }
   }
@@ -348,17 +353,19 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
 
     // Debug logging: verify max_tokens is being sent (helps diagnose Nvidia NIM truncation)
     if (isDebugEnabled()) {
+      const bodyAsRecord = body as Record<string, unknown>
       logDebug('DEBUG', `OpenAICompatible request for ${this.modelId}`, {
-        max_tokens: body.max_tokens ?? 'NOT SET (using provider default)',
-        model: body.model,
-        messageCount: body.messages?.length ?? 0,
-        toolsCount: body.tools?.length ?? 0,
+        max_tokens: bodyAsRecord.max_tokens ?? 'NOT SET (using provider default)',
+        model: bodyAsRecord.model,
+        messageCount: (bodyAsRecord.messages as unknown[] | undefined)?.length ?? 0,
+        toolsCount: (bodyAsRecord.tools as unknown[] | undefined)?.length ?? 0,
       })
 
       // Log full messages for debugging truncation issues
-      if (body.messages && body.messages.length > 0) {
+      const messages = bodyAsRecord.messages as Array<{ role: string; content: unknown }> | undefined
+      if (messages && messages.length > 0) {
         logDebug('DEBUG', 'Request messages', {
-          messages: body.messages.map((m: any, i: number) => ({
+          messages: messages.map((m, i: number) => ({
             index: i,
             role: m.role,
             contentPreview:
